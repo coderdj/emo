@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+
+    <br>
+{% for runInfo in runs_list %}
+
+<!--<div class="beforeentry">Today</div>
+
+<!--
+<div class="beforeentry">{{ runInfo.starttimestamp|date:"M Y"}} </div>-->
+
+<div class="entry" id="{{ runInfo.name }}">
+  <div class="header">
+    <div class="row">
+      <div class="col-xs-1 col-sm-1 entry-icon                                                                                                                
+                  {% if runInfo.shorttype == 'write' %}                                                                                                       
+                  entry-icon-1                                                                                                                                
+                  {% elif runInfo.shorttype == 'dump' %}                                                                                                      
+                  entry-icon-2                                                                                                                                
+                  {% elif runInfo.shorttype == 'muon' %}                                                                                                      
+                  entry-icon-3                                                                                                                                
+                  {% endif %}">{{runInfo.shorttype}}
+                  </div>
+                  <div class="col-xs-6 col-sm-6">
+                  <div class="entry-title">{{runInfo.name}}</div>
+          			<div class="entry-date">Started by {{runInfo.user}} on {{ runInfo.starttimestamp|date:"d M"}} at {{ runInfo.starttimestamp|time:"H:i"}}</div>
+        				</div>
+        				<div class="col-xs-2 col-sm-2 entry-status" style="color:#689f38;"> {{ runInfo.stage }} 
+        				</div>
+       			 <div class="col-xs-2 col-sm-2 entry-messages">
+        				<td style="pull-right">
+        					<span class="glyphicon glyphicon-comment"> {{ runInfo.comments|length }}</span>
+        				</td>
+       			 </div>
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+  <br>
+  <p style="padding-left:5px;"><a href="../" class="btn btn-info btn-large">&laquo; Back</a></p>
+  
+  <!-- Template for expanded header -->
+<script type="text/template" id="header-template">
+  <div class="entry-header">
+    <!-- Override icon class for collapse button -->
+    <div class="col-sm-1 col-xs-1" style="text-align:left;color:#AAAAAA;line-height:2.4;font-size:26px;height:59px;">
+      <span class="glyphicon glyphicon-chevron-up" onclick="entryCollapse()" style="size:20px;"></span>
+    </div>
+    <div class="col-sm-3 col-xs-3 entry-title" style="margin-left:0;padding-left:0;border-left:0;text-align:left;font-size:24px;">{RunName}</div>
+    <!-- Override messages class for right side nav buttons -->
+    <div class="entry-messages" style="font-size:16px;line-height:2.7;">
+      <a style="font-size:24px;" id="runinfo_button" onclick="DrawInfo('runinfo')">Info</a>&nbsp;&nbsp;&nbsp;
+      <a id="readerinfo_button" onclick="DrawInfo('readerinfo')">Reader</a>&nbsp;&nbsp;&nbsp;
+      <a id="triggerinfo_button" onclick="DrawInfo('triggerinfo')">Trigger</a>&nbsp;&nbsp;&nbsp;
+      <a id="processorinfo_button" onclick="DrawProcessor()">Processor</a>&nbsp;&nbsp;&nbsp;
+      <a id="comments_button" onclick="DrawInfo('comments')">Comments</a>&nbsp;&nbsp;&nbsp;
+    </div>
+  </div>
+  <div class="entry-content" id="entry-content" style="overflow-x:hidden;overflow-y:auto;width:100%;">
+    Data not found.
+  </div>
+</script>
+<!-- Template for Info panel -->
+<script type="text/template" id="info-template">
+  <div class="col-sm-12 col-xs-12" style="padding-left:10px;border-left:0px;margin-left:20px;margin-right:20px;">
+      {basicinfo}
+  </div>
+  <div class="col-sm-6 col-xs-6">
+  </div>
+</script>
+
+
+<script type="text/javascript">
+var lastDiv = '';
+var lastDivID = '';
+var lastDivHandler = '';
+var htmlcontent = '';
+var lastdata = '';
+var lastpanel = '#runinfo_button';
+var lastupdateurl = '';
+
+  function entryCollapse(){
+      // Get ID of parent of parent of parent (entry)                                                                                                           
+      lastDiv.animate({height:'60',marginTop:'-1px',marginBottom:'0px'},
+                      300,
+                      function(){
+                          document.getElementById(lastDivID).innerHTML = htmlcontent;
+                          lastDiv.on('click',lastDivHandler);
+                          lastDiv = '';
+                          lastDivID = '';
+                          lastDivHandler = '';
+                          htmlcontent = '';
+                      });
+  };
+
+ $('.entry').click(function(){
+      if(lastDivID != $(this).attr('id') ){
+
+          if(lastDiv != ''){ //neat hack to wait for animation to finish                                                                                        
+              document.getElementById(lastDivID).innerHTML = "";
+                lastDiv.animate({height:'60',marginTop:'-1px'
+                                 ,marginBottom:'0px'},300);
+              document.getElementById(lastDivID).innerHTML = htmlcontent;
+              lastDiv.on('click',lastDivHandler);
+              lastDiv.fadeIn("fast");
+          }
+          lastDivID = $(this).attr('id');
+          lastDiv=$(this);
+          htmlcontent = document.getElementById($(this).attr('id')).innerHTML;
+          $(this).animate({height:'300',marginTop:'10px',marginBottom:'10px'},300)
+          // Get the data                                                                                                                                       
+          var updateUrl = "/runs/rundetail" + "?run="; 
+            updateUrl += ($(this).attr('id'));
+           
+          lastupdateurl = updateUrl;
+          var theid = ($(this).attr('id'));
+          console.log(updateUrl)
+          $.getJSON( updateUrl, function(data) {
+              lastdata=data;
+              console.log(data);
+              document.getElementById(theid).innerHTML = $('#header-template').html().replace('{RunName}', data['runinfo']['name'][1]);
+              DrawInfo('runinfo');
+              //document.getElementById(theid).innerHTML = thisHTML;                                                                                            
+              lastDivHandler = ($._data(lastDiv.get(0), "events"))['click'][0];
+                lastDiv.off('click',lastDivHandler);
+          });
+      }
+  })
+ function DrawInfo(butwho){
+      // For drawing the info panel                                                                                                                             
+      var basicinfo = '';
+      if(lastpanel != '')
+          $(lastpanel).animate({fontSize:"16px"},0);
+      lastpanel = '#'+butwho + "_button";
+      $(lastpanel).animate({fontSize:"24px"},10);
+
+      if(butwho != 'comments'){
+          basicinfo += '<ul class="list-group">';
+          for (var key in lastdata[butwho]){
+              basicinfo += '<li class="list-ground-item"><strong>';
+              basicinfo += lastdata[butwho][key][0];
+              basicinfo += ': </strong>';
+              basicinfo += lastdata[butwho][key][1];
+              basicinfo += '</li>';
+          }
+          basicinfo += '</ul>';
+      }
+      else { //comments!                                                                                                                                        
+          if(lastdata[butwho].length==0){
+              basicinfo += '<h6>No comments yet</h6>';
+          }
+ else{
+              for( i=0; i<lastdata[butwho].length;i+=1){
+                  basicinfo+='<div class="bubble"><p><b>';
+                  basicinfo+=lastdata[butwho][i][2];
+                  basicinfo+='</b>&nbsp; wrote on &nbsp ';
+                  basicinfo+=lastdata[butwho][i][1];
+                  basicinfo+='<p>{% autoescape off %}';
+                  basicinfo+=lastdata[butwho][i][3];
+                  basicinfo+='{% endautoescape %}</p></p></div>';
+              }
+          }
+          basicinfo+= '<br><button class="btn btn-info" onclick="NewComment()" style="margin-bottom:20px;width:80%;margin-left:10%;margin-right:10%;">Add a New\
+ Comment</button><br>';
+      }
+      document.getElementById("entry-content").innerHTML = $('#info-template').html().replace('{basicinfo}', basicinfo);
+
+  };
+
+function NewComment(){
+    title = "New comment to run: "+lastDivID;
+    console.log(lastupdateurl);
+    message = "<form action='" + lastupdateurl + "' method='post'>{% csrf_token %}<textarea type='text' id='text' name='text' class='form-control'  placeholder\
+='New comment...' ></textarea><hr><input class='btn btn-info btn-lg' type=submit value='New comment'/></form>";
+ BootstrapDialog.show({
+     			title: title,
+     		//	top: 40px;
+            message: message,
+  });
+};
+// Get a runs list
+function DownloadList(whichone){
+    startdate = document.getElementById("id_startdate").value;
+    enddate   = document.getElementById("id_enddate").value;
+    runmode   = document.getElementById("id_runmode").value;
+    var urlstart = "{% url 'download_list' %}";
+    var url = "?which=";
+    url += whichone;
+    url += "&startdate=";
+    url += encodeURIComponent(startdate);
+    url += "&enddate=";
+    url += encodeURIComponent(enddate);
+    url += "&runmode=";
+    url += runmode;
+    console.log(url);
+    console.log("What does it do with %2F for example");
+    var html = '<iframe src="' + urlstart + url + '" style="display: none;" ></iframe>';
+    console.log(html);
+    $("body").append(html);
+
+};
+
+</script>
+{% endblock %}
+

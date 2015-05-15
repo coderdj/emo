@@ -62,7 +62,8 @@ a.show-sidebar:hover {
   color:#000;
 }
 #sidebar-left {
-  position:relative;
+  #position:relative;
+  position: fixed;
   z-index: inherit;
   padding-bottom: 3000px !important;
   margin-bottom: -3000px !important;

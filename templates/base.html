@@ -14,11 +14,12 @@
     <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
 	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
 	 <link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
-	     
+	 <link href="{% static "emo/css/emo_runslist.css" %}" rel="stylesheet">
+	 
     <!-- Declare here any global javascript -->
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
     <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
-    
+     <script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
   </head>
@@ -155,7 +156,7 @@ e</a></li>
 				
 				</ul>
 			</div>	
-   		<div id="content" class="col-xs-12 col-sm-10" >
+   		<div id="content" class="col-xs-12 col-sm-10 col-sm-offset-2" >
 			{% block content %}
 			{% endblock %}
 			</div>

@@ -29,5 +29,5 @@ urlpatterns = [
 
     # Documentation
     url(r'^docs/',include('docs.urls')),
-
+    url(r'^runs/', include('runs.urls')),
 ]
