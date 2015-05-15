@@ -71,10 +71,11 @@ doc:{
 		],
 	} 
 </pre>
-
 <br>
+<p>The default collection for run docs is 'online.runs'.
+</p>
 <h4>Dispatcher Status Docs</h4>
-<p>The dispatcher inserts the following status docs every couple seconds:</p>
+<p>The dispatcher inserts the following status docs into online.status every couple seconds:</p>
 <pre class="prettyprint">
 doc:{
 	"createdAt": datetime,
@@ -93,7 +94,7 @@ doc:{
 This doc is a global status. In addition to the status updates of each slave node 
 are inserted in the database as they are received. This is a TTL collection and the
 documents are deleted after a certain time. This allows the user to look back in time
-a little bit to see how each node has been behaving.
+a little bit to see how each node has been behaving. These docs are put into online.nodes.
 <pre class="prettyprint">
 doc:{
 	"createdAt": datetime,
@@ -105,5 +106,78 @@ doc:{
 	"timeseconds": int,
 }
 </pre>
+</p>
+<br>
+<h4>Log Entry Docs</h4>
+<p>All DAQ components are capable of making log entries. Users can make log entries via 
+the interface as well. These entries are threaded. Log entries tagged as ERROR or FATAL
+require user intervention in order to continue operating the DAQ. The log is at online.log.</p>
+<pre class="prettyprint">
+doc: {
+	"message": string,
+	"time": datetime,
+	"sender": string,
+	"priority": int,
+}
+</pre>
+<br><p>
+The possible priority tags are: USER (0), INFO (1), WARNING (2), ERROR (3), FATAL(4), 
+WARNING_CLOSED (7), ERROR_CLOSED (8), FATAL_CLOSED (9), DEBUG(99). If there are any entries in the 
+log with WARNING, ERROR or FATAL tags, the user will be advised. Additionally for ERROR 
+and FATAL tags, run start is disabled until a user responds to them. The user responds 
+by filling out a response form on the log page informing what action was taken. This is 
+stored in a thread with the log message and the tag is switched to 'closed'.
+</p>
+<br>
+<h4>Command and Reply Docs</h4>
+<p>The ability to control the acquisition system over the web interface means the user 
+has to be able to send commands. The commands are limited to 'start' and 'stop' for the 
+system. Any further action has to be undertaken by experts in the backend. In addition to 
+the command docs there are reply docs. After a user issues a command it has to pass a plausibility 
+check by the web server. If this passes the server passes the request to the database where 
+it is picked up by the dispatcher. An additional plausibility check is performed and the result 
+is reported back. If the result is positive the run is started, if it is negative the run is 
+not. A third option exists where the DAQ might issue a warning but allow a start anyway. In 
+this case the user will be shown the warning and given the option to override or not.
+</p>
+<p>The initial command doc has the following format:</p>
+<pre class="prettyprint">
+doc: {
+	"command": string,	// command string
+	"mode": string,		// run mode if start command
+	"name": string,		// user name
+	"comment": string,	// comment for starting or stopping run
+	"detector": string,	// which detector to apply (ALL means all)
+	"baselines": bool,	// perform baselines (for run start)
+	"noise": bool,			// make noise spectra (for run start)
+}
+</pre>
+<br>
+<p>The reply has the following format:</p>
+<pre class="prettyprint">
+doc:{
+	"replyenum": int,     // Response code. 
+	"message": string,
+	"mode": string,
+	"user": string,		// Requesting user
+}
+</pre>
+<br><p>
+Here the replyenum is one of the following: SUCCESS (0), FAILED (1), STATUS (2), OVERRIDE (3). 
+In all cases the message string contains more information. These docs are placed into online.daqcommands.
+In addition to the command docs a 'lock' document also exists. The lock document looks like this:
+</p>
+<pre class="prettyprint">
+doc:{
+	"lock": bool,     	// If there is a lock 
+	"lock_user": string, // The user who made the lock
+	"lock_time": string, // The time the lock was made
+}
+</pre>
+<br><p>
+The locking document is checked whenever a user makes a command. If it is locked it means the DAQ is 
+busy with another command. In case of a lock error the user will have the option to override the lock. 
+Locks are made by the web interface as soon as the user's command is accepted. They are freed by the 
+dispatcher as soon as the DAQ finishes with the command. Locks expire be default after one minute.
 </p>
 {% endblock %}
