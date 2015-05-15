@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% load staticfiles %}
+
+<div style="padding:20px;">
+  <h3>User information for {{ user.username }}</h3>
+  <hl>
+    <h4> My permissions </h4>
+    <div style="padding-left:60px">
+      {% if user.is_authenticated %}
+      <li> You <strong>may</strong> post new log messages</li>
+      <li> You <strong>may</strong> view the run history</li>
+      <li> You <strong>may</strong> view the acquisition status and control panels</li>
+      {% if user.is_superuser %}
+      <li> You <strong>may</strong> start and stop data taking</li>
+      {% elif canstartruns %}
+      <li> You <strong>may</strong> start and stop data taking until {{ expiration|date:"D d M Y" }}</li>
+      {% else %}       
+      <li> You <strong>may not</strong> start and stop data taking
+      {% endif %}
+      {% if user.is_superuser %}
+      <li> You <strong>may</strong> create new operations modes</li>
+      {% else %}
+      <li> You <strong>may not</strong> create new operations mode</li>
+      {% endif %}
+      {% if user.is_superuser %}
+      <li> You <strong>may</strong> access the admin interface (if you know how)</li>
+      {% else %}
+      <li> You <strong>may not</strong> access the admin interface</li>
+      {% endif %}
+      {% else %}
+      <li> You may view the homepage and a few other pages, but no content pages. Please log in to access the full site.</li>
+      {% endif %}
+    </div>
+    <br>
+    <div class="bg-info" style="padding:10px;width:80%">
+      <h5> A normal user may request controller status for one week </h5>
+      <p>
+	<strong>Note:</strong> By clicking this you accept the responsibility of controlling data acquisition. Please ensure you know what this entails.
+      </p>
+      <p>
+	<strong>Further note:</strong> All control actions are logged.
+      </p>
+      <p>
+	<strong>Further further note:</strong> You might wonder why we make you do this. It's because everyone can access this portal from anywhere, however most people do not need to control the experiment. This should reduce any cases of somebody, their cat, or their toddler accidentally clicking something and disrupting the experiment. 
+      </p>
+      <br>
+      <form action="/profile/" method="post" style="padding-left: 50px">
+	{% csrf_token %}
+      <button class="btn btn-success" type=submit value="auth" name="auth">I am a responsible person, give me the power</button>
+      <button class="btn btn-danger" type=submit value="unauth" name="auth">Remove my shifter permissions</button>
+      </form>
+      <br>
+    </div>
+</div>
+
+{% endblock %}

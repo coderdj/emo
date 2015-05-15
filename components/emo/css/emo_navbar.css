@@ -1,0 +1,36 @@
+.emo-navbar { background-color: white;min-height:40px;height:40px;margin-bottom:0px; /*#3498DB;*/}
+.emo-navbar .navbar-nav>.active>a:hover,.emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus { 
+    background-color: #DDDDDD /*#CACACA*/
+}
+.emo-navbar .navbar-nav>.active>a,.emo-navbar .navbar-nav>.open>a,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover, .emo-navbar .navbar-nav>.open>a:focus { background-color: #DDDDDD;}
+.dropdown-menu { background-color: #EEEEEE; margin-right:20px;left:auto;right:auto; /*#ECF0F1*/}
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: #3498DB}
+.emo-navbar { background-image: none; }
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-image: none; }
+.dropdown-header {color: #000000 }
+.emo-navbar { border-color: #CCCCCC}
+.emo-navbar .navbar-brand 
+{ color: #333333;height:40px;padding:10px; /*#ECF0F1*/}
+.emo-navbar .navbar-brand:hover 
+{ color: #AAAAAA}
+.emo-navbar .navbar-nav>li>a 
+{ color: #777777; min-height:24px; height:24px; margin-left:0px;margin-right:-1px;margin-top:8px;margin-bottom:8px;padding-top:2px;padding-bottom:2px;padding-left:10px;padding-right:10px; border-left-width:1px; border-right-width:1px; border-color:#777777;border-style:solid;border-top-width:0px; border-bottom-width: 0px;}
+.emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus 
+{ background-color: #EEEEEE; color:#555555; border-color:#555555;}
+.emo-navbar .navbar-nav>.active>a,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover, .emo-navbar .navbar-nav>.open>a:focus { color: #ECF0F1}
+.emo-navbar .navbar-nav>.active>a:hover, .emo-navbar .navbar-nav>.active>a:focus { color: #ECF0F1; background-color:#EEEEEE}
+.dropdown-menu>li>a { color: #3498DB}
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { color: #ECF0F1;}
+.emo-navbar .navbar-nav>.dropdown>a .caret { border-top-color: #ECF0F1}
+.emo-navbar .navbar-nav>.dropdown>a:hover .caret { border-top-color: #ECF0F1}
+.emo-navbar .navbar-nav>.dropdown>a .caret { border-bottom-color: #ECF0F1}
+.emo-navbar .navbar-nav>.dropdown>a:hover .caret { border-bottom-color: #ECF0F1}
+/*.navbar-toggle:before{color:#FFFFFF}
+.navbar-toggle:hover:before{color:#FFFFFF}
+.navbar-toggle:focus:before{color:#FFFFFF}*/
+@media only screen and (max-width: 766px) {
+.navbar-toggle {color:FFFFFF;}
+.collapsing, .in {background-color: #f7f7f7;}
+.collapsing ul li a, .in ul li a {color: #555!important;}
+.collapsing ul li a:hover, .in ul li a:hover {color: #f1f1f1!important;}
+}

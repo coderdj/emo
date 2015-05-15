@@ -1,0 +1,242 @@
+{% load url from future %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">  
+    <title>XENON1T Online Monitoring - Powered by emo</title>     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta name="description" content="XENON1T Data Monitor">    
+    <meta name="author" content="Daniel Coderre" >
+    
+    <!-- Declare here any global styles all classes need -->
+    <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
+	 <link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
+	     
+    <!-- Declare here any global javascript -->
+    <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+    <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
+    
+    <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
+	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
+  </head>
+
+  <body>
+   	
+   	<!-- Make the navigation bar -->	
+   		<header class="navbar navbar-fixed-top emo-navbar">   	
+   			<div class="navbar-header" style="height:40px">
+   				<button type="button" class="navbar-toggle"
+               	   data-toggle="collapse" data-target=".navbar-collapse">
+      				<span class="icon-bar"></span>                                           
+          		   <span class="icon-bar"></span>                                           
+         		   <span class="icon-bar"></span>
+     	   	  </button>
+     	   	  
+   				<a class="navbar-brand" href="/"> 
+   				XENON1T Data Acquisition 
+   				</a>
+   			</div>
+   		
+									
+				
+   				
+   			<div class="collapse navbar-collapse">
+          		{% block login_toggle %}
+          		{% include "login_toggle.html" %}
+          		{% endblock %}
+          	<ul class="nav navbar-nav pull-right">
+            	<li id="alert_notifier">
+            	</li>
+					<li class="dropdown">
+            	  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Navigation 
+							<b class="caret" style="color:#777777"></b></a>
+            	  <ul class="dropdown-menu" style="font-size:14pt">
+                <li class="dropdown-header" style="font-size:14pt">Inside</li>
+                <li><a href="/control/reader">
+                    <span class="glyphicon glyphicon-off"></span>
+                    &nbsp;Control</a></li>
+                <li><a href="/control/reader/runmodeconf">
+                    <span class="glyphicon glyphicon-cog"></span>
+                    &nbsp;Configure</a></li>
+                <li><a href="/runs/">
+                    <span class="glyphicon glyphicon-list-alt"></span>
+                    &nbsp;Runs</a></li>
+                <li><a href="/onlineMonitor">
+                    <span class="glyphicon glyphicon-eye-open"></span>
+                    &nbsp;Monitor</a></li>
+                <!--<li><a href="/trigger/">                                         
+                    <span class="glyphicon glyphicon-flash"></span>                  
+                    &nbsp;Trigger</a></li>-->
+                <li><a href="/log/">
+                    <span class="glyphicon glyphicon-book"></span>
+                    &nbsp;Logbook</a></li>
+                <li><a href="/apps/">
+                    <span class="glyphicon glyphicon-link"></span>
+                    &nbsp;Links</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header" style="font-size:14pt">Outside</li>
+                <li><a href="http://www.xenon1t.org">XENON1T.org</a></li>
+                <li><a href="https://xecluster.lngs.infn.it/dokuwiki/doku.php">XENON\
+1T wiki</a></li>
+                <li><a href="http://www.lhep.unibe.ch/darkmatter">Uni Bern XENON Pag\
+e</a></li>
+                <li><a href="http://www.github.com/XENON1T">XENON1T Github</a></li>
+                <li class="divider"></li>
+                <li><a href="/about/"> About</a></li>
+                <li><a href="/control/help"> Help</a></li>
+                <li><a href="/docs/index"> Docs</a></li>
+              </ul>
+            	</li>
+          		</ul>
+          </div>
+ 
+</header>
+   		
+   		<!-- If user is not logged in just show them a pretty picture -->
+   		{% if user.is_authenticated %}
+			<!-- Sidebar -->
+	<div id="main" class="container-fluid" style="margin-top:40px;">
+		<div class="row">
+     		<div id="sidebar-left" class="col-xs-2 col-sm-2">
+        		<ul class="nav main-menu">
+
+				<li>
+					<a href="/control/reader" class="ajax-link">
+						<span class="hidden-xs">Control Panel</span>
+					</a>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle">
+						<span class="hidden-xs">Diagnostics</span>
+					</a>
+					<ul class="dropdown-menu">
+						<li><a class="ajax-link" href="/monitor/waveforms">Live Waveforms</a></li>
+						<li><a class="ajax-link" href="/monitor/diagnostics">Detector Paramters</a></li>
+						<li><a class="ajax-link" href="/monitor/runstats">Run Parameters</a></li>
+						<li><a class="ajax-link" href="/monitor/scope">Noise Spectra</a></li>
+						<li><a class="ajax-link" href="/monitor/hardware">DAQ Hardware</a></li>
+						<li><a class="ajax-link" href="/monitor/scope">Live Scope</a></li>
+						<li><a class="ajax-link" href="/monitor/eventdisplay">Event Display</a></li>
+					</ul>
+				</li>
+				<li>
+					<a class="ajax-link" href="/runs">
+						 <span class="hidden-xs">Runs Database</span>
+					</a>
+					
+				</li>
+				<li>
+					 <a class="ajax-link" href="/logbook">
+						 <span class="hidden-xs">Logbook</span>
+					</a>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle">
+						 <span class="hidden-xs">Super User</span>
+					</a>
+					<ul class="dropdown-menu">
+						<li><a class="ajax-link" href="#">Run Configuration</a></li>
+						<li><a class="ajax-link" href="#">MMS (external link)</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle">
+						 <span class="hidden-xs">About/Help</span>
+					</a>
+					<ul class="dropdown-menu">
+						<li><a class="ajax-link" href="/docs">Documentation</a></li>
+						<li><a class="ajax-link" href="#">Contact</a></li>
+						<li><a class="ajax-link" href="#">Credits</a></li>
+					</ul>
+				</li>
+				
+				</ul>
+			</div>	
+   		<div id="content" class="col-xs-12 col-sm-10" >
+			{% block content %}
+			{% endblock %}
+			</div>
+			</div>
+   		{% else %}
+   		<div id="content" class="col-xs-12 col-sm-12">
+   		<br><br><br>
+   			<h5>Welcome to the XENON1T data monitor. Please log in to view content.</h5>
+   			<br>
+   			<h6>If you are here by mistake, maybe you'd rather check out our <a href="http://www.xenon1t.org"> public page</a>
+   			</h6>
+   		</div>
+			{% endif %}
+			
+
+		</div>	
+
+  </body>
+
+<script>
+// For google code prettification
+  !function ($) {
+    $(function(){
+      window.prettyPrint && prettyPrint()
+    })
+  }(window.jQuery)
+</script>
+
+<script type="text/javascript">
+// Toggle the sidebar
+$('body').on('click', '.show-sidebar', function (e) {
+		e.preventDefault();
+		$('div#main').toggleClass('sidebar-show');
+		//$('.show-sidebar').toggleClass('sidebar-extend');
+
+	});
+	
+// Menu handling
+$('.main-menu').on('click', 'a', function (e) {
+		var parents = $(this).parents('li');
+		var li = $(this).closest('li.dropdown');
+		var another_items = $('.main-menu li').not(parents);
+		another_items.find('a').removeClass('active');
+		another_items.find('a').removeClass('active-parent');
+		if ($(this).hasClass('dropdown-toggle') || $(this).closest('li').find('ul').length == 0) {
+			$(this).addClass('active-parent');
+			var current = $(this).next();
+			if (current.is(':visible')) {
+				li.find("ul.dropdown-menu").slideUp('fast');
+				li.find("ul.dropdown-menu a").removeClass('active')
+			}
+			else {
+				another_items.find("ul.dropdown-menu").slideUp('fast');
+				current.slideDown('fast');
+			}
+		}
+		else {
+			if (li.find('a.dropdown-toggle').hasClass('active-parent')) {
+				var pre = $(this).closest('ul.dropdown-menu');
+				pre.find("li.dropdown").not($(this).closest('li')).find('ul.dropdown-menu').slideUp('fast');
+			}
+		}
+		if ($(this).hasClass('active') == false) {
+			$(this).parents("ul.dropdown-menu").find('a').removeClass('active');
+			$(this).addClass('active')
+		}
+	/*	if ($(this).hasClass('ajax-link')) {
+			e.preventDefault();
+			if ($(this).hasClass('add-full')) {
+				$('#content').addClass('full-content');
+			}
+			else {
+				$('#content').removeClass('full-content');
+			}
+			var url = $(this).attr('href');
+			window.location.hash = url;
+			LoadAjaxContent(url);
+		}*/
+		if ($(this).attr('href') == '#') {
+			e.preventDefault();
+		}
+	});
+</script>
+</html>

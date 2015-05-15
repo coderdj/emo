@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<br>
+<h2> Welcome to the documentation for the experimental monitor web suite </h2>
+<hr>
+<h3>Getting Started</h3>
+<br>
+<p>
+As a user you can do several things: start and stop data-taking, monitor the data coming in, 
+monitor the acquisition computer cluster, browse runs, and view the logs.
+ </p>
+ <p>Most of these actions are possible as a normal user. However to take control of the DAQ 
+ you have to elevate your permissions in your profile. You can navigate to your profile on 
+ the top right of the page. Please follow the instructions there.
+ </p>
+ <br>
+<h3>Development</h3>
+<br>
+<p>If you're interested in developing new functionality please contact the DAQ group. The site
+is implemented in Django with a SQL-lite backend. However all acquisition monitoring information 
+is provided by a MongoDB database. If you have a cool idea for a new view you are welcome to 
+implement it!
+</p>
+<br>
+<h3>MongoDB Document format</h3>
+<br>
+<p> The DAQ system is synchronized by a MongoDB backend. The same backend is used to communicate
+with the web interface. This relies on certain formats being followed. And new collections made
+ should be documented here.
+</p>
+<br>
+<h4>Run Control Docs</h4>
+<p>The run control doc has the following form:</p>
+<pre class="prettyprint">
+doc:{
+		"runmode": string,
+		"user": string,
+		"name": string,
+		"detector": string,
+		"shorttype": string,
+		"starttimestamp": datetime,
+		"endtimestamp": datetime,
+		"trigger": {
+			"mode" : string,
+			"status": string,
+			"ended": string,		
+		},
+		"reader": {
+			"options": ini_file_as_string,
+			"compressed": int,
+			"starttime": int,
+			"endtime": int,
+			"data_taking_ended": bool,
+			"storage_buffer": {
+				"dbname": string,
+				"dbcollection": string,
+				"dbaddr": string,
+		},
+		"processor": {
+			"mode": string,
+		},
+		"comments": [
+			{ 
+				"user": string,
+				"date": datetime,
+				"text": string,
+			},
+		],
+	} 
+</pre>
+
+<br>
+<h4>Dispatcher Status Docs</h4>
+<p>The dispatcher inserts the following status docs every couple seconds:</p>
+<pre class="prettyprint">
+doc:{
+	"createdAt": datetime,
+	"timeseconds": int,
+	"detector": string,
+	"mode": string,
+	"state": string,   		// "Running", "Idle", "Armed", "Error", "Undefined"
+	"network": bool,
+	"currentRun": string,
+	"startedBy": string,
+	"startTime": string,
+	"numSlaves": int,
+}
+</pre>
+<br><p>
+This doc is a global status. In addition to the status updates of each slave node 
+are inserted in the database as they are received. This is a TTL collection and the
+documents are deleted after a certain time. This allows the user to look back in time
+a little bit to see how each node has been behaving.
+<pre class="prettyprint">
+doc:{
+	"createdAt": datetime,
+	"node": string,
+	"bltrate": int, // rate of block transfers
+	"datarate": float, // rate in MB/s
+	"runmode": string,
+	"nboards": int,
+	"timeseconds": int,
+}
+</pre>
+</p>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% if user.is_authenticated %}
+<ul class="nav navbar-nav navbar-right">
+    <li class="dropdown">
+        <a class="dropdown-toggle" id="dropuser" data-toggle="dropdown"
+            href="#"> User: {{ user.username }} <b class="caret"></b></a>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dropuser">
+	    <li><a href="/profile">My Profile</a></li>
+            <li><a href="{% url "logout" %}">Logout</a></li>
+        </ul>
+    </li>
+</ul>
+{% else %}
+
+<ul class="nav navbar-nav navbar-right">
+  <li class="dropdown">
+    <a class="dropdown-toggle" id="dropuser" data-toggle="dropdown"
+       href="#"> Sign In <b class="caret"></b></a>
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropuser">
+      <form class="navbar-form" action="{% url "login" %}"
+            method="post" accept-charset="utf-8">
+	<li><div class="form-group">
+          <input class="form-control" type="text" placeholder="Username" name="username">
+	</div></li>
+	<li><div class="form-group">
+          <input class="form-control" type="password" placeholder="Password" name="password">
+	</div></li>
+	{% csrf_token %}
+	<li class="divider"></li>
+	<button type="submit" class="btn btn-default">Login</button>	
+      </form>
+    </ul>
+  </li>
+</ul>
+{% endif %}
