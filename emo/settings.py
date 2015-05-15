@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'management',
     'docs',
     'runs',
+    'control',
 )
 
 MIDDLEWARE_CLASSES = (

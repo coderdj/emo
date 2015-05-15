@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<script src="{% static "emo/js/daqcontrol.js"%}" type="text/javascript"></script>
+
+<div class="row" style="height:20px;margin:0px;">
+  <div class="col-sm-3 col-xs-12">
+    <h4>DAQ Control Panel</h4>
+  </div>
+  <div class="col-sm-9 col-xs-12 pull-right">
+    <ul class="pull-right" style="padding:3px;margin-top:3px;">
+      <button class="btn btn-success">Start Run</button>
+      <button class="btn btn-danger">Stop Run</button>
+    </ul>
+  </div>
+</div><!-- end row -->
+
+<div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;">
+</div>
+<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;">
+</div>
+
+<div class="col-xs-12" id="info_panel" style="height:50%;min-height:300px;"></div>
+
+<script type="text/javascript">
+  
+  // Globals for this page
+  //var chart = null;
+  var updateFreq = 5000;          // 5 second update polling
+  var chartdiv = "rates_panel";
+  var dataUrl = "/control/readerstatusupdate";
+  var pointUpdateUrl = "/control/readerpointupdate";
+
+  // Page update poll
+  function UpdatePage( chart ){  
+
+      //TextUpdate();
+      updateData( chart, pointUpdateUrl );
+      setTimeout( function() {
+           UpdatePage( chart );
+      }, updateFreq );
+  };
+
+  // Load page function
+  $( function() {
+  
+  var chart = null;
+     drawChart( chart, chartdiv, function(chart) {         
+          loadData( chart, dataUrl, function(chart) {   
+               UpdatePage( chart );  
+          });
+     });
+
+  }); // end document ready function
+
+
+</script>
+{% endblock %}

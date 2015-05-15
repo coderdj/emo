@@ -18,10 +18,17 @@
 	 
     <!-- Declare here any global javascript -->
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+    <script src="{% static "Highcharts-4.0.1/js/highcharts.js" %}"></script>
+
+    
     <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
      <script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
+
+{% block head %}
+{% endblock %}
+
   </head>
 
   <body>
@@ -56,7 +63,7 @@
 							<b class="caret" style="color:#777777"></b></a>
             	  <ul class="dropdown-menu" style="font-size:14pt">
                 <li class="dropdown-header" style="font-size:14pt">Inside</li>
-                <li><a href="/control/reader">
+                <li><a href="/control">
                     <span class="glyphicon glyphicon-off"></span>
                     &nbsp;Control</a></li>
                 <li><a href="/control/reader/runmodeconf">
@@ -158,6 +165,7 @@ e</a></li>
 			</div>	
    		<div id="content" class="col-xs-12 col-sm-10 col-sm-offset-2" >
 			{% block content %}
+			<h4 style="margin:2%">Welcome! Please choose a link to begin. </h4>
 			{% endblock %}
 			</div>
 			</div>
