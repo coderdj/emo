@@ -1423,8 +1423,9 @@ td.beauty-hover {
 .input-group .form-control {
   margin:0;
 }
+
 #ui-datepicker-div {
-  background: rgba(0, 0, 0, 0.7) !important;
+  background: rgba(0, 0, 0, .7) !important;
   border:0;
 }
 #ui-datepicker-div .ui-widget-header {
@@ -1434,16 +1435,17 @@ td.beauty-hover {
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
-  color: #f8f8f8;
-  padding: 1px 0;
+  color: black;
+  padding: 1px 0 0 0;
 }
 #ui-datepicker-div.ui-widget-content {
-  color:#f8f8f8 !important;
+  color: #f8f8f8;!important;
+
 }
 #ui-datepicker-div .ui-state-default, #ui-datepicker-div .ui-widget-content .ui-state-default, #ui-datepicker-div .ui-widget-header .ui-state-default {
   background: none;
   border:0;
-  color:#f8f8f8;
+  color: #f8f8f8;
   text-align: center;
 }
 #ui-datepicker-div .ui-state-hover, #ui-datepicker-div.ui-widget-content .ui-state-hover, #ui-datepicker-div .ui-widget-header .ui-state-hover, #ui-datepicker-div .ui-state-focus, #ui-datepicker-div.ui-widget-content .ui-state-focus, #ui-datepicker-div .ui-widget-header .ui-state-focus,
@@ -1498,7 +1500,7 @@ td.beauty-hover {
   margin-left: -4px;
   outline: none;
   cursor: pointer;
-}
+}*/
 .ui-spinner-input {
   margin:0;
 }

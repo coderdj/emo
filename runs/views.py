@@ -1,29 +1,34 @@
 from django.shortcuts import render, HttpResponse
 from pymongo import MongoClient
 import json
-from runs.models import run_comment
+from runs.models import run_comment, run_search_form
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
 
 @login_required
 def runs(request):
-    
+
+    filter_query = {}
     # These options will be set somewhere else later?
     online_db_name = "online"
     runs_db_collection = "runs"
     mongodb_address = "localhost"
     mongodb_port = 27017
 
-    # leave out search for the moment but put in after
-    
     # Connect to pymongo
     client = MongoClient(mongodb_address, mongodb_port)
     db = client[ online_db_name ]
     collection = db[ runs_db_collection ]
+    fields = collection.distinct( "mode" )
 
-    retset = collection.find()
-    return render( request, 'runs/runs.html', { "runs_list": retset } )
+    if request.method == 'GET':
+        filter_form = run_search_form( fields, request.GET )
+    else:
+        filter_form = run_search_form( fields )
+
+    retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
+    return render( request, 'runs/runs.html', { "runs_list": retset, "form" : filter_form } )
 
 @login_required
 def rundetail ( request ):

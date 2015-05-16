@@ -4,6 +4,21 @@
   D. Coderre, Uni Bern, 26.01.2015
 */
 
+.emo-search-bar{
+    width: -moz-calc(100% - 5px);
+    width: -webkit-calc(100% - 5px);
+    width: calc(100% - 5px);
+    margin-top:0;
+    border: 1px solid #AAAAAA;
+    box-shadow: 3px 3px 3px #BBBBBB;
+
+  border-top:0;
+    height:40px;
+
+  margin-left:5px;
+    background-color: white;
+
+}
 .beforeentry{
 margin-left: 5%;
 margin-right: 5%;
@@ -13,7 +28,7 @@ color: #AAAAAA;
 }
 .entry-header{
 background-color: white;
-height: 60px;
+height: 40px;
 border: 1px solid #AAAAAA;
 margin-top: -1px;
 margin-left: -1px;
@@ -23,9 +38,9 @@ line-height: 2.0;
 }
 .entry-content{
 background-color: white;
-height: 239px;
-margin-top:-10px;
-margin-bottom: 10px;
+height: 259px; /*239px;*/
+margin-top:0px;
+margin-bottom: 0px;
 font-size: 14px;
 }
 
@@ -53,7 +68,7 @@ margin-top: -1px;
 margin-bottom: 0px;
 box-shadow: 3px 3px 3px #BBBBBB;
 background-color: white;
-height:60px;
+height:40px;
 }
 .entry:hover {
     background-color: #EEEEEE;
@@ -65,14 +80,14 @@ margin-right: 1%;
 }
 
 .entry-icon {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   margin-left: 15px;
-  margin-top: 8px;
+  margin-top: 3px;
   margin-bottom: 3px;
   text-align: center;
   padding: 6px 0;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 2.1;
   border-radius: 20px;
 background-color: #888888;
@@ -89,17 +104,18 @@ background-color: #689f38;
 }
 .entry-title{
 margin-left: 25px;
-font-size: 20px;
-height: 30px;
+font-size: 18px;
+height: 10px;
 text-align: left;
-line-height: 2.3;
+line-height: 3.;
 margin-right: 0px;
 }
 .entry-date{
 width: 100%;
 margin-left: 25px;
 margin-right: 0px;
-font-size: 16px;
+font-size: 12px;
+  line-height: 37px;
 color: #BBBBBB;
 }
 .entry-status{
@@ -108,7 +124,7 @@ margin-right:10px;
 line-height: 2.8;
 }
 .entry-messages{
-height: 50px;
+height: 40px;
 margin-right: 1px;
 margin-left: auto;
 line-height: 3;

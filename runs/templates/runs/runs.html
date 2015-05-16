@@ -1,16 +1,57 @@
 {% extends "base.html" %}
-
+{% load staticfiles %}
 {% block content %}
+<script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
+<link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
+
+ <script>
+    $(function() {
+        $( "#id_startdate" ).datepicker({
+            changeMonth: true,
+            changeYear: true
+        });
+    });
+    $(function() {
+        $( "#id_enddate" ).datepicker({
+            changeMonth: true,
+            changeYear: true
+        });
+    });
+  </script>
+
+<style type="text/css">
+    #id_startdate, #id_enddate, #id_mode, #id_custom{
+        height: 20px;
+        width: 70%;
+        margin-top:10px;
+    }
 
 
+</style>
+
+<div class="col-xs-12 emo-search-bar">
+    <form method="GET" action="/runs/">
+        <div class="row">
+            <div class="col-sm-1" style="line-height:40px;"><strong>Filter:</strong></div>
+            <div class="col-sm-2">From: {{form.startdate}} </div>
+            <div class="col-sm-2">To: {{form.enddate}} </div>
+            <div class="col-sm-2">Mode: {{ form.mode }}</div>
+            <div class="col-sm-4">Custom search: {{ form.custom }} </div>
+            <div class="col-sm-1">
+                <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
 
     <br>
+<div class="container" style="margin:0;padding:0;margin-top:40px;">
 {% for runInfo in runs_list %}
 
 <!--<div class="beforeentry">Today</div>
 
 <!--
-<div class="beforeentry">{{ runInfo.starttimestamp|date:"M Y"}} </div>-->
+<div class="beforeentry">{{ runInfo.starttimestamp|date:"M Y" }} </div>-->
 
 <div class="entry" id="{{ runInfo.name }}">
   <div class="header">
@@ -42,21 +83,21 @@
   {% endfor %}
   <br>
   <p style="padding-left:5px;"><a href="../" class="btn btn-info btn-large">&laquo; Back</a></p>
-  
+  </div>
   <!-- Template for expanded header -->
 <script type="text/template" id="header-template">
   <div class="entry-header">
     <!-- Override icon class for collapse button -->
-    <div class="col-sm-1 col-xs-1" style="text-align:left;color:#AAAAAA;line-height:2.4;font-size:26px;height:59px;">
-      <span class="glyphicon glyphicon-chevron-up" onclick="entryCollapse()" style="size:20px;"></span>
+    <div class="col-sm-1 col-xs-1" style="text-align:left;color:#AAAAAA;line-height:1.4;font-size:26px;height:40px;">
+      <span class="glyphicon glyphicon-chevron-up" onclick="entryCollapse()" style="font-size:20px;"></span>
     </div>
-    <div class="col-sm-3 col-xs-3 entry-title" style="margin-left:0;padding-left:0;border-left:0;text-align:left;font-size:24px;">{RunName}</div>
+    <div class="col-sm-3 col-xs-3 entry-title" style="margin-left:0;padding-left:0;border-left:0;text-align:left;font-size:20px;">{RunName}</div>
     <!-- Override messages class for right side nav buttons -->
-    <div class="entry-messages" style="font-size:16px;line-height:2.7;">
+    <div class="entry-messages" style="font-size:16px;line-height:1.7;">
       <a style="font-size:24px;" id="runinfo_button" onclick="DrawInfo('runinfo')">Info</a>&nbsp;&nbsp;&nbsp;
-      <a id="readerinfo_button" onclick="DrawInfo('readerinfo')">Reader</a>&nbsp;&nbsp;&nbsp;
-      <a id="triggerinfo_button" onclick="DrawInfo('triggerinfo')">Trigger</a>&nbsp;&nbsp;&nbsp;
-      <a id="processorinfo_button" onclick="DrawProcessor()">Processor</a>&nbsp;&nbsp;&nbsp;
+      <a id="readerinfo_button" onclick="DrawInfo('JSON')">JSON</a>&nbsp;&nbsp;&nbsp;
+      <!--<a id="triggerinfo_button" onclick="DrawInfo('triggerinfo')">Trigger</a>&nbsp;&nbsp;&nbsp;
+      <a id="processorinfo_button" onclick="DrawProcessor()">Processor</a>&nbsp;&nbsp;&nbsp;-->
       <a id="comments_button" onclick="DrawInfo('comments')">Comments</a>&nbsp;&nbsp;&nbsp;
     </div>
   </div>
@@ -66,7 +107,7 @@
 </script>
 <!-- Template for Info panel -->
 <script type="text/template" id="info-template">
-  <div class="col-sm-12 col-xs-12" style="padding-left:10px;border-left:0px;margin-left:20px;margin-right:20px;">
+  <div class="col-sm-12 col-xs-12" style="padding-left:0px;border-left:0px;margin-left:0px;margin-right:0px;">
       {basicinfo}
   </div>
   <div class="col-sm-6 col-xs-6">
@@ -85,7 +126,7 @@ var lastupdateurl = '';
 
   function entryCollapse(){
       // Get ID of parent of parent of parent (entry)                                                                                                           
-      lastDiv.animate({height:'60',marginTop:'-1px',marginBottom:'0px'},
+      lastDiv.animate({height:'40',marginTop:'-1px',marginBottom:'0px'},
                       300,
                       function(){
                           document.getElementById(lastDivID).innerHTML = htmlcontent;
@@ -102,7 +143,7 @@ var lastupdateurl = '';
 
           if(lastDiv != ''){ //neat hack to wait for animation to finish                                                                                        
               document.getElementById(lastDivID).innerHTML = "";
-                lastDiv.animate({height:'60',marginTop:'-1px'
+                lastDiv.animate({height:'40',marginTop:'-1px'
                                  ,marginBottom:'0px'},300);
               document.getElementById(lastDivID).innerHTML = htmlcontent;
               lastDiv.on('click',lastDivHandler);
@@ -138,22 +179,26 @@ var lastupdateurl = '';
       lastpanel = '#'+butwho + "_button";
       $(lastpanel).animate({fontSize:"24px"},10);
 
-      if(butwho != 'comments'){
-          basicinfo += '<ul class="list-group">';
-          for (var key in lastdata[butwho]){
-              basicinfo += '<li class="list-ground-item"><strong>';
-              basicinfo += lastdata[butwho][key][0];
-              basicinfo += ': </strong>';
-              basicinfo += lastdata[butwho][key][1];
-              basicinfo += '</li>';
-          }
-          basicinfo += '</ul>';
+     if(butwho == 'JSON'){
+         basicinfo = '<pre class="prettyprint" style="width:105%;">' + JSON.stringify(lastdata, null, '\t') + "</pre>";
+     }
+      else if(butwho != 'comments'){
+         basicinfo = "<div class='col-xs-12' style='padding:2%'> " +
+                " <div class='row'><div class='col-sm-6 col-xs-12'><strong>Run name: </strong>" + lastdata['name'] + "</div>" +
+                 "<div class='col-sm-6 col-xs-12'><strong>Run mode: </strong>" + lastdata['mode'] + "</div></div>" +
+                "<div class='row'>" +
+                 "<div class='col-sm-4 col-xs-12'><strong>Raw size: </strong>" + lastdata['size'] + "</div>" +
+                "<div class='col-sm-4 col-xs-12'><strong>Processed size: </strong>" + lastdata['procsize'] + "</div>" +
+                "<div class='col-sm-4 col-xs-12'><strong>Events: </strong>" + lastdata['events'] + "</div></div>" +
+                " Note: this section should be filled more later once we know what we want to see quickly.";
+
+          basicinfo += '</div>';
       }
       else { //comments!                                                                                                                                        
           if(lastdata[butwho].length==0){
               basicinfo += '<h6>No comments yet</h6>';
           }
- else{
+          else{
               for( i=0; i<lastdata[butwho].length;i+=1){
                   basicinfo+='<div class="bubble"><p><b>';
                   basicinfo+=lastdata[butwho][i][2];
@@ -168,6 +213,7 @@ var lastupdateurl = '';
  Comment</button><br>';
       }
       document.getElementById("entry-content").innerHTML = $('#info-template').html().replace('{basicinfo}', basicinfo);
+     window.prettyPrint && prettyPrint()
 
   };
 

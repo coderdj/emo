@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'docs',
     'runs',
     'control',
+    'monitor',
 )
 
 MIDDLEWARE_CLASSES = (

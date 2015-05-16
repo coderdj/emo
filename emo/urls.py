@@ -31,4 +31,5 @@ urlpatterns = [
     url(r'^docs/',include('docs.urls')),
     url(r'^runs/', include('runs.urls')),
     url(r'^control/', include('control.urls')),
+    url(r'^monitor/', include('monitor.urls')),
 ]
