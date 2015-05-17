@@ -7,5 +7,6 @@ urlpatterns = [
 
     url(r'^new_comment', views.new_comment, name='new_comment'),
     url(r'^new_log_entry', views.new_log_entry, name='new_log_entry'),
+    url(r'^get_dispatcher_log', views.get_dispatcher_log, name='get_dispatcher_log'),
     url(r'$', login_required(views.log), name="log")
 ]

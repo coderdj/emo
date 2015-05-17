@@ -1,4 +1,4 @@
-from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect, HttpResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 import datetime
@@ -7,6 +7,23 @@ import json
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from log.models import LogEntryForm, LogSearchForm, LogCommentForm
+from bson.json_util import dumps
+
+
+@login_required
+def get_dispatcher_log(request):
+
+    """
+    Make the dispatcher log page
+    """
+    c = MongoClient("localhost", 27017)
+    d = c['online']
+    mongo_collection = d['log']
+
+    mongo_query = {"sender": "default_sender"}
+    log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:50]
+
+    return HttpResponse(dumps(log_list), content_type="application/json")
 
 
 @login_required

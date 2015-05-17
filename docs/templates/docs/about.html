@@ -16,9 +16,11 @@ This site was built as a hobby in order to learn web development. It is not requ
         extended user models, etc.) while the actual data crunching is left to pymongo.
     </li>
     <li><a href="http://www.mongodb.org">MongoDB</a>, specifically pymongo. MongoDB is used everywhere throughout the DAQ
-        system for its extremely fast speeds and almost insultingly simple interface. All communication with the DAQ is
+        system for its extremely fast speeds and for its multi-lingual (and almost insultingly simple) API. All communication with the DAQ is
         done through reads and writes to a MongoDB database. The fact that the DAQ data is stored in a MongoDB buffer means
-        you can look at live data online.
+        you can look at live data online. Want to look at pulses in a single channel as they are created? No problem. Want
+        to browse waveforms that were created by interactions in the detector one second ago? Piece of cake. Want to analyze
+        a subset of your data and plot some diagnostics to make sure the quality is good? Super easy.
     </li>
     <li>Various styling packages were used to do things for us so we could focus on functionality. There are not many things
         worse than fighting with css stylings until you have things just right, but luckily a lot of people have already
