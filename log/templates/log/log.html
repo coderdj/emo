@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load log_extras %}
+{% block content %}
+<script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
+<script src="{% static "js/summernote.min.js"%}"></script>
+<link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
+<link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
+<link href="{%  static "font-awesome-4.1.0/css/font-awesome.min.css" %}" rel="stylesheet">
+<link href="{% static "css/summernote.css" %}" rel="stylesheet">
+
+
+  <script type="text/javascript">
+    $(function() {
+	$( "#id_startdate" ).datepicker({
+	    changeMonth: true,
+	    changeYear: true
+	});
+    });
+  $(function() {
+      $( "#id_enddate" ).datepicker({
+	  changeMonth: true,
+	  changeYear: true
+      });
+  });
+  </script>
+
+<style type="text/css">
+    #id_start_date, #id_end_date, #id_priority, #id_custom, #id_user, #id_detector, #id_run_name{
+        height: 20px;
+        width: 70%;
+        margin-top:10px;
+    }
+</style>
+
+<div class="col-xs-12 emo-search-bar" style="height:80px">
+    <form method="GET" action="/log/">
+        <div class="row">
+            <div class="col-sm-1" style="line-height:40px;"><strong>Filter:</strong></div>
+            <div class="col-sm-2">From: {{form.start_date}} </div>
+            <div class="col-sm-2">To: {{form.end_date}} </div>
+            <div class="col-sm-2">Priority: {{ form.priority }}</div>
+            <div class="col-sm-2">User: {{ form.user }}</div>
+            <div class="col-sm-3">Run: {{ form.run_name }}</div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 col-sm-offset-1">Detector: {{  form.detector }}</div>
+            <div class="col-sm-5">MongoDB Query: {{ form.custom }} </div>
+            <div class="col-sm-1 col-sm-offset-2">
+                <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="row" style="margin-top:100px;">
+<div class="col-xs-3 col-sm-3">
+    <h3>DAQ Logbook</h3>
+</div>
+<div class="col-xs-1 col-sm-1 col-xs-offset-8">
+  <button onclick="NewComment()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewEntry </a>
+</div>
+</div>
+
+<table class="table table-condensed table-hover" style="background-color:white;padding:0;">
+  <tbody>
+  <tr>
+    <th style="width:250px"> Time (UTC)</th>
+    <th style="width:100px"> Sender </th>
+    <th> Message </th>
+    <th style="pull-right;"></th>
+  </tr>
+      {% for logEntry in log_list %}
+      <!-- syntax coloring -->
+      {% if logEntry.priority == 2 %}
+      <tr class="warning accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
+          onclick="summernoteform('{{ logEntry|private:"_id" }}')">
+      {% elif logEntry.priority == 3 %}
+      <tr class="danger accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
+          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
+      {% elif logEntry.priority == 4 %}
+      <tr class="danger accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
+          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
+      {% elif logEntry.priority == 0 %}
+      <tr class="info accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
+          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
+      {% else %}
+      <tr class="accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
+          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
+      {% endif %}
+      <td style="color:black;"><strong> {{ logEntry.time }} </strong></td>
+      <td style="color:black;">{{logEntry.sender}}</td>
+      <td style="color:black;">{% autoescape off %}{{logEntry.message}}{% endautoescape %}</td>
+      <td style="pull-right"> <span class="glyphicon glyphicon-comment">&nbsp{{ logEntry.comments|length }}</span></td>
+      </tr>
+<!-- from here -->
+      <tr class="active">
+	        <td colspan="4" class="hiddenRow">
+                <div class="accordian-body collapse {{ logEntry|private:"_id" }}" style="background-color:white">
+	                 <p><b>&nbsp;Showing {{ logEntry.comments|length }} user comments </b></p>
+	                 {% for comment in logEntry.comments %}
+	                 <div class="bubble">
+	                     <p><small><i>{{ comment.user }}&nbsp;wrote on &nbsp;{{ comment.date }}
+	                     </i></small></p>
+	                    {% autoescape off %} {{comment.text }} {% endautoescape %}
+	                 </div>
+                     {% endfor %}
+	                <form action="/log/new_comment/" method="post">
+                    {% csrf_token %}
+                    <textarea id="{{ logEntry|private:"_id" }}_formtext" name="content">something to add?</textarea>
+                     <br>
+                     <input type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>
+                     <button class="btn btn-info" type="submit" value="{{ logEntry|private:"_id" }}" name="log_id" style="padding-bottom:10px;margin-bottom:15px;margin-left:15px;">New comment</button>
+                     </form>
+	            </div>
+	        </td>
+      </tr>
+      {% empty %}
+      <li>No messages to display.</li>
+      {% endfor %}
+  </tbody>
+</table>
+
+<script>
+
+//$(document).ready(function(){
+var summernoteform = function (name) {
+formname = '#' + name + '_formtext';
+console.log(formname);
+//formname = '.summernotediv';
+$(formname).summernote({
+  height: 200,
+//  focus: true,                 // set focus to editable area after initializing summernote
+/*toolbar: [
+    //[groupname, [button list]]
+
+    ['style', ['bold', 'italic', 'underline', 'clear']],
+    ['font', ['strikethrough']],
+    ['fontsize', ['fontsize']],
+    ['color', ['color']],
+    ['para', ['ul', 'ol', 'paragraph']],
+    ['height', ['height']],
+  ],*/
+});
+};
+
+function NewComment(){
+    title = "New Log Entry";
+    message = "<form action='/log/new_log_entry' method='post'>{% csrf_token %}<textarea type='text' id='new_comment_text' \
+        name='message' class='form-control'  placeholder \
+        ='New comment...' ></textarea><hr><input class='btn btn-info btn-lg' type=submit value='New comment'/></form>";
+ $("#new_comment_text").summernote({height:200});
+ BootstrapDialog.show({
+     			title: title,
+     		//	top: 40px;
+            message: message,
+  });
+
+};
+</script>
+
+
+
+
+{% endblock %}

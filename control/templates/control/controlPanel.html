@@ -4,7 +4,10 @@
 {% endblock %}
 {% block content %}
 <script src="{% static "emo/js/daqcontrol.js"%}" type="text/javascript"></script>
-
+<style>
+    .table-striped > tbody > tr:nth-child(2n) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+  /* background-color: #4136D6;*/
+}</style>
 <div class="row" style="height:20px;margin:0px;">
   <div class="col-sm-3 col-xs-12">
     <h4>DAQ Control Panel</h4>
@@ -16,10 +19,64 @@
     </ul>
   </div>
 </div><!-- end row -->
-
-<div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;">
+<div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;max-height:30%;">
 </div>
-<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;">
+    <br>
+<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;margin-top:20px;max-height:200px;overflow-y:scroll;">
+<table class="table table-striped table-hover table-condensed">
+   <!-- <thead>
+      <tr>
+        <th>2015-05-16 19:24</th>
+        <th>Lastname</th>
+        <th>Email</th>
+      </tr>
+    </thead>-->
+    <tbody>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dan</td>
+        <td>Example table output for online log</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>User xedaq started run tpc_00142 in background mode.</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>Baselines successfully determined for 32 digitizers</td>
+          <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dan</td>
+        <td>Example table output for online log</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>User xedaq started run tpc_00142 in background mode.</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>Baselines successfully determined for 32 digitizers</td>
+          <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dan</td>
+        <td>Example table output for online log</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>User xedaq started run tpc_00142 in background mode.</td>
+      </tr>
+      <tr>
+        <td>2015-05-16 19:24</td>
+        <td>Dispatcher</td>
+        <td>Baselines successfully determined for 32 digitizers</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <div class="col-xs-12" id="info_panel" style="height:50%;min-height:300px;"></div>

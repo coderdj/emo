@@ -5,6 +5,15 @@ from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
 
-    url(r'$', login_required( TemplateView.as_view( template_name='docs/startpage.html' ) )),
+    url(r'^about', login_required( TemplateView.as_view(
+        template_name='docs/about.html'
+    ) )),
+    url(r'^contact', login_required( TemplateView.as_view(
+        template_name='docs/contact.html'
+    ) )),
+    url(r'$', login_required( TemplateView.as_view( 
+        template_name='docs/startpage.html' 
+    ) )),
+
 ]
 

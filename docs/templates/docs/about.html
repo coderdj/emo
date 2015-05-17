@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<br>
+<h3>About</h3>
+<br>
+<p>
+This site was built as a hobby in order to learn web development. It is not required to run the DAQ (you can use some
+    command line stuff running in a detached screen) but it is certainly the nicest way. It would be impossible to code
+    such a portal in odd hours on nights and weekends if it weren't for the great about of well-documented, open-source,
+    industry-grade software packages simply available for free. Here are a few.
+    <ul>
+    <li>The <a href="https://www.djangoproject.com/">Django Project.</a> Django is an immensely popular open-source web
+        framework and it runs the backend of this site. Django interfaces with several popular relational databases and
+        provides an insanely easy way to power your pages with python functions and pass the data to the frontend. In
+        this case we're using Django with the SQL-lite backend. This database stores all the Django-internal models (forms,
+        extended user models, etc.) while the actual data crunching is left to pymongo.
+    </li>
+    <li><a href="http://www.mongodb.org">MongoDB</a>, specifically pymongo. MongoDB is used everywhere throughout the DAQ
+        system for its extremely fast speeds and almost insultingly simple interface. All communication with the DAQ is
+        done through reads and writes to a MongoDB database. The fact that the DAQ data is stored in a MongoDB buffer means
+        you can look at live data online.
+    </li>
+    <li>Various styling packages were used to do things for us so we could focus on functionality. There are not many things
+        worse than fighting with css stylings until you have things just right, but luckily a lot of people have already
+        done that fighting and shared the fruits of their labors. The main style of the site is powered by Twitter's
+        <a href="http://getbootstrap.com/">Bootstrap</a>.
+        Backend to frontend communication, as well as other high-level Javascript functionality is made easy with
+        <a href="https://jquery.com/">Jquery</a>. Other smaller packages helped a lot including <a href="http://devoops.me/">devoops</a>,
+        <a href="http://summernote.org/#/">summernote</a>, <a href="http://www.highcharts.com/">Highcharts</a>,
+        <a href="http://dygraphs.com/">Dygraphs</a>, and <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>.
+        The cool, 3D, OpelGL stuff is made crazy easy with <a href="http://threejs.org/">Three.js</a>.
+
+        And of course a few development tools like <a href="https://www.jetbrains.com/pycharm/">PyCharm</a> (we would have
+        never kept to PEP8 without it) and <a href="https://www.github.com">GitHub</a> make life just so much easier.
+    </li>
+</ul>
+</p>
+<br>
+<h3>Contributing</h3>
+<br>
+<p>
+Do you have a great idea for something to add to this site? Want to check out how modern web development looks?
+    Maybe you want to press a button and watch the final WIMP spectrum live-update (it's not impossible ;).
+    Pull the code, write your view, and make a pull request. We'd be happy to help you get started.
+</p>
+
+{% endblock %}

@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
+<script src="{% static "js/three.js" %}"></script>
+<script src="{% static "js/threex.fullscreen.js"%}"></script>
+<script src="{% static "js/OrbitControls.js"%}"></script>
+<script src="{% static "emo/js/tpc_3d.js"%}"></script>
+{% endblock %}
+{% block content %}
+
+<audio id="audio_s1" autobuffer style="display:none;" src="{{STATIC_URL}}audio/s1_long.mp3"></audio>
+<audio id="audio_s2" autobuffer style="display:none;" src="{{STATIC_URL}}audio/s2_short.mp3"></audio>
+
+<!--<div id="3dcontent" class="container" style="padding:0;position:relative;height:100%;margin:0;width:100%;margin:0;border:0;">-->
+<div class="container" id="3dcontent" style="height:100%;position:relative">
+  <div id="flash" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.6);z-index:1;pointer-events:none;"></div>
+  <div id="flash2" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.2);z-index:1;pointer-events:none;"></div>
+  
+  <div id="infoPanel" style="position:absolute;top:5px;left:5px;width:230px;height:73%;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;"> 
+    <div id="infoPanel_title" class="infoPanel_title" style="height:30px;margin-top:2px;margin-bottom:2px;width:100%">
+      <span style="height:25px;">Event info</span>
+    </div>
+    <hr style="margin:0;">
+    <div class="row" style="margin:0;margin-top:2px;">
+      <div id="playpause" style="height:40px;display:inline-block;"><span class="glyphicon glyphicon-pause" style="font-size:40px" onclick="PlayPause(1)"></span></div> 
+      <div id="fullscreen" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-fullscreen" onclick="MakeFullScreen()" style="font-size:35px"></span></div>
+      <div id="audioonoff" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-volume-off" onclick="ToggleAudio()" style="font-size:35px"></span></div>
+      <div id="lightsonoff" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-certificate" onclick="Lights()" style="font-size:35px"></span></div>
+    </div>
+    <div class="row" style="margin:0">
+      <button class="btn btn-default btn-xs" onclick="ToggleTPC()" style="margin-bottom:10px">TPC Visibility</button>
+    </div>
+    <div class="row" style="margin:0">
+      <button class="btn btn-danger btn-xs" id="button_anim" onclick="ToggleAnimations()" style="margin-bottom:10px">Animations</button>
+    </div>
+    <div class="row" style="margin:0">
+      <button class="btn btn-default btn-xs" onclick="ColorToggle()" style="margin-bottom:10px">Color</button>
+    </div>              
+  <hr style="margin:0">
+  <span style="font-size:10pt">Run name: <div id="runName" style="font-size:10pt"></div></span>
+    <!--<span>Mode: <div id="runMode"></div></span> -->
+    <span style="font-size:10pt">Event number: <div id="eventNumber"></div></span>
+    <!--<span>Event number: <div id="eventNum"></div></span> -->
+    <span style="font-size:10pt">Timestamp: <div id="eventTime"></div></span>
+    <span style="font-size:10pt">Energy S2[0]: <div id="s2energy"></div></span>
+    <!--<span>Energy S1[0]: <div id="s1energy"></div></span>-->
+    <!--<span>Coincidence S1[0]: <div id="s1elements"></div></span>-->
+    <span style="font-size:10pt">Position (x,y,z): <div id="position"></div></span>
+  </div>
+
+  <div class="plotPanel" id="plotPanel" style="position:absolute;top:5px;right:5px;width:25%;height:73%;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;margin-right:5px;">
+    <div id="plotPanel_title" class="plotPanel_title" style="height:30px;margin-top:2px;margin-bottom:2px;width:100%">
+      <span style="height:25px;">Waveforms</span>
+    </div>
+    <hr style="margin:0;">
+    <div id="s1_plot" style="width:100%;height:45%">
+    </div>
+    <div id="s2_plot" style="width:100%;height:45%">
+    </div>
+  </div>
+  <div class="plotPanel" id="fullWaveformPanel" style="position:absolute; bottom:5px; left:5px; width:99%; height:25%; background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;margin-right:5px;">
+<!--    <div id="fullWaveformPanel_title" class="plotPanel_title" style="height:30px; margin-top:2px; margin-bottom:2px; width:100%;">
+      <span style="height:25px;">Event waveform</span>
+    </div>
+    <hr style="margin:0"> -->
+    <div id="full_plot" style="width:100%;height:100%">
+    </div>
+  </div> 
+  <div id="graph_panel" class="col-md-12" style="padding:0;width:100%;height:100%;position:absolute;top:0;left:0;margin:0px;"></div>
+</div>
+
+
+
+
+
+<script type="text/javascript">
+
+  //GLOBALS  
+  var waveformUrlBase="{% url 'getwaveform' %}";
+  var tpc_geometry_path = "{% static "emo/js/emo_tpc_model.js" %}";
+  var loaded = false;
+  var play = true;
+  var animations = false;
+  var audio = false;
+  var stillonpage = true;
+  var updateFreq = 10000;
+  var renderer = null;
+  var scene = null;
+  var camera = null;
+  
+  //scene size
+  var WIDTH=document.getElementById("graph_panel").offsetWidth;//window.innerWidth;
+  var HEIGHT=document.getElementById("graph_panel").offsetHeight;//window.innerHeight;
+  console.log(WIDTH);
+  console.log(HEIGHT);
+  
+  var hit_locs = [];
+  var hits = [];
+  var n_photons = 1000;//500;
+  var n_electrons = 40;//20; //n_photons MUST be at least n_electrons*5!
+  var n_pe = 20;
+  var mesh;
+  var lights = "on";
+  var options = { "audio": false, "photons_s1": 1000, "electrons_s2": 40,
+	      "dynamic_s1s2": true, "pe_electron": 20, "s1_audioDiv": "audio_s1",
+	      "s2_audioDiv": "audio_s2", "imagepath": "{{STATIC_URL}}images/particle_1.png", "flaretex0": "{{STATIC_URL}}images/lensflare0.png", "flaretex2": "{{STATIC_URL}}images/lensflare2.png", "flaretex3": "{{STATIC_URL}}images/lensflare3.png", "flaretex1": "{{STATIC_URL}}images/lensflare1.png" };
+
+  // Toggles
+  function Lights(onoff){
+      if(onoff == "on"){
+	  document.getElementById("lightsonoff").innerHTML='<span class="glyphicon glyphicon-certificate" onclick="Lights("off")" style="font-size:35px"></span>';
+	  lights = true;	  
+      }
+  }
+  function ToggleAudio(){
+      if(!audio){
+	  document.getElementById("audioonoff").innerHTML='<span class="glyphicon glyphicon-volume-up" onclick="ToggleAudio()" style="font-size:35px"></span>';
+	  audio = true;
+	  options['audio'] = true;
+      }
+      else{
+	  audio = false;
+	  options['audio'] = false;
+	  document.getElementById("audioonoff").innerHTML='<span class="glyphicon glyphicon-volume-off" onclick="ToggleAudio()" style="font-size:35px"></span>';
+      }
+  };
+  function ToggleTPC(){
+ //     if(mesh.material.opacity == 1.)
+//	  mesh.material.opacity = 0.5;
+      if(mesh.material.opacity == 0.5)
+	  mesh.material.opacity = 0.2;
+      else if(mesh.material.opacity == .2)
+	  mesh.material.opacity = .05;
+      else if(mesh.material.opacity == .05)
+	  mesh.material.opacity = 0.;
+      else 
+	  mesh.material.opacity=.5;
+  };
+  function ToggleAnimations(){
+      if(animations){
+	  document.getElementById("button_anim").className =
+	      document.getElementById("button_anim").className.replace
+	  ( /(?:^|\s)btn-success(?!\S)/g , '' );
+	  document.getElementById("button_anim").className += " btn-danger";
+	  animations=false;
+      }
+      else{
+	  document.getElementById("button_anim").className =
+              document.getElementById("button_anim").className.replace
+          ( /(?:^|\s)btn-danger(?!\S)/g , '' );
+          document.getElementById("button_anim").className += " btn-success";
+	  animations=true;
+      }
+  };
+
+  function MakeFullScreen(){
+      if( THREEx.FullScreen.activated() )
+	  THREEx.FullScreen.cancel();      
+      else
+	  THREEx.FullScreen.request($('#3dcontent').get(0));
+      //THREEx.FullScreen.request(document.getElementById("3dcontent"));
+  };
+  
+  function PlayPause(pp){
+      if(pp == 1){
+	  document.getElementById("playpause").innerHTML="<span class='glyphicon glyphicon-play' style='font-size:40px;' onclick='PlayPause(0)'></span>";
+	  play = false;
+      }
+      else{
+	  document.getElementById("playpause").innerHTML="<span class='glyphicon glyphicon-pause' style='font-size:40px' onclick='PlayPause(1)'></span>";
+	  play = true;
+      }	  
+  };
+  
+  /* Setting up scene */
+  function CreateScene( callback ){
+      //camera
+      var VIEW_ANGLE = 80;
+      //ASPECT = WIDTH/HEIGHT,
+      var ASPECT = 16./9.;
+      var NEAR = .1;
+      var FAR = 10000;
+      
+      // get DOM element to attach to
+      var $container = $('#graph_panel');
+      
+      // going to use WebGL
+      // make a renderer, camera, and scene
+      renderer = new THREE.WebGLRenderer( { blending: THREE.AdditiveBlending, alpha: true});
+      renderer.setClearColor( 0x000000, 1);
+      
+      camera = new THREE.PerspectiveCamera(VIEW_ANGLE,ASPECT,NEAR,FAR);
+      scene = new THREE.Scene();
+      scene.add(camera);
+      
+      // camera always starts at origin. move it back
+      camera.position.z = -2400;//-1124;
+      camera.position.y = 1089;//989;//1400;//989;
+      camera.position.x = -466;
+      
+      // set the size
+      renderer.setSize(WIDTH,HEIGHT);
+      
+      // attach renderer's DOM element to container
+      $container.append(renderer.domElement);
+      
+      //$('#3dcontent').append('<div id="flash"></div>');
+      //  $('#flash').css({width:100%, height:100%,position:absolute,top:0,left:0,pointer-events:none});
+      //  $('#flash').fadeOut(1);
+      $('#flash').css({height: HEIGHT});
+      $('#flash').css({width: WIDTH});
+      $('#flash2').css({height: HEIGHT});
+      $('#flash2').css({width: WIDTH});
+      $('#flash').fadeOut(1);
+      $('#flash2').fadeOut(1);
+      //
+      //
+      //
+  
+  // set a callback here
+      draw_tpc( scene, camera, renderer, tpc_geometry_path );
+      
+      // make some lights
+      var pointLight = new THREE.PointLight(0xFFFFFF,.5,10000); //white rec 0xCC00000
+      var secondLight = new THREE.PointLight(0xFFFFFF,5.,10000);
+      var thirdLight = new THREE.PointLight(0xFFFFFF,5.,10000);
+      var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+      directionalLight.position.set( 0, 1, 0 );
+      scene.add( directionalLight );
+      //position of light
+      pointLight.position.x = -1000;
+      pointLight.position.y = 1200;
+      pointLight.position.z = 1000;
+      secondLight.position.x = 1000;
+      secondLight.position.y = 1200;
+      secondLight.position.z = 1000;
+      thirdLight.position.x = -1000;
+      thirdLight.position.y = 1200;
+      thirdLight.position.z = 1000;
+      scene.add(pointLight);
+      scene.add(secondLight);
+      //  scene.add(thirdLight);
+      
+      
+      controls = new THREE.OrbitControls(camera,renderer.domElement);
+      controls.target = (new THREE.Vector3(0, 500, 0));
+      
+      console.log("done");
+      callback();
+  }
+  
+  function animate(){
+      requestAnimationFrame(animate);
+      
+      renderer.render(scene,camera);
+      controls.update();
+  }
+
+  
+  // Here start drawing events in
+  function drawpoints(el) { 
+
+      if ( play ){
+	  // For random
+	  /*
+	    randomx = Math.random() * 700 - 350;
+	    randomy = Math.random() * 700 - 350;
+	    randomz = Math.random() * 1000 - 500;
+	  */
+	  
+	  // for not random
+	  console.log("EventDisplayRequest");
+	  $.getJSON(waveformUrlBase, function(data){
+	      
+	      //UPDATE TEXT
+	      document.getElementById("runName").innerHTML = data['run_name'];
+	      document.getElementById("eventTime").innerHTML = data['time'].substring(0, data['time'].length-7);
+	      document.getElementById("eventNumber").innerHTML = data['event_number'];
+	      if(data['s2s'].length>0){
+		  document.getElementById("s2energy").innerHTML = data['s2s'][0]['area'].toFixed(2);
+		  //document.getElementById("s1energy").innerHTML = data['s1s'][0]['area']
+		  var postring = "X: " + data['position']['x'].toFixed(2) + " Y: " + data['position']['y'].toFixed(2) + " Z: " + data['position']['z'].toFixed(2);
+		  document.getElementById("position").innerHTML = postring;
+	      }
+	      
+	      //UPDATE WAVEFORMS
+	      var total_data = UnzipWaveforms(data);
+	      
+	      draw_peak( "s1_plot", data, total_data, 0, "s1s", "S1[0]" );
+	      draw_peak( "s2_plot", data, total_data, 0, "s2s", "S2[0]" );
+	      draw_full_waveform( "full_plot", total_data );		  
+	      
+	      // Make the hit pattern
+	      draw_hit_location( scene, data, hit_locs );
+	      draw_hitpattern( scene, camera, renderer, hits, data );
+	      
+	      //Animation  
+	      if(animations && hit_locs.length != 0 )
+		  MakeAnimation( hit_locs[ hit_locs.length -1 ].position.x, 
+				 hit_locs[ hit_locs.length -1 ].position.y,
+				 hit_locs[ hit_locs.length -1 ].position.z,
+				 data['s1s'][0]['area'],
+				 data['s2s'][0]['area'],
+				 scene, camera, renderer, options);
+	  }); 
+      }; // end if play
+      if(stillonpage)            
+	  setTimeout(function() { drawpoints(el); }, updateFreq); 
+  };
+  
+  var ambientlight =  new THREE.AmbientLight(  0xFDFDFD  ) ;  
+  function Lights(){
+      console.log(lights);
+      if(lights == "off"){
+          lights = "one";
+	  scene.add(pointLight);
+      }
+      else if(lights=="one"){
+	  scene.add(secondLight);
+	  lights="two";
+      }
+      else if(lights =="two"){
+	  scene.add(thirdLight);
+	  lights="three";
+      }
+      else if(lights == "three"){
+	  scene.add(directionalLight);
+	  lights = "high";
+      }
+      else if(lights == "high"){
+	  scene.add(ambientlight);
+	  lights = "on";
+      }
+      else{
+	  lights = "off";
+	  scene.remove(ambientlight);
+	  scene.remove(pointLight);
+	  scene.remove(secondLight);
+	  scene.remove(thirdLight);
+	  scene.remove(directionalLight);
+      }      
+  } // end light toggle
+  
+  $(document).ready(function(){
+      $("#infoPanel").resizable({});
+      //      document.getElementById("l_eventdisplay").className += "active";
+      
+      $("#infoPanel").draggable({ handle: "#infoPanel_title",
+				    containment: "#3dcontent"});
+      $( "div, #infoPanel_title" ).disableSelection();
+      $("#plotPanel").resizable({});
+      $("#plotPanel").draggable({handle: "#plotPanel_title",
+				 containment: "#3dcontent"});
+      $( "div", "#plotPanel_title").disableSelection();
+      CreateScene( function(){
+	  animate();	  
+	  drawpoints();
+      });
+  });
+  
+  $(window).bind("resize", function(){
+      var w = $(window).width();
+      var h = $(window).height();
+      $("#wrapper").removeClass( "toggled" );
+      $("#3dcontent").css("width", w + "px");
+      $("#3dcontent").css("height", h + "px"); 
+      $("#flash").css("height", h+"px");
+      $("#flash2").css("height",h+"px");
+      renderer.setSize(w,h);
+      
+  });
+
+  
+  var screenColor = 0;
+  function ColorToggle(){
+      if( screenColor == 0 ){
+	  // make white
+	  var idstr = "infoPanel";
+	  document.getElementById(idstr).style.color = "black";
+	  document.getElementById(idstr).style.borderColor = "black";
+	  document.getElementById(idstr).style.background = "rgba(255,255,255,255)";
+	  document.getElementById("plotPanel").style.color = "black";
+	  document.getElementById("plotPanel").style.borderColor = "black";
+	  document.getElementById("plotPanel").style.background = "rgba(255,255,255,255)";
+	  document.getElementById("fullWaveformPanel").style.color = "white";
+	  document.getElementById("fullWaveformPanel").style.borderColor = "white";
+	  document.getElementById("fullWaveformPanel").style.background = "rgba(0,0,0,.5)";
+	  renderer.setClearColor( 0xffffff, 1);
+	  screenColor = 1;
+      }
+      else if( screenColor == 1 ){
+	  renderer.setClearColor( 0x000000, .8);
+	  screenColor = 2;
+      }
+      else if( screenColor == 2 ){
+	  renderer.setClearColor( 0x000000, .2);
+	  screenColor = 3;
+      }
+      else{
+	  // make black             
+	  var idstr = "infoPanel";
+	  document.getElementById(idstr).style.color = "white";
+	  document.getElementById(idstr).style.borderColor = "white";
+	  document.getElementById(idstr).style.background = "rgba(0,0,0,.5)";
+	  document.getElementById("plotPanel").style.color = "white";
+	  document.getElementById("plotPanel").style.borderColor = "white";
+	  document.getElementById("plotPanel").style.background = "rgba(0,0,0,.5)";
+	  document.getElementById("fullWaveformPanel").style.color = "white";
+	  document.getElementById("fullWaveformPanel").style.borderColor = "white";
+	  document.getElementById("fullWaveformPanel").style.background = "rgba(0,0,0,.5)";
+	  renderer.setClearColor( 0x000000, 1);
+	  screenColor = 0;
+      }	
+  }
+</script>
+{% endblock %}
+      
+

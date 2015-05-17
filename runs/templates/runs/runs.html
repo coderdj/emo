@@ -36,7 +36,7 @@
             <div class="col-sm-2">From: {{form.startdate}} </div>
             <div class="col-sm-2">To: {{form.enddate}} </div>
             <div class="col-sm-2">Mode: {{ form.mode }}</div>
-            <div class="col-sm-4">Custom search: {{ form.custom }} </div>
+            <div class="col-sm-4">Mongo search: {{ form.custom }} </div>
             <div class="col-sm-1">
                 <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
             </div>
@@ -45,7 +45,7 @@
 </div>
 
     <br>
-<div class="container" style="margin:0;padding:0;margin-top:40px;">
+<div class="container" style="margin:0;padding:0;margin-top:40px;width:99%">
 {% for runInfo in runs_list %}
 
 <!--<div class="beforeentry">Today</div>
@@ -163,7 +163,7 @@ var lastupdateurl = '';
           $.getJSON( updateUrl, function(data) {
               lastdata=data;
               console.log(data);
-              document.getElementById(theid).innerHTML = $('#header-template').html().replace('{RunName}', data['runinfo']['name'][1]);
+              document.getElementById(theid).innerHTML = $('#header-template').html().replace('{RunName}', data['name']);
               DrawInfo('runinfo');
               //document.getElementById(theid).innerHTML = thisHTML;                                                                                            
               lastDivHandler = ($._data(lastDiv.get(0), "events"))['click'][0];
@@ -185,7 +185,7 @@ var lastupdateurl = '';
       else if(butwho != 'comments'){
          basicinfo = "<div class='col-xs-12' style='padding:2%'> " +
                 " <div class='row'><div class='col-sm-6 col-xs-12'><strong>Run name: </strong>" + lastdata['name'] + "</div>" +
-                 "<div class='col-sm-6 col-xs-12'><strong>Run mode: </strong>" + lastdata['mode'] + "</div></div>" +
+                 "<div class='col-sm-6 col-xs-12'><strong>Run mode: </strong>" + lastdata['runmode'] + "</div></div>" +
                 "<div class='row'>" +
                  "<div class='col-sm-4 col-xs-12'><strong>Raw size: </strong>" + lastdata['size'] + "</div>" +
                 "<div class='col-sm-4 col-xs-12'><strong>Processed size: </strong>" + lastdata['procsize'] + "</div>" +
@@ -195,7 +195,7 @@ var lastupdateurl = '';
           basicinfo += '</div>';
       }
       else { //comments!                                                                                                                                        
-          if(lastdata[butwho].length==0){
+          if( !( butwho in lastdata ) || lastdata[butwho].length==0){
               basicinfo += '<h6>No comments yet</h6>';
           }
           else{

@@ -32,4 +32,5 @@ urlpatterns = [
     url(r'^runs/', include('runs.urls')),
     url(r'^control/', include('control.urls')),
     url(r'^monitor/', include('monitor.urls')),
+    url(r'^log/', include('log.urls')),
 ]

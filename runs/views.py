@@ -5,6 +5,8 @@ from runs.models import run_comment, run_search_form
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
+from bson.json_util import dumps
+
 
 @login_required
 def runs(request):
@@ -20,15 +22,35 @@ def runs(request):
     client = MongoClient(mongodb_address, mongodb_port)
     db = client[ online_db_name ]
     collection = db[ runs_db_collection ]
-    fields = collection.distinct( "mode" )
+    fields = collection.distinct( "runmode" )
+    fields.insert( 0, "All" )
+    fieldslist = zip (fields, fields)
 
     if request.method == 'GET':
-        filter_form = run_search_form( fields, request.GET )
-    else:
-        filter_form = run_search_form( fields )
+        filter_form = run_search_form( fieldslist, request.GET )
 
+        if filter_form.is_valid():
+            #build query from form
+            if filter_form.cleaned_data[ 'custom' ] is not "":
+                filter_query = json.loads( filter_form.cleaned_data['custom'] )
+            if filter_form.cleaned_data[ 'startdate' ] is not None:
+                filter_query[ 'starttimestamp' ]= { "$gt" : datetime.datetime.combine(filter_form.cleaned_data['startdate'],
+                                                                        datetime.datetime.min.time() )}
+            if filter_form.cleaned_data[ 'enddate' ] is not None:
+                if 'starttimestamp' in filter_query.keys():
+                    filter_query['starttimestamp']['$lt'] = datetime.datetime.combine(filter_form.cleaned_data['enddate'],
+                                                                        datetime.datetime.max.time() )
+                else:
+                    filter_query[ 'starttimestamp' ]= { "$lt" : datetime.datetime.combine(filter_form.cleaned_data['enddate'],
+                                                                                        datetime.datetime.max.time() )}
+            if filter_form.cleaned_data[ 'mode' ] is not "" and filter_form.cleaned_data['mode'] != 'All':
+                filter_query['runmode'] = filter_form.cleaned_data['mode']
+    else:
+        filter_form = run_search_form( fieldslist )
+    print(filter_query)
+    print("THERE")
     retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
-    return render( request, 'runs/runs.html', { "runs_list": retset, "form" : filter_form } )
+    return render( request, 'runs/runs.html', {"runs_list": retset, "form" : filter_form } )
 
 @login_required
 def rundetail ( request ):
@@ -76,48 +98,7 @@ def rundetail ( request ):
         print("Not found!")
         return HttpResponsePermanentRedirect( '/' )
 
-    # Repackage data for nicer display
-    rdata = {
-        "name": [ "Run name", str(run) ],
-        "starttimestamp": ["Start time", rundoc['starttimestamp'].strftime(
-            "%Y-%M-%D %h:%m:%s") ],
-        "user": [ "Starting user", rundoc['user'] ],
-        "mode": [ "Run mode", rundoc['runmode'] ], }
-    if rundoc[ 'endtimestamp' ] is not None:
-        rdata[ 'endtimestamp' ] = [ "End time", rundoc[ 'endtimestamp' ].strftime("%Y-%M-%D %h:%m:%s")]
-    else:
-        rdata[ 'endtimestamp' ] = [ "End time", "None" ]
-
-    # Reader info
-    rinfo = rundoc[ 'reader' ]
-    readerdata = { "compressed": [ "Compression on", rinfo['compressed'] ],
-                   "starttime" : [ "Digitizer start time", rinfo['starttime']],
-                   #"endtime"   : [ "Digitizer end time", rinfo['endtime']],
-                   "buffer": ["Buffer database and collection",
-                              str(rinfo['storage_buffer']['dbaddr'] + ":" +
-                                  rinfo['storage_buffer']['dbname'] + "." +
-                                  rinfo['storage_buffer']['dbcollection'])]}
-    if 'endtime' in rinfo.keys():
-        readerdata['endtime'] = ["Digitizer end time", rinfo['endtime']]
-    readerini = rinfo['options']
-
-    # Trigger info 
-    #tinfo = rundoc['trigger']
-    triggerdata = {}
-    #triggerdata = {"status": ["Status", tinfo['trigger_status'] ],
-    #               "mode"  : ["Mode", tinfo['mode'] ]}
-                        
-    # Comments
-    cdata=[]    
-    if "comments" in rundoc.keys():
-        for c in rundoc[ 'comments' ]:
-            cdata.append([ 0, c['date'].strftime("%Y-%m-%d %H:%M:%S"),
-                           c['user'], c['text'] ] )
-    rdata['user_comments'] = len(cdata)
-    retdict = {'runinfo': rdata, 'comments': cdata, 'readerinfo': readerdata,
-               'readerini': readerini, "triggerinfo": triggerdata, }
-
-    return HttpResponse(json.dumps(retdict), content_type = 'application/json')
+    return HttpResponse( dumps(rundoc), content_type = 'application/json')
 
 
 def download_list ( request ):

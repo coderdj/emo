@@ -43,7 +43,7 @@
          		   <span class="icon-bar"></span>
      	   	  </button>
      	   	  
-   				<a class="navbar-brand" href="/"> 
+   				<a class="navbar-brand toggle-sidebar">
    				XENON1T Data Acquisition 
    				</a>
    			</div>
@@ -137,7 +137,7 @@ e</a></li>
 					
 				</li>
 				<li>
-					 <a class="ajax-link" href="/logbook">
+					 <a class="ajax-link" href="/log">
 						 <span class="hidden-xs">Logbook</span>
 					</a>
 				</li>
@@ -147,7 +147,7 @@ e</a></li>
 					</a>
 					<ul class="dropdown-menu">
 						<li><a class="ajax-link" href="#">Run Configuration</a></li>
-						<li><a class="ajax-link" href="#">MMS (external link)</a></li>
+						<li><a class="ajax-link" href="https://mms.mongodb.com">MMS (external link)</a></li>
 					</ul>
 				</li>
 				<li class="dropdown">
@@ -156,8 +156,8 @@ e</a></li>
 					</a>
 					<ul class="dropdown-menu">
 						<li><a class="ajax-link" href="/docs">Documentation</a></li>
-						<li><a class="ajax-link" href="#">Contact</a></li>
-						<li><a class="ajax-link" href="#">Credits</a></li>
+						<li><a class="ajax-link" href="/docs/contact">Contact</a></li>
+						<li><a class="ajax-link" href="/docs/about">About</a></li>
 					</ul>
 				</li>
 				
@@ -195,9 +195,23 @@ e</a></li>
 
 <script type="text/javascript">
 // Toggle the sidebar
-$('body').on('click', '.show-sidebar', function (e) {
+
+
+
+$('body').on('click', '.toggle-sidebar', function (e) {
 		e.preventDefault();
+	var div = document.getElementById("content");
+		console.log(div.className)
+		if( (' ' + div.className + ' ').indexOf(' ' + "col-sm-offset-2" + ' ') > -1 ){
+			console.log("removing");
+			div.className = div.className.replace(/(?:^|\s)col-sm-offset-2(?!\S)/g , '');
+		}
+		else{
+			console.log("adding");
+			div.className += " col-sm-offset-2";
+		}
 		$('div#main').toggleClass('sidebar-show');
+
 		//$('.show-sidebar').toggleClass('sidebar-extend');
 
 	});
