@@ -7,7 +7,11 @@
 <style>
     .table-striped > tbody > tr:nth-child(2n) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
   /* background-color: #4136D6;*/
-}</style>
+}
+.table-condensed>thead>tr>th, .table-condensed>tbody>tr>th, .table-condensed>tfoot>tr>th, .table-condensed>thead>tr>td, .table-condensed>tbody>tr>td, .table-condensed>tfoot>tr>td{
+    padding: 1px;
+}
+</style>
 <div class="row" style="height:20px;margin:0px;">
   <div class="col-sm-3 col-xs-12">
     <h4>DAQ Control Panel</h4>
@@ -21,12 +25,11 @@
 </div><!-- end row -->
 <div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;max-height:30%;">
 </div>
-    <br>
-<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;margin-top:20px;max-height:200px;overflow-y:scroll;">
-
-</div>
-
+<br>
 <div class="col-xs-12" id="info_panel" style="height:50%;min-height:300px;"></div>
+<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;margin-top:20px;max-height:200px;overflow-y:scroll;"></div>
+
+
 
 <script type="text/javascript">
   
@@ -34,8 +37,8 @@
   //var chart = null;
   var updateFreq = 5000;          // 5 second update polling
   var chartdiv = "rates_panel";
-  var dataUrl = "/control/readerstatusupdate";
   var pointUpdateUrl = "/control/readerpointupdate";
+  var dataUrl = "/control/status_update"
   var logUrl = "/log/get_dispatcher_log";
 
   // Page update poll

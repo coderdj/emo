@@ -15,7 +15,8 @@
 	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
 	 <link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
 	 <link href="{% static "emo/css/emo_runslist.css" %}" rel="stylesheet">
-	 
+	 <link href="{%  static "font-awesome-4.1.0/css/font-awesome.min.css" %}" rel="stylesheet">
+
     <!-- Declare here any global javascript -->
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
     <script src="{% static "Highcharts-4.0.1/js/highcharts.js" %}"></script>
@@ -55,53 +56,38 @@
           		{% block login_toggle %}
           		{% include "login_toggle.html" %}
           		{% endblock %}
-          	<ul class="nav navbar-nav pull-right">
-            	<li id="alert_notifier">
-            	</li>
-					<li class="dropdown">
-            	  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Navigation 
-							<b class="caret" style="color:#777777"></b></a>
-            	  <ul class="dropdown-menu" style="font-size:14pt">
-                <li class="dropdown-header" style="font-size:14pt">Inside</li>
-                <li><a href="/control">
-                    <span class="glyphicon glyphicon-off"></span>
-                    &nbsp;Control</a></li>
-                <li><a href="/control/reader/runmodeconf">
-                    <span class="glyphicon glyphicon-cog"></span>
-                    &nbsp;Configure</a></li>
-                <li><a href="/runs/">
-                    <span class="glyphicon glyphicon-list-alt"></span>
-                    &nbsp;Runs</a></li>
-                <li><a href="/onlineMonitor">
-                    <span class="glyphicon glyphicon-eye-open"></span>
-                    &nbsp;Monitor</a></li>
-                <!--<li><a href="/trigger/">                                         
-                    <span class="glyphicon glyphicon-flash"></span>                  
-                    &nbsp;Trigger</a></li>-->
-                <li><a href="/log/">
-                    <span class="glyphicon glyphicon-book"></span>
-                    &nbsp;Logbook</a></li>
-                <li><a href="/apps/">
-                    <span class="glyphicon glyphicon-link"></span>
-                    &nbsp;Links</a></li>
-                <li class="divider"></li>
-                <li class="dropdown-header" style="font-size:14pt">Outside</li>
-                <li><a href="http://www.xenon1t.org">XENON1T.org</a></li>
-                <li><a href="https://xecluster.lngs.infn.it/dokuwiki/doku.php">XENON\
-1T wiki</a></li>
-                <li><a href="http://www.lhep.unibe.ch/darkmatter">Uni Bern XENON Pag\
-e</a></li>
-                <li><a href="http://www.github.com/XENON1T">XENON1T Github</a></li>
-                <li class="divider"></li>
-                <li><a href="/about/"> About</a></li>
-                <li><a href="/control/help"> Help</a></li>
-                <li><a href="/docs/index"> Docs</a></li>
-              </ul>
-            	</li>
-          		</ul>
-          </div>
- 
-</header>
+			   		{% if user.is_authenticated %}
+	<ul class="navbar-right">
+				<ul class="nav navbar-nav">
+  				<li class="dropdown">
+    				<a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
+       					href="#">Connected <span id="contact"></span></a>
+    				<ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
+						More info here
+					</ul>
+  				</li>
+			</ul>
+			<ul class="nav navbar-nav">
+  				<li class="dropdown">
+    				<a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
+       					href="#"> DAQ Status <span id="status"></span></a>
+    				<ul class="emo-status-menu dropdown-menu" id="status_more" role="menu" aria-labelledby="daq_status_nav">
+						More info here
+					</ul>
+  				</li>
+			</ul>
+			<ul class="nav navbar-nav">
+  				<li class="dropdown">
+    				<a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
+       					href="#"> Open Alerts <span id="alerts"></span></a>
+    				<ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
+						More info here
+					</ul>
+  				</li>
+			</ul></ul>
+			{% endif %}
+		</div>
+	</header>
    		
    		<!-- If user is not logged in just show them a pretty picture -->
    		{% if user.is_authenticated %}
@@ -195,9 +181,6 @@ e</a></li>
 
 <script type="text/javascript">
 // Toggle the sidebar
-
-
-
 $('body').on('click', '.toggle-sidebar', function (e) {
 		e.preventDefault();
 	var div = document.getElementById("content");
@@ -262,4 +245,92 @@ $('.main-menu').on('click', 'a', function (e) {
 		}
 	});
 </script>
+
+<script type="text/javascript">
+	function DoUpdate(Url){
+		$.getJSON(Url, function(data) {
+
+			// Now do some aggregations. data is a list of status docs for the detectors. Status can
+			// either be RUNNING, IDLE, or ERROR. Last update is most recent update
+			connected = false;
+			status = "NONE";
+			var currentTime = new Date();
+			var maxtdiff = 1000000;
+			var recentTime;
+			for (x = 0; x < data.length; x++) {
+				//data = $.parseJSON(data, true);
+				if (data[x]['state'] == "Running")
+					status = "Running";
+				else if (data[x]['state'] == 'Error')
+					status = "Error";
+
+				//var docdate = new Date(data[x]['createdAt'].match(/\d+/)[0] * 1);
+				//docdate = data[x]['createdAt'];
+
+				var docdate = new Date(data[x]['createdAt']['$date']);
+				tdiff = currentTime - docdate;
+				if (tdiff < maxtdiff) {
+					maxtdiff = tdiff;
+					recentTime = docdate;
+				}
+			}
+
+			if (status == "Running"){
+				document.getElementById("status").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+			}
+			else if ( status == "Idle" ) {
+				document.getElementById("status").innerHTML = '<i style="color:yellow;" class="fa fa-exclamation-triangle"></i>';
+			}
+			else if ( status == "Error" ) {
+				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
+			}
+			else {
+				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
+			}
+
+			status_more = "";
+			for (x = 0; x < data.length; x++) {
+				status_more += "<div class='emo-status-menu-entry'><strong>Detector " + data[x]['detector'] + " status: </strong>";
+				if( data[x]['state'] == "Running" ) {
+					status_more += "<strong style='color:green;'> Running </strong> in " + data[x]['mode'] + " mode with run name " +
+							data[x]['currentRun'] + "</div>";
+				}
+				else{
+					status_more += "<strong style='color:red;'>" + data[x]['state'] + "</strong> </div>";
+				}
+			}
+
+			document.getElementById("status_more").innerHTML = status_more;
+
+			if( maxtdiff < 60000 ){
+				document.getElementById("contact").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
+					"Network connection established: </strong> Most recent status " +
+					"check-in: " + (tdiff / 1000).toString() + " seconds ago.</div>";
+			}
+			else {
+				document.getElementById("contact").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
+				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
+					"No connection to the DAQ database: </strong> Most recent status " +
+					"check-in: " + (tdiff / 1000).toString() + " seconds ago.</div>";
+				document.getElementById("status").innerHTML = '<i style="color:#AAAAAA;" class="fa fa-question-circle"></i>';
+				document.getElementById("status_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
+					"We can't connect: </strong> So we don't really know what the status is. Consider logging into the DAQ cluster " +
+						"directly.</div>";
+
+			}
+			document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';;
+			console.log(data);
+			setTimeout(function() {
+           		DoUpdate( Url );
+      			}, 10000 );
+		});
+	}
+	var UpdateUrl = "/control/get_status_update";
+	$(function(){
+			DoUpdate(UpdateUrl);
+	});
+
+</script>
+
 </html>

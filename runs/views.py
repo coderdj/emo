@@ -47,8 +47,7 @@ def runs(request):
                 filter_query['runmode'] = filter_form.cleaned_data['mode']
     else:
         filter_form = run_search_form( fieldslist )
-    print(filter_query)
-    print("THERE")
+
     retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
     return render( request, 'runs/runs.html', {"runs_list": retset, "form" : filter_form } )
 
