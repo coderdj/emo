@@ -1,7 +1,5 @@
 __author__ = 'dan'
 
-
-
 from pymongo import MongoClient
 import pymongo
 import datetime

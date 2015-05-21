@@ -106,7 +106,6 @@ doc:{
 	"timeseconds": int,
 }
 </pre>
-</p>
 <br>
 <h4>Log Entry Docs</h4>
 <p>All DAQ components are capable of making log entries. Users can make log entries via 
@@ -179,5 +178,125 @@ The locking document is checked whenever a user makes a command. If it is locked
 busy with another command. In case of a lock error the user will have the option to override the lock. 
 Locks are made by the web interface as soon as the user's command is accepted. They are freed by the 
 dispatcher as soon as the DAQ finishes with the command. Locks expire be default after one minute.
+</p>
+<br>
+<h4>Run Configuration Docs</h4>
+<p>
+The digitizers read a local ini file to start running. This ini file can be created by the DAQ dispatcher from a BSON
+document (but it's basically JSON because we have no binary fields).
+This allows run modes to be stored on the web database and viewed or modified by the frontend. During commissioning
+the run configuration document will probably change as fields are added, modified, or removed. However this should stabilize later.
+
+Normal users can view operations modes. Superusers can edit the JSON directly in their browser.
+</p>
+	<pre class="prettyprint">
+doc = {
+	"user": string, 					# Who made the document
+	"created": datetime,				# when was it made
+	"name": string,						# long name of doc, ambe_run10_mod0, for example
+	"shortname": string,				# name for run badges, for example just "AmBe". Max 5-6 characters
+	"detector": string,					# name of the detector this doc is for
+   	"blt_size": 524288,
+   	"run_start": 1,
+	"run_start_module": 1868,
+	"muon_veto": 0,                     # NIM for S-IN prop to MV or not
+	"pulser_freq": 0,                   # 0 inactive
+	"write_mode": 0,                    # 0 -none, 1-file, 2-MongoDB
+	"compression": 1,                   # 0 -none, 1-snappy
+	"baseline_mode": 1,                 # 0 -load from file, 1-run start, 2-none
+	"processing_num_threads": 8,        # Number of processing threads
+	"processing_mode":  4,              # Parsing mode: 0-none, 1-event, 2-occurrence, 3-occurrenceZLE, 4-new FW
+	"processing_readout_threshold": 1,  # # of BLTs that must be in board buffer before it's read
+	"occurrence_integral": 0,           # Integrate each pulse (! Only processing modes 2,3,4) 0-off, 1-on
+	"file_path": "",
+	"file_events_per_file": 1000000,
+	"mongo_address": "xedaq00",
+	"mongo_database": "raw",
+	"mongo_collection": "data*",
+	"mongo_write_concern": 0,           # 0- No write concern, 1- on
+	"mongo_min_insert_size": 1,         # minimum size of BSON vector for bulk inserts
+	"trigger_mode"	: string,			# mode for the trigger. Should be something the trigger understands
+	"processing_mode": string,			# mode for the processor. ditto
+	"registers": [
+		{
+			"register": "EF24",
+			"value": "0",
+			"board": "-1",
+			"comment": "board reset register"
+		},
+		{
+			"register": "EF1C",
+			"value": "1",
+			"board": "-1",
+			"comment": "events per BLT"
+		},
+		{
+			"register": "EF00",
+			"value": "10",
+			"board": "-1",
+			"comment": "BERR register, 10=enable BERR",
+		},
+		{
+			"register": "8100",
+			"value": "0",
+			"board": "-1",
+			"comment": "acquisition control register. Always set to 0"
+		},
+	],
+	"DDC-10": {
+		"address": "130.92.139.240",
+		"sign": 1,
+		"window": 100,
+		"delay": 200,
+		"signal_threshold": 150,
+		"integration_threshold": 20000,
+		"width_cut": 50,
+		"rise_time_cut": 30,
+		"component_status": 1,
+		"parameter_0": 0,
+		"parameter_1": 0,
+		"parameter_2": 0,
+		"parameter_3": 50,
+		"outer_ring_factor": 2,
+		"inner_ring_factor": 1,
+		"prescaling": 1000,
+	},
+	"links": [
+		{
+			"type": "V2718",
+			"link": 0,
+			"crate": 0,
+			"reader": 0,
+		},
+		{
+			"type": "V2718",
+			"link": 0,
+			"board": 0,
+			"reader": 1,
+		}
+	],
+	"boards": [
+		{
+			"type": "V1724",
+			"link": 0,
+			"board": 0,
+			"vme_address": "32100000",
+			"serial": "876",
+			"reader": 0,
+		},
+		{
+			"type": "V1724",
+			"link": 0,
+			"board": 0,
+			"vme_address": "22230000",
+			"serial": "770",
+			"reader": 1,
+		},
+	]
+}
+</pre>
+<br><p>
+These docs go in the collection "online.run_modes". The a run is started the entire ini file is written to the run document
+in string form (string for maintains compatibility in case a run is started via command line with a traditional ini file).
 </p>
 {% endblock %}

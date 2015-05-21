@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+    <link href="{% static "codemirror-5.3/lib/codemirror.css" %}" rel="stylesheet">
+    <script src="{% static "codemirror-5.3/lib/codemirror.js" %}"></script>
+    <script src="{% static "codemirror-5.3/mode/python/python.js" %}"></script>
+
+
+    <div class="col-xs-12" style="margin-top:10px;">
+        <h3>Run Mode Configuration</h3>
+    </div>
+    <form>
+        <div class="col-xs-12" style="margin-top:10px;">
+            <form>
+                <div class="col-xs-1">
+                    <strong>Select:</strong>
+                </div>
+                <div class="col-xs-2">
+                    (dropdown)
+                </div>
+                <div class="col-xs-4">
+                    <button class="btn btn-info">Fetch</button>
+                </div>
+            </form>
+        </div>
+    </form>
+    <form>
+        <div class="col-xs-12" id="run_json_div">
+            <textarea id="json_text"></textarea>
+
+        </div>
+        <div class="col-xs-3 col-xs-offset-8" style="margin-top:10px;">
+            <i>Note: only valid JSON is accepted</i>
+        </div>
+        <div class="col-xs-1" style="margin-top:10px;">
+            <button class="btn btn-info">Submit</button>
+        </div>
+    </form>
+
+    <script type="text/javascript">
+
+        $(function(){
+            var json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
+                value: "run_doc: {\n}",
+                mode:  "python",
+                lineNumbers: true,
+            });
+            json_code_mirror.getDoc().setValue('run_doc: {\n\n\t"your_options": \t"go_here",\n\n}');
+
+        });
+
+    </script>
+
+{% endblock %}
