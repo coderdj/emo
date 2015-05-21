@@ -1,22 +1,36 @@
 .emo-status-menu {
 
     min-height:30px;
-    min-width:400px;
+    min-width:500px;
     padding: 10px;
 
 }
 .emo-status-menu-entry {
     min-height:30px;
     padding: 10px;
-    border 1px solid #AAAAAA;
+    //border: 1px solid #AAAAAA;
+}
+.emo-node-header{
+    background-color:white;
+    border: 1px solid #AAAAAA;
+}
+.emo-node-line{
+    background-color:#FEFEFE;
+    border: 1px solid #AAAAAA;
 }
 .emo-navbar { background-color: white;min-height:40px;height:40px;margin-bottom:0px; /*#3498DB;*/}
 
 .emo-navbar .navbar-nav>.active>a:hover,.emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus { 
     background-color: #DDDDDD /*#CACACA*/
 }
+.row-same-height {
+  display: table;
+  width: 100%;
+  /* fix overflow */
+  table-layout: fixed;
+}
 .emo-navbar .navbar-nav>.active>a,.emo-navbar .navbar-nav>.open>a,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover, .emo-navbar .navbar-nav>.open>a:focus { background-color: #DDDDDD;}
-.dropdown-menu { background-color: #EEEEEE; margin-right:20px;left:auto;right:auto; /*#ECF0F1*/}
+.dropdown-menu { background-color: #EEEEEE; left:auto;right:auto; /*#ECF0F1*/}
 .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: #3498DB}
 .emo-navbar { background-image: none; }
 .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-image: none; }

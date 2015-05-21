@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'control',
     'monitor',
     'log',
+    'config',
 )
 
 MIDDLEWARE_CLASSES = (

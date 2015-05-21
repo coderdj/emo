@@ -6,7 +6,8 @@ from control import views
 
 urlpatterns = [
     url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),
-
+    url(r'^get_node_updates',views.GetNodeUpdates,name='get_node_updates'),
+    url(r'^get_node_history', views.GetNodeHistory,name='get_node_history'),
     url(r'$', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanel.html"))),
     #url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),

@@ -44,7 +44,7 @@
          		   <span class="icon-bar"></span>
      	   	  </button>
      	   	  
-   				<a class="navbar-brand toggle-sidebar">
+   				<a class="navbar-brand toggle-sidebar" style="cursor:pointer;">
    				XENON1T Data Acquisition 
    				</a>
    			</div>
@@ -71,7 +71,7 @@
   				<li class="dropdown">
     				<a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
        					href="#"> DAQ Status <span id="status"></span></a>
-    				<ul class="emo-status-menu dropdown-menu" id="status_more" role="menu" aria-labelledby="daq_status_nav">
+    				<ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
 						More info here
 					</ul>
   				</li>
@@ -247,6 +247,7 @@ $('.main-menu').on('click', 'a', function (e) {
 </script>
 
 <script type="text/javascript">
+
 	function DoUpdate(Url){
 		$.getJSON(Url, function(data) {
 
@@ -288,39 +289,43 @@ $('.main-menu').on('click', 'a', function (e) {
 				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
 			}
 
-			status_more = "";
+			status_more = "<strong><div class='row emo-status-menu-entry'><div class='col-xs-2'>Detector</div>" +
+					"<div class='col-xs-2'>Status</div><div class=col-xs-2>Mode</div><div class='col-xs-6'>Run name</div></div></strong>";
 			for (x = 0; x < data.length; x++) {
-				status_more += "<div class='emo-status-menu-entry'><strong>Detector " + data[x]['detector'] + " status: </strong>";
+				status_more += "<div class='row emo-status-menu-entry'><div class='col-xs-2'><strong>" +
+						data[x]['detector'] + "</strong></div>" + "<div class='col-xs-2'>";
 				if( data[x]['state'] == "Running" ) {
-					status_more += "<strong style='color:green;'> Running </strong> in " + data[x]['mode'] + " mode with run name " +
-							data[x]['currentRun'] + "</div>";
+					status_more += "<strong style='color:green;'> Running </strong></div><div class='col-xs-2'>" + data[x]['mode'] +
+							"</div><div class=col-xs-6>" +
+							data[x]['currentRun'] + "</div></div>";
 				}
 				else{
-					status_more += "<strong style='color:red;'>" + data[x]['state'] + "</strong> </div>";
+					status_more += "<strong style='color:red;'>" + data[x]['state'] + "</strong> </div></div>";
 				}
 			}
-
+			status_more+="</div>";
 			document.getElementById("status_more").innerHTML = status_more;
 
 			if( maxtdiff < 60000 ){
 				document.getElementById("contact").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
 					"Network connection established: </strong> Most recent status " +
-					"check-in: " + (tdiff / 1000).toString() + " seconds ago.</div>";
+					"check-in: " + Math.round(tdiff / 1000).toString() + " seconds ago.</div>";
 			}
 			else {
 				document.getElementById("contact").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
 					"No connection to the DAQ database: </strong> Most recent status " +
-					"check-in: " + (tdiff / 1000).toString() + " seconds ago.</div>";
+					"check-in: " + Math.round(tdiff / 1000).toString() + " seconds ago.</div>";
 				document.getElementById("status").innerHTML = '<i style="color:#AAAAAA;" class="fa fa-question-circle"></i>';
 				document.getElementById("status_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
 					"We can't connect: </strong> So we don't really know what the status is. Consider logging into the DAQ cluster " +
 						"directly.</div>";
 
 			}
-			document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';;
-			console.log(data);
+			document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+			document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
+					"No open alerts: </strong> You seem to be in the clear.</div>";
 			setTimeout(function() {
            		DoUpdate( Url );
       			}, 10000 );

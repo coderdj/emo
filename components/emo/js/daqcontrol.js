@@ -17,7 +17,7 @@ function drawChart( chart, chartdiv, callback )
             animation: {
                 easing: 'linear',
               },
-	    spacingTop: 2,
+	    spacingTop: 10,
             spacingLeft: 10,
            spacingRight: 10,
             spacingBottom: 10,
@@ -29,14 +29,14 @@ function drawChart( chart, chartdiv, callback )
         xAxis: {
             maxPadding:0,
             minPadding:0,
-            title : { text: 'time (your time zone)' },
-            labels: { enabled: true},
-            tickInterval: 5000000,
+            title : { text: 'time (UTC)' },
+            //tickInterval: 5000000,
             type: 'datetime',
             labels: {
+                enabled: true,
                 formatter: function() {
-                    var d = new Date();
-                    return Highcharts.dateFormat('%H:%M', this.value - d.getTimezoneOffset()*60000);
+                  //  var d = new Date();
+                    return Highcharts.dateFormat('%H:%M', this.value);//- d.getTimezoneOffset()*60000);
                 },
             },
         },
@@ -52,36 +52,12 @@ function drawChart( chart, chartdiv, callback )
                 marker: {enabled:false},		
             },
         },
-	series: [{
-            name: 'xedaq01',
-            color: '#5cb85c',
-            fillColor: 'rgba(92,184,92,0.2)',
-            data: [],
-        },{
-            name: 'xedaq02',
-              color: '#d9534f',
-            fillColor: 'rgba(217,83,79,0.2)',
-            data: [],
-        },{
-            name: 'xedaq03',
-              color: '#5bc0de',
-            fillColor: 'rgba(91,192,222,0.2)',
-            data: [],
-        },{
-	    name: 'xedaq04',
-            color: '#f0ad4e',
-            fillColor: 'rgba(240,173,78,0.2)',
-            data: [],
-        },{
-            name: 'muon_veto',
-            color: '#785223',
-            fillColor: 'rgba(220,133,21,0.2)',
-            data: [],
-        },
-                ],
+	series: [],
+
     }; //end waveform options    
     
-    chart = new Highcharts.Chart(waveformOptions, callback(chart));
+    chart = new Highcharts.Chart(waveformOptions);
+    callback(chart);
 
 }
 
@@ -124,16 +100,31 @@ function loadData( chart, dataURL, callback )
 // Loads data from the URL into the chart. 
 // Used the first time only
 {
+    var fillColors = ["rgba(92,184,92,0.2)", "rgba(217,83,79,0.2)",
+    "rgba(91,192,222,0.2)", "rgba(240,173,78,0.2)", "rgba(220,133,21,0.2)"];
+    var colors = ["#5cb85c","#d9534f", "#5bc0de", "#f0ad4e", "#785223" ];
+
     $.getJSON( dataURL, function(data) {
-	chart.series[0].setData(data['xedaq01_rates'],false);
-        chart.series[1].setData(data['xedaq02_rates'],false);
-        chart.series[2].setData(data['xedaq03_rates'],false);
-        chart.series[3].setData(data['xedaq04_rates'],false);
-        chart.series[4].setData(data['muon_veto_rates'],false);
+
+        for( x=0; x<data.length; x++ ){
+            var dict = {};
+            if( x< 5 )
+                dict = {
+                   color: colors[x],
+                   fillColor: fillColors[x],
+                   data: data[x]['data'],
+                   name: data[x]['node'],
+                };
+            else
+                dict = { data: data[x]['data'], name: data[x]['node']};
+            chart.addSeries(dict, false);
+        }
+
         chart.redraw();
     });
     callback(chart);
-};
+}
+
 
 function GetTimeString(startdate){
     // Return the time string based on the run's start time
@@ -163,52 +154,99 @@ function GetTimeString(startdate){
     if(hours==0 && minutes==0)
         timestring="...just started";
     return timestring;
-};
+}
 
-function UpdateText( currentStatus, detString, detStringLong, document, numSlaves, canStartRuns, latestRates ){
-    
-    // We have a text display showing rates and connectivity status of readers
-    // This function updates it. CurrentStatus is status.det. detString is the
-    // suffix identifying DOM elements for each detector. document is the doc.
+function UpdateDetectorText(dataUrl, divname){
+    $.getJSON( dataUrl, function(data){
+
+            var html_string = "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;background-color:#EEEEEE;color:#666666;'>"+
+            "<strong><div class='col-xs-2'>Detector</div><div class='col-xs-2'>Status</div><div class='col-xs-2'>Mode</div>" +
+                "<div class='col-xs-2'>Started by</div><div class='col-xs-2'>Start time</div><div class='col-xs-2'>Current/last run</div></strong></div>";
+            var currentTime = new Date();
+
+            for ( var x=0; x<data.length; x+=1 ){
+
+                if( data[x]['detector'] == 'tpc')
+                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                        "<div class='col-xs-2'><h4>TPC</h4></div>";
+                else if( data[x]['detector'] == 'muon_veto')
+                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                        "<div class='col-xs-2'><h4>Muon Veto</h4></div>";
+                else
+                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                        "<div class='col-xs-2'><h4>"+data[x]['detector']+"</h4></div>";
+
+                // Reformat date for display in JS
+                var docdate = new Date(data[x]['createdAt']['$date']);
+                var update_seconds = Math.round( (currentTime - docdate)/1000 );
+
+                // Put state with coloring to make it pop a little
+                if( data[x]['state'] == "Running" && update_seconds < 30 )
+                    html_string += "<div class='col-xs-2' style='color:green;height:100%;'><h5>Running</h5></div>";
+                else if( data[x]['state'] == "Idle" && update_seconds < 30 )
+                    html_string += "<div class='col-xs-2' style='color:red;height:100%;'><h5>Idle</h5></div>";
+                else if( data[x]['state'] == "Error" && update_seconds < 30 )
+                    html_string += "<div class='col-xs-2' style='color:red;height:100%'><h5>Error</h5></div>";
+                else
+                    html_string += "<div class='col-xs-2' style='color:#AAAAAA;height:100%;'><h5>Unknown</h5></div>";
+
+                // If running we can provide a bunch more information
+                if( data[x]['state'] == "Running" ) {
+                    var startdate = new Date(data[x]['startTime']['$date']);
+
+                    html_string += "<div class='col-xs-2'><h6>" + data[x]['mode'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + data[x]['startedBy'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + startdate + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + data[x]['currentRun'] + "</h6></div>";
+                }
+                else
+                    html_string += "<div class='col-xs-2 col-xs-offset-6'><h6>" + data[x]['currentRun'] + "</h6></div>";
 
 
-    if( currentStatus == null )
-	return;
-    // need STATUS_HTML, RUN_NAME, STARTED_BY, MODE, NUMSLAVES
-    var MODE = currentStatus.mode;
-    var STARTED_BY = currentStatus.startedBy;
-    var RUN_NAME = currentStatus.currentRun;
-    var NUMSLAVES = currentStatus.NUMSLAVES;
+                // close row
+                html_string += "</div>";
 
-    var STATUS_HTML = "<h3 style='color:red'>Idle</h3>";
-    if (currentStatus.state == "Armed" )
-	STATUS_HTML = "<h3 style='color:#c6961d'>Armed</h3>";
-    else if( currentStatus.state == "Running" ){
-	var startdate = new Date( currentStatus.startTime );
-        timestring = GetTimeString( startdate );
-        STATUS_HTML = "<h3 style='margin-bottom:0'><a style='font-size:18pt;color:green'>Running</a> <a style='font-size:10pt;color:black;'>&nbsp;" + timestring + "</a></h3>";
-    }
+            }
+        document.getElementById(divname).innerHTML = html_string;
+    });
+}
 
-    
+function UpdateNodes( nodes_div, nodesUrl ){
 
+        $.getJSON( nodesUrl, function(data) {
 
-    var HTMLSTRING = "<div class='dcpanel-header'><div class='col-xs-4 col-sm-4 col-md-4'><h3>" + detStringLong + "</h3></div><div class='col-xs-8 col-sm-8 col-md-8'><div class='pull-right'><span id='stateindicator_" + detString + "'>" + STATUS_HTML + "</span></div></div></div><hr style='margin:0;'><!-- END HEADER --><!-- INFO TEXT --><div style='margin-bottom:1%;'>   <div class='col-md-6 col-xs-12 dcsmalltext' style='margin:0px;padding:0px;'>      <div class='list-group' style='margin:0;'>         <li class='list-group-item nopad' style='border:0'>            <b>Run Name: </b>             <span id='run_" + detString + "'>" + RUN_NAME +"</span></li>         <li class='list-group-item nopad' style='border:0'>             <b>Started by: </b>              <span id='startedby_" + detString + "'>" + STARTED_BY + "</span></li>      </div>   </div>   <div class='col-md-6 col-xs-12 dcsmalltext' style='margin:0px;padding:0px;'>      <div class='list-group' style='margin:0px;'>         <li class='list-group-item nopad' style='border:0'>            <b>Mode: </b><span id='mode_" + detString + "'>" + MODE + "</span></li>         <li class='list-group-item nopad' style='border:0'>            <b> Connected clients: </b>             <span id='numslaves_" + detString + "'>" + NUMSLAVES + "</span> </li>      </div>  <br>";
+            var html_string = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;border-color:#AAAAAA;background-color:#EEEEEE;color:#666666;'>" +
+                        "<div class='col-xs-2'>Slave node</div>"+
+                        "<div class='col-xs-2'>Run mode</div>"+
+                        "<div class='col-xs-2'>Num. digitizers</div>"+
+                        "<div class='col-xs-2'>BLT Rate</div>"+
+                        "<div class='col-xs-2'>Data Rate</div>"+
+                        "<div class='col-xs-2'>Seconds since update</div>" +
+                        "</div></strong>";
 
-    for( x=0; x<numSlaves; x++) {
-	var IDSTR = detString + "_" + x.toString;
-	if( latestRates[IDSTR] == null )
-	    continue;
-	var ABSRATE = ((latestRates[IDSTR]*1000).toFixed(2)).toString();
-	var PCTRATE = (math.Round( (latestRates[IDSTR]*1000 / 80.) )).toString();
-	HTMLSTRING += "<div class='container col-xs-12'>   <h5 id='" + IDSTR + "_name' style='color:#AAAAAA;font-size:10pt;float:left;margin-right:1em;margin-top:0px;margin-bottom:3px;'>" + IDSTR + "</h5>   <div class='progress' id='" + IDSTR + "_progress' style='margin-bottom:3px;background-color:#EEEEEE;'>   <div class='progress-bar progress-bar-info progress-bar-striped active' id='" + IDSTR + "_bar' role='progressbar' aria-valuenow='" + PCTRATE + "' aria-valuemin='0' aria-valuemax='100' style='width:" + PCTRATE + "%;'>" + ABSRATE + "MB/s</div></div></div>";
-    }
-    if( canStartRuns ){
-	
-	//update buttons
-	HTMLSTRING += "<div class='pull-right'>   <button class='btn btn-success' id='" + detString + "start' onclick='NewCommand(\"sd\")'>Start " + detStringLong + " Calibration</button>   <button class='btn btn-danger' id='" + detString + "stop' onclick='NewCommand(\"pd\")'>Stop " + detStringLong + " Only</button></div>";
-    }
+            var currentTime = new Date();
 
-    document.getElementById( "info_" + detString ).innerHTML = HTMLSTRING;
-};
-	
+            for ( var x=0; x<data.length; x++ ){
+
+                var docdate = new Date(data[x]['createdAt']['$date']);
+				var update_seconds = Math.round( (currentTime - docdate)/1000 );
+                var color = "black";
+                if (update_seconds > 30 )
+                    color = "#AAAAAA";
+
+                html_string += "<div class='row emo-node-line' style='color:" + color + "'>" +
+                        "<div class='col-xs-2'>" + data[x]['node'] + "</div>"+
+                        "<div class='col-xs-2'>" + data[x]['runmode'] + "</div>"+
+                        "<div class='col-xs-2'>" + data[x]['nboards'] + "</div>"+
+                        "<div class='col-xs-2'>" + data[x]['bltrate'] + "</div>"+
+                        "<div class='col-xs-2'>" + data[x]['datarate'] + "</div>"+
+                        "<div class='col-xs-2'>" + update_seconds.toString() + "</div>" +
+                        "</div>";
+
+            }
+
+            document.getElementById( nodes_div).innerHTML = html_string;
+        });
+
+}
 
