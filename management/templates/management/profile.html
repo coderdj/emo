@@ -34,17 +34,20 @@
       {% endif %}
     </div>
     <br>
-    <div class="bg-info" style="padding:10px;width:80%">
-      <h5> A normal user may request controller status for one week </h5>
+    <div class="bg" style="padding:10px;width:80%;background-color:white;border-color:#AAAAAA;border-width:1px;border-style:solid;">
+      <h5> DAQ Control Authorization Request </h5>
       <p>
-	<strong>Note:</strong> By clicking this you accept the responsibility of controlling data acquisition. Please ensure you know what this entails.
+	<strong>Brief:</strong> Only one user may have "DAQ Controller" status at once. This is to avoid sending conflicting commands
+        to the DAQ from multiple sessions and also to avoid accidental DAQ control. All functions are available to non-controller
+        users except Start/Stop of data acquisition (also certain configuration functions are reserved for admins). If you
+        are the shifter and you need to start and stop runs you may 'steal' the controller status from the current controller via this form.
       </p>
       <p>
-	<strong>Further note:</strong> All control actions are logged.
+	<strong>Note:</strong> All control actions are logged.
       </p>
       <p>
-	<strong>Further further note:</strong> You might wonder why we make you do this. It's because everyone can access this portal from anywhere, however most people do not need to control the experiment. This should reduce any cases of somebody, their cat, or their toddler accidentally clicking something and disrupting the experiment. 
-      </p>
+	<strong>Further note:</strong> If you want to relinquish your controller status you can do that here as well. It will expire
+      automatically after one week and must be renewed here.</p>
       <br>
       <form action="/profile/" method="post" style="padding-left: 50px">
 	{% csrf_token %}

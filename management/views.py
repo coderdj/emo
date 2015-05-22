@@ -28,6 +28,12 @@ def profile(request):
             # Get the user object
             thisuser = User.objects.get(username=request.user)
 
+            # If there are any other controllers then remove their permission
+            for userobj in UserProfile.objects.all():
+                if (datetime.datetime.now( datetime.timezone.utc ) - userobj.control_permission_date).days < 7:
+                    userobj.control_permission_date = datetime.datetime(1985, 8, 8, 10, 23)
+                    userobj.save()
+
             # If there is no profile make one
             if UserProfile.objects.filter(user__id=thisuser.id).count() == 0:
                 USERDOC = UserProfile()
@@ -42,6 +48,7 @@ def profile(request):
                 else:
                     USERDOC.control_permission_date = datetime.datetime(1985, 8, 8, 10, 23)
                 USERDOC.save()
+
         return HttpResponsePermanentRedirect('/profile')
 
     # If no POST request then check the user's permissions
