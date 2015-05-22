@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+{% load staticfiles %}
+
+<br><br>
+<div class="col-lg-6">
+   <h2>Login</h2>
+   <p>You need to login to view the site. If you want a user account please send an email using the contact form. This will later be integrated with the lab authentication system.</p>
+</div>
+
+<br>
+<div class="col-lg-6">
+<form action="{% url "login" %}" method="post" accept-charset="utf-8">
+  {% csrf_token %}
+    {{ form }}
+  <input type="hidden" name="next" value="{{ next }}" />
+  <br>
+  <input class="btn btn-success" type="submit" value="Login" />
+</form>
+</div>
+<br></br>
+<br></br>
+<br></br>
+<br></br>
+<br></br>
+<p>  <div style="padding-left: 30px;"><a href="/" class="btn btn-info btn-large">&laquo; Home</a></p></div>
+
+{% endblock %}

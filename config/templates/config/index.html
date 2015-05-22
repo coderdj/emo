@@ -10,45 +10,99 @@
     <div class="col-xs-12" style="margin-top:10px;">
         <h3>Run Mode Configuration</h3>
     </div>
-    <form>
         <div class="col-xs-12" style="margin-top:10px;">
-            <form>
-                <div class="col-xs-1">
-                    <strong>Select:</strong>
-                </div>
-                <div class="col-xs-2">
-                    (dropdown)
-                </div>
-                <div class="col-xs-4">
-                    <button class="btn btn-info">Fetch</button>
-                </div>
-            </form>
-        </div>
-    </form>
-    <form>
-        <div class="col-xs-12" id="run_json_div">
-            <textarea id="json_text"></textarea>
+            <table class="table table-bordered table-condensed" style="background-color:white;";>
+                <tr>
+                    <th> Name</th>
+                    <th> Created </th>
+                    <th>Created by</th>
+                    <th> Comment </th>
+                    <th></th>
+                </tr>
+                {% for mode in runmodes %}
+                    <tr>
+                    <td style="padding:1px;">{{ mode.name }}</td>
+                    <td style="padding:1px;"> {{ mode.date }} </td>
+                    <td style="padding:1px;">{{ mode.user }}</td>
+                    <td style="padding:1px;"> {{ mode.comment }} </td>
+                    <td style="padding:1px;width:160px;"> <input class="btn btn-info btn-sm" type="button" style="margin:0px;margin-left:10px" value="Fetch"
+                   onclick="FillMode('{{ mode.name }}')" />
+                    {% if request.user.is_superuser %}
+                <input class="btn btn-danger btn-sm" type="button" style="margin:0px;margin-left:10px;" value="Remove"
+                       onclick="RemoveMode('{{ mode.name }}')"/>
+        {% endif %}</td>
+                </tr>
+            {% endfor %}
 
+            </table>
         </div>
-        <div class="col-xs-3 col-xs-offset-8" style="margin-top:10px;">
+    <form method="POST" action="/config/">
+        <div class="col-xs-12" id="run_json_div">
+            {% csrf_token %}
+            <textarea id="json_text" name="bulk">{{ form.bulk.value }}</textarea>
+        </div>
+        <div class="col-xs-8" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
+        <div class="col-xs-3" style="margin-top:10px;">
             <i>Note: only valid JSON is accepted</i>
         </div>
         <div class="col-xs-1" style="margin-top:10px;">
-            <button class="btn btn-info">Submit</button>
+            {% if request.user.is_superuser %}
+            <button type="submit" class="btn btn-info">Submit</button>
+            {%  endif %}
         </div>
     </form>
+    <div class="col-xs-12" style="margin-top:20px">
+        <h4>Options reference:</h4>
+        <p>
+            Here is some general reference for the options here. For more information see the kodiaq docs.
+
+            <br>
+            <table class="table table-bordered" style="background-color:white;">
+                <tr>
+                    <th style="width:250px"> Option</th>
+                    <th style="width:100px"> Type </th>
+                    <th> Brief </th>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>String</td>
+                    <td>The name of the run mode. This must be unique.</td>
+                </tr>
+                <tr>
+                    <td>date</td>
+                    <td>datetime</td>
+                    <td>Date document was created or updated. Not editable on this interface, automatically given the current date on creation/update.</td>
+                </tr>
+    </table>
+        </p>
+    </div>
 
     <script type="text/javascript">
-
+        var run_mode_list_url = "/config/fetch_mode_list";
+        var run_mode_url = '/config/fetch_run_mode';
+        var json_code_mirror = null;
         $(function(){
-            var json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
+             json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
                 value: "run_doc: {\n}",
                 mode:  "python",
                 lineNumbers: true,
             });
-            json_code_mirror.getDoc().setValue('run_doc: {\n\n\t"your_options": \t"go_here",\n\n}');
 
-        });
+
+
+      });
+    function FillMode(name){
+            $.getJSON( run_mode_url + "?name=" + name, function(data) {
+                if(json_code_mirror != null){
+                    json_code_mirror.getDoc().setValue(JSON.stringify(data, null, 2));
+                }
+            });
+        };
+        function RemoveMode(name) {
+            // Make a modal to ask if user is really sure.
+            // Then delete the thing if they confirm
+        };
+
 
     </script>
 

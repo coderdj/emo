@@ -7,7 +7,7 @@ import time
 import pytz
 
 
-def inject_rc_doc():
+def inject_mode_doc():
 
     """
     Function to inject a run mode.
@@ -15,7 +15,7 @@ def inject_rc_doc():
     """
 
     run_mode_dict = {
-
+        "user": "dan",
         "blt_size": 524288,
         "run_start": 1,
         "run_start_module": 1868,
