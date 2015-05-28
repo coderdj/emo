@@ -2,12 +2,12 @@ from pymongo import MongoClient
 from django.contrib.auth.decorators import login_required
 from json import dumps
 from django.shortcuts import HttpResponse
-
+import pickle
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.embed import components
-
-import numpy as np
+import matplotlib.pyplot as plt
+import mpld3
 
 # These options will be set somewhere else later?
 online_db_name = "online"
@@ -18,6 +18,7 @@ mongodb_port = 27017
 # Connect to pymongo
 client = MongoClient(mongodb_address, mongodb_port)
 db = client[online_db_name]
+
 
 
 def getwaveform():
@@ -111,3 +112,25 @@ def get_aggregate_plot(request):
 
     ret = {"script": script, "div": div}
     return HttpResponse(dumps(ret), content_type="application/json")
+
+
+@login_required
+def get_latest_display(request):
+
+    print("HERE")
+    collection = db['monitor_plots']
+    try:
+        docs = collection.find().sort("_id", -1)[:1]
+        doc=docs[0]
+    except:
+        return HttpResponse({}, content_type="application/json")
+
+    print("Found")
+    fig = pickle.loads(doc['data'])
+
+    print(fig)
+    print(type(fig))
+    #plt = mpld3.fig_to_dict(fig)
+    plot = mpld3.fig_to_html(fig)
+    return HttpResponse(dumps({'figure': plot, 'run_name': doc['run_name'], 'event_number': doc['event_number'],
+                               'event_date': doc['event_date']}), content_type="application/json")

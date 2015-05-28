@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<script src="{% static "js/d3.js"%}"></script>
+<script src="{% static "js/mpld3.v0.2.js"%}"></script>
+<link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
+
+    <style type="text/css">
+
+  .Loading {
+      display:    none;
+      position:   fixed;
+      z-index:    1000;
+      top:        0;
+      left:       0;
+      height:     100%;
+      width:      100%;
+      background: rgba( 255, 255, 255, .8 )
+      url('{{STATIC_URL}}images/ajax-loader.gif')
+      50% 50%
+      no-repeat;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="Loading">Loading Next Event</div>
+
+    <div class="col-xs-12 emo-search-bar" style="position:absolute;z-index:2;">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6" style="line-height:40px;">
+                <strong>Run: </strong>
+                <span id="run_name" style="font-size:12pt;"></span>&nbsp;&nbsp;
+                <strong>Event: </strong>
+                <span style="font-size:12pt" id="event_number"></span>&nbsp;&nbsp;
+                <strong>Collected: </strong><span id="event_date"></span>
+            </div>
+            <div class="col-xs-12 col-sm-6 text-right">
+                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
+                        onclick="nextevent()">Newest Event</button>
+                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
+                        onclick="loadjson()">Load from file</button>
+                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
+                        onclick="savejson()">Save to file</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-12" id="display_div" style="margin-top:-40px;z-index:0;"></div>
+
+
+    <script type="text/javascript">
+    var currentData = {};
+    var waveformUrl = "/monitor/get_latest_display";
+
+    function savejson(){
+      var url = 'data:text/json;charset=utf8,' + encodeURIComponent(currentData);
+      window.open(url, '_blank');
+      window.focus();
+    }
+    function loadjson(){
+        BootstrapDialog.show({ title: 'Load event from file',
+			     message: 'put prompt here'
+			   });
+    }
+
+    function nextevent(){
+      // function gets JSON data from server and reformats it, then draws next event
+      // also resets s2 index to zero and draws s2[0] for the event
+       $(".Loading").show();
+      $.getJSON(waveformUrl, function(data){
+	    currentdata = data;
+         // $("#display_div").append(data['figure']);
+                    document.getElementById("run_name").innerHTML = data['run_name'];
+                    document.getElementById("event_number").innerHTML = data['event_number'];
+                    document.getElementById("event_date").innerHTML = data['event_date'];
+
+          document.getElementById("display_div").innerHTML = "";
+          $("#display_div").append(data['figure']);
+
+                $(".Loading").hide();
+
+      });
+    } //end NextEvent
+    </script>
+{% endblock %}
