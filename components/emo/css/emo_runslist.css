@@ -13,7 +13,8 @@
     box-shadow: 3px 3px 3px #BBBBBB;
 
   border-top:0;
-    height:40px;
+  min-height:40px;
+  padding-bottom: 5px;
 
   margin-left:5px;
     background-color: white;

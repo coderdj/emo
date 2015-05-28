@@ -32,12 +32,12 @@
 <div class="col-xs-12 emo-search-bar">
     <form method="GET" action="/runs/">
         <div class="row">
-            <div class="col-sm-1" style="line-height:40px;"><strong>Filter:</strong></div>
-            <div class="col-sm-2">From: {{form.startdate}} </div>
-            <div class="col-sm-2">To: {{form.enddate}} </div>
-            <div class="col-sm-2">Mode: {{ form.mode }}</div>
-            <div class="col-sm-4">Mongo search: {{ form.custom }} </div>
-            <div class="col-sm-1">
+            <div class="col-xs-1" style="line-height:40px;"><strong>Filter:</strong></div>
+            <div class="col-xs-2">From: {{form.startdate}} </div>
+            <div class="col-xs-2">To:&nbsp;   {{form.enddate}} </div>
+            <div class="col-xs-2">Mode: {{ form.mode }}</div>
+            <div class="col-xs-3">Query: {{ form.custom }} </div>
+            <div class="col-xs-2">
                 <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
             </div>
         </div>

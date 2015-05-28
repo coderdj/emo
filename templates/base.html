@@ -19,6 +19,7 @@
 
     <!-- Declare here any global javascript -->
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+
     <script src="{% static "Highcharts-4.0.1/js/highcharts.js" %}"></script>
 
     
@@ -26,6 +27,8 @@
      <script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
+
+
 
 {% block head %}
 {% endblock %}
@@ -108,7 +111,7 @@
 					</a>
 					<ul class="dropdown-menu">
 						<li><a class="ajax-link" href="/monitor/waveforms">Live Waveforms</a></li>
-						<li><a class="ajax-link" href="/monitor/diagnostics">Detector Paramters</a></li>
+						<li><a class="ajax-link" href="/monitor/diagnostics">Data Monitoring</a></li>
 						<li><a class="ajax-link" href="/monitor/runstats">Run Parameters</a></li>
 						<li><a class="ajax-link" href="/monitor/scope">Noise Spectra</a></li>
 						<li><a class="ajax-link" href="/monitor/hardware">DAQ Hardware</a></li>

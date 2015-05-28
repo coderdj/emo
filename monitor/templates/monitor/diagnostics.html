@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<style type="text/css">
+
+      .gridster li header {
+        background: #999;
+        display: block;
+        font-size: 20px;
+        line-height: normal;
+        padding: 4px 0 6px ;
+        margin-bottom: 20px;
+          overflow-y: auto;
+        cursor: move;
+      }
+        .gridster li {
+            background: #FFFFFF;
+        }
+
+</style>
+  <!--   <script src="{% static "js/lodash.min.js"%}"></script>
+    <script src="{% static "gridstack.js-master/dist/gridstack.js"%}"></script>
+<link rel="stylesheet" href="{% static "gridstack.js-master/dist/gridstack.css" %}"/>-->
+    <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
+
+
+{% endblock %}
+{% block content %}
+
+    <div class="col-xs-12">
+        <h5>Add chart dialog here</h5>
+    </div>
+   <div class="col-xs-12" id="grid">
+</div>
+
+
+
+    <script type="text/javascript">
+
+    var aggregate_list_url = "/monitor/get_aggregate_list";
+    var aggregate_data_url = "/monitor/get_aggregate_plot/";
+
+    function MakeGridTemplate(datadiv){
+        ret = "<div class='col-md-4 col-s-6 col-xs-12'>" + datadiv + "</div>";
+        return ret;
+    }
+
+      $(function(){
+
+      $.getJSON(aggregate_list_url, function(plotdata){
+
+         for(x=0; x<plotdata.length; x+=1){
+
+             query = aggregate_data_url + "?name=" + plotdata[x];
+              widget_id = "plot_" + x.toString();
+              $.getJSON(query, function(aggregate_data){
+
+                    if (aggregate_data != null && aggregate_data != {}) {
+                        console.log(aggregate_data);
+                        $("#grid").append(MakeGridTemplate(aggregate_data['div']));
+                        $("body").append(aggregate_data['script']);
+
+                    }
+              }); // End second getJSON
+
+              } // End for
+          }); // End first getJSON
+    });
+
+    </script>
+<script id="js_div"></script>
+
+{% endblock %}

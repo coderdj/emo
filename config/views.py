@@ -1,4 +1,4 @@
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect
 from pymongo import MongoClient
 from bson.json_util import dumps, loads
 from django.contrib.auth.decorators import login_required
@@ -16,6 +16,20 @@ mongodb_port = 27017
 client = MongoClient(mongodb_address, mongodb_port)
 db = client[online_db_name]
 collection = db[runs_db_collection]
+
+@login_required
+def delete_run_mode(request):
+
+    """
+    Deletes a run mode by name
+    :param request:
+    :return:
+    """
+    if 'mode' not in request.GET.keys():
+        return
+    if request.GET['mode'] is not None:
+        collection.remove({"name":request.GET['mode']})
+    return HttpResponsePermanentRedirect("config/index.html")
 
 @login_required
 def fetch_run_mode(request):

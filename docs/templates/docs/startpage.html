@@ -299,4 +299,44 @@ doc = {
 These docs go in the collection "online.run_modes". The a run is started the entire ini file is written to the run document
 in string form (string for maintains compatibility in case a run is started via command line with a traditional ini file).
 </p>
+<h3>Data Monitoring</h3>
+<p>
+The data monitor has two types of documents. "Event documents" contain data on single events. During operation a pax instance
+processes data from the trigger output database and fills a capped MongoDB collection with event docs. This means there is a buffer
+of event docs. The buffer is managed such that new event docs are always added as quickly as they can be processed. When the
+collection reaches a certain size the old docs are deleted.
+
+The other type of document are "aggregate documents". These are basically histograms in the form of MongoDB documents. This
+is an online view of certain detector properties. These documents are filled on a per-run basis (when a new run comes along
+the old doc is retired and a new one is created). So the user is able to view these aggregate histograms for the most recent run,
+the last week, or the entire data period. These aggregate documents have a general form so that new aggregates can be added to
+pax at any time and the frontend will know what to do with them.
+</p>
+
+<p>
+The aggregate docs have the following form:
+</p>
+	<pre class="prettyprint">
+doc = {
+	"name": string,   			# name of the histogram
+	"type": string,				# type of aggregate, currently supports h1, h2, scatter
+	"run":	string,				# name of the run for which this histgram is valid
+	"xaxis": {
+		"label": 	string,		# name of the x axis
+		"start": 	float,		# starting value of first bin (only h1/h2)
+	},
+	"yaxis": {
+		"label":	string,		# name of the y axis
+		"start": 	float,		# starting value of the first bin (only h1/h2)
+	},
+	bulk:[	float ],			# list of bin contents, in case of n dimensions [float,float] = [x,y]
+}
+</pre>
+<p>
+The event docs are basically a mirror of the pax3 event class, containing all waveforms and found peaks.
+</p>
+<pre class="prettyprint">
+
+</pre>
+
 {% endblock %}

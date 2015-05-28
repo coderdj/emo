@@ -62,8 +62,6 @@ def rundetail ( request ):
     client = MongoClient(mongodb_address, mongodb_port)
     db = client[ online_db_name ]
     collection = db[ runs_db_collection ]
-    print("HERE")
-    
     
     if request.method == 'POST':
         
