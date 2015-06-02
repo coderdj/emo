@@ -67,7 +67,7 @@ border-style=solid;border-width:1px;">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
           <h4 class="modal-title">Start a new run</h4>
         </div>
-        <form method="POST" action="/control/start_run">
+        <form method="POST" action="/control/start_run" id="run_start_form">
         <div class="modal-body" style="min-height:200px;overflow-y:auto;">
             <div class="col-xs-12" id="top-selector">
                 <ul class="nav nav-pills">
@@ -83,7 +83,7 @@ border-style=solid;border-width:1px;">
                     </div>
                 <div class="row">
                     <div class="col-xs-6"><strong>Comment:</strong></div>
-                    <div class="col-xs-6"><textarea rows:"4" name="comment"></textarea></div>
+                    <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
                 </div>
             </div>
             <div class="col-xs-12" id="tpc-options" style="display:block;margin-top:20px;">
@@ -91,7 +91,7 @@ border-style=solid;border-width:1px;">
                 <hr>
                 <div class="row">
                     <div class="col-xs-6"><strong>Run mode:</strong></div>
-                    <div class="col-xs-6"></div>
+                    <div class="col-xs-6"><select id="tpc_run_mode" name="opt_tpc_run_mode"></select></div>
                 </div>
                 <div class="row">
                     <div class="col-xs-6"><strong>Do baselines:</strong></div>
@@ -119,7 +119,7 @@ border-style=solid;border-width:1px;">
                 <hr>
                 <div class="row">
                     <div class="col-xs-6"><strong>Run mode:</strong></div>
-                    <div class="col-xs-6"></div>
+                    <div class="col-xs-6"><select id="muon_veto_run_mode" name="opt_muon_run_mode"></select></div>
                 </div>
                 <div class="row">
                     <div class="col-xs-6"><strong>Do baselines:</strong></div>
@@ -158,6 +158,7 @@ border-style=solid;border-width:1px;">
   // Globals for this page
   //var chart = null;
   var updateFreq = 5000;          // 5 second update polling
+  var run_mode_list_url = "/config/fetch_mode_list";
   var chartdiv = "rates_panel";
   var pointUpdateUrl = "/control/get_node_updates";
   var historyUrl = "/control/get_node_history";
@@ -207,6 +208,22 @@ border-style=solid;border-width:1px;">
   //DrawLogWindow( "message_panel", logUrl );
     var chart = null;
 
+      $.getJSON(run_mode_list_url, function(data){
+             if(data!=null){
+                if("tpc" in data){
+                    for(x=0;x<data['tpc'].length;x++){
+                        $("#tpc_run_mode").append("<option name='"+data['tpc'][x]+"'>"+
+                                data['tpc'][x]+"</option>");
+                    }
+                }
+                 if("muon_veto" in data){
+                    for(x=0;x<data['muon_veto'].length;x++){
+                        $("#muon_veto_run_mode").append("<option name='"+data['muon_veto'][x]+"'>"+
+                                data['muon_veto'][x]+"</option>");
+                    }
+                }
+             }
+      });
 
      drawChart( chart, chartdiv, function(thechart) {
           loadData( thechart, historyUrl, function(anotherchart) {
