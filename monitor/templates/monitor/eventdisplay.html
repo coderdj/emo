@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block head %}
+    <script src="{% static "js/pace.min.js"%}"></script>
+  <link href="{% static "css/pace.css"%}" rel="stylesheet" />
+    <script type="text/javascript">Pace.start();</script>
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <script src="{% static "js/three.js" %}"></script>
 <script src="{% static "js/threex.fullscreen.js"%}"></script>
 <script src="{% static "js/OrbitControls.js"%}"></script>
 <script src="{% static "emo/js/tpc_3d.js"%}"></script>
+
+     <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
 {% endblock %}
 {% block content %}
 
@@ -80,7 +86,7 @@
 <script type="text/javascript">
 
   //GLOBALS  
-  var waveformUrlBase="{% url 'getwaveform' %}";
+  var waveformUrlBase="{% url 'get_event_as_json' %}";
   var tpc_geometry_path = "{% static "emo/js/emo_tpc_model.js" %}";
   var loaded = false;
   var play = true;
@@ -359,9 +365,19 @@
       CreateScene( function(){
 	  animate();	  
 	  drawpoints();
+          draw_full_plot();
       });
   });
-  
+  function draw_full_plot(){
+
+            $.getJSON("/monitor/get_event_for_3d", function(data) {
+                document.getElementById("fullWaveformPanel").innerHTML = "";
+                $("#fullWaveformPanel").append(data['div']);
+
+                $("body").append(data['script']);
+            });
+
+  }
   $(window).bind("resize", function(){
       var w = $(window).width();
       var h = $(window).height();

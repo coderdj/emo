@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block head %}
+
+  <script src="{% static "js/pace.min.js"%}"></script>
+  <link href="{% static "css/pace.css"%}" rel="stylesheet" />
+    <script type="text/javascript">Pace.start();</script>
+     <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
+{% endblock %}
+{% block content %}
+     <div class="col-xs-12">
+        <h5 id="run_name">{{ run_name }}</h5>
+    </div>
+   <div class="col-xs-12" id="grid" style="overflow-x:scroll;">
+   {% autoescape off %}{{ div }}{{ script }}{% endautoescape %}
+</div>
+<script type="text/javascript">
+    $(function(){
+
+
+    });
+</script>
+{% endblock %}
+

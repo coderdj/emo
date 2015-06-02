@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block content %}
+
+<div class="row" style="margin-top:10px;">
+<div class="col-xs-3 col-sm-3">
+    <h3>Noise Spectra</h3>
+</div>
+</div>
+    <br>
+
+<table class="table table-condensed table-hover" style="background-color:white;padding:0;">
+  <tbody>
+  <tr>
+    <th style="width:250px"> Date (UTC)</th>
+    <th style="width:100px"> Run </th>
+    <th> Comments </th>
+    <th style="pull-right;"></th>
+  </tr>
+    {% for run in run_list %}
+        <script>console.log("{{ run }}");</script>
+        {% if "approved" in run %}
+        <tr style="color:#777777">
+        {% else %}
+        <tr>
+      {% endif %}
+      <td style="color:black;"><strong> {{ run.date|date:"DATETIME_FORMAT" }} </strong></td>
+      <td style="color:black;">{{run.run_name}}</td>
+    {% if "comments" in run %}
+        <td> <span class="glyphicon glyphicon-comment">&nbsp{{ run.comments|length }}</span></td>
+  {% else %}
+        <td> <span class="glyphicon glyphicon-comment">&nbsp0</span></td>
+  {% endif %}
+    <td><a class="btn btn-info btn-small" href="/monitor/noise_report?run={{ run.collection }}">View/Approve</a></td>
+      </tr>
+{% endfor %}
+</tbody></table>
+
+{% endblock %}
