@@ -1,3 +1,8 @@
 from django.db import models
+from django import forms
 
-# Create your models here.
+
+class RunStartForm(forms.Form):
+
+    user = forms.CharField(label="User", max_length=100, required=False)
+

@@ -8,8 +8,10 @@ urlpatterns = [
     url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),
     url(r'^get_node_updates',views.GetNodeUpdates,name='get_node_updates'),
     url(r'^get_node_history', views.GetNodeHistory,name='get_node_history'),
+    url(r'$start_run', views.start_run, name='start_run'),
     url(r'$', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanel.html"))),
+
     #url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),
     #   url(r'^rundetail',views.rundetail,name='rundetail'),
     #    url(r'^download_list',views.download_list,name='download_list'),

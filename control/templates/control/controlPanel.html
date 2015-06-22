@@ -80,6 +80,7 @@ border-style=solid;border-width:1px;">
                 <div class="row">
                     <div class="col-xs-6"><strong>Starting user:</strong></div>
                     <div class="col-xs-6">{{ request.user.username }}</div>
+                    <input class="hidden" name="user" value="{{ request.user.username }}"/>
                     </div>
                 <div class="row">
                     <div class="col-xs-6"><strong>Comment:</strong></div>

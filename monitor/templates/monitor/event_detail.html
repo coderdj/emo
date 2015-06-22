@@ -14,7 +14,9 @@
         <h5 id="run_name">{{ run_name }}</h5>
     </div>
    <div class="col-xs-12" id="grid" style="overflow-x:scroll;">
-   {% autoescape off %}{{ div }}{{ script }}{% endautoescape %}
+       {%  for plot in plots %}
+   {% autoescape off %}{{ plot.div }}{{ plot.script }}{% endautoescape %}
+       {% endfor %}
 </div>
 <script type="text/javascript">
     $(function(){

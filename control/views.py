@@ -147,3 +147,32 @@ def GetNodeHistory(request):
         ret.append( { "node": node, "data": ret_list } )
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
+
+
+@login_required
+def start_run(request):
+
+    """
+    Requests a run start by writing a run start doc to the runs DB
+    """
+
+    # Check that request is valid
+    if request.method != "POST":
+        return
+
+
+    insert_doc = {}
+
+
+
+    # These options will be set somewhere else later?
+    online_db_name = "online"
+    runs_db_collection = "daq_control"
+    mongodb_address = "localhost"
+    mongodb_port = 27017
+
+    # Connect to pymongo
+    client = MongoClient(mongodb_address, mongodb_port)
+    db = client[ online_db_name ]
+    collection = db[ runs_db_collection ]
+

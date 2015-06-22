@@ -15,6 +15,131 @@
 //var fragmentShader = "uniform sampler2D texture; uniform vec3 color; uniform float alpha; void main() { gl_FragColor = vec4( color, alpha ); gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord ); }";
 //</script>
 
+//PMT MAP
+var g_pmt_map = { 0 : {'x' : 0, 'y' : 0},
+                  1 : {'x' : 166.84, 'y' : 0.00},     2 : {'x' : 163.19, 'y' : 34.69},
+                  3 : {'x' : 152.42, 'y' : 67.86},    4 : {'x' : 134.98, 'y' : 98.07},
+                  5 : {'x' : 111.64, 'y' : 123.99},   6 : {'x' : 83.42, 'y' : 144.49},
+                  7 : {'x' : 51.56, 'y' : 158.67},    8 : {'x' : 17.44, 'y' : 165.93},
+                  9 : {'x' : -17.44, 'y' : 165.93},   10 : {'x' : -51.56, 'y' : 158.67},
+                  11 : {'x' : -83.42, 'y' : 144.49},  12 : {'x' : -111.64, 'y' : 123.99},
+                  13 : {'x' : -134.98, 'y' : 98.07},  14 : {'x' : -152.42, 'y' : 67.86},
+                  15 : {'x' : -163.19, 'y' : 34.69},  16 : {'x' : -166.84, 'y' : 0.00},
+                  17 : {'x' : -163.19, 'y' : -34.69}, 18 : {'x' : -152.42, 'y' : -67.86},
+                  19 : {'x' : -134.98, 'y' : -98.07}, 20 : {'x' : -111.64, 'y' : -123.99},
+                  21 : {'x' : -83.42, 'y' : -144.49}, 22 : {'x' : -51.56, 'y' : -158.67},
+                  23 : {'x' : -17.44, 'y' : -165.93}, 24 : {'x' : 17.44, 'y' : -165.93},
+                  25 : {'x' : 51.56, 'y' : -158.67},  26 : {'x' : 83.42, 'y' : -144.49},
+                  27 : {'x' : 111.64, 'y' : -123.99}, 28 : {'x' : 134.98, 'y' : -98.07},
+                  29 : {'x' : 152.42, 'y' : -67.86},  30 : {'x' : 163.19, 'y' : -34.69},
+                  31 : {'x' : 136.53, 'y' : 0.00},    32 : {'x' : 131.88, 'y' : 35.34},
+                  33 : {'x' : 118.24, 'y' : 68.27},   34 : {'x' : 96.54, 'y' : 96.54},
+                  35 : {'x' : 68.27, 'y' : 118.24},   36 : {'x' : 35.34, 'y' : 131.88},
+                  37 : {'x' : 0.00, 'y' : 136.53},    38 : {'x' : -35.34, 'y' : 131.88},
+                  39 : {'x' : -68.27, 'y' : 118.24},  40 : {'x' : -96.54, 'y' : 96.54},
+                  41 : {'x' : -118.24, 'y' : 68.27},  42 : {'x' : -131.88, 'y' : 35.34},
+                  43 : {'x' : -136.53, 'y' : 0.00},   44 : {'x' : -131.88, 'y' : -35.34},
+                  45 : {'x' : -118.24, 'y' : -68.27}, 46 : {'x' : -96.54, 'y' : -96.54},
+                  47 : {'x' : -68.27, 'y' : -118.24}, 48 : {'x' : -35.34, 'y' : -131.88},
+                  49 : {'x' : -0.00, 'y' : -136.53},  50 : {'x' : 35.34, 'y' : -131.88},
+                  51 : {'x' : 68.27, 'y' : -118.24},  52 : {'x' : 96.54, 'y' : -96.54},
+                  53 : {'x' : 118.24, 'y' : -68.27},  54 : {'x' : 131.88, 'y' : -35.34},
+                  55 : {'x' : 106.20, 'y' : 0.00},    56 : {'x' : 101.00, 'y' : 32.82},
+                  57 : {'x' : 85.92, 'y' : 62.42},    58 : {'x' : 62.42, 'y' : 85.92},
+                  59 : {'x' : 32.82, 'y' : 101.00},   60 : {'x' : 0.00, 'y' : 106.20},
+                  61 : {'x' : -32.82, 'y' : 101.00},  62 : {'x' : -62.42, 'y' : 85.92},
+                  63 : {'x' : -85.92, 'y' : 62.42},   64 : {'x' : -101.00, 'y' : 32.82},
+                  65 : {'x' : -106.20, 'y' : 0.00},   66 : {'x' : -101.00, 'y' : -32.82},
+                  67 : {'x' : -85.92, 'y' : -62.42},  68 : {'x' : -62.42, 'y' : -85.92},
+                  69 : {'x' : -32.82, 'y' : -101.00}, 70 : {'x' : -0.00, 'y' : -106.20},
+                  71 : {'x' : 32.82, 'y' : -101.00},  72 : {'x' : 62.42, 'y' : -85.92},
+                  73 : {'x' : 85.92, 'y' : -62.42},   74 : {'x' : 101.00, 'y' : -32.82},
+                  75 : {'x' : 75.87, 'y' : 0.00},     76 : {'x' : 68.76, 'y' : 32.06},
+                  77 : {'x' : 47.75, 'y' : 58.96},    78 : {'x' : 17.07, 'y' : 73.93},
+                  79 : {'x' : -15.77, 'y' : 74.21},   80 : {'x' : -46.71, 'y' : 59.79},
+                  81 : {'x' : -68.19, 'y' : 33.26},   82 : {'x' : -75.87, 'y' : 0.00},
+                  83 : {'x' : -68.76, 'y' : -32.06},  84 : {'x' : -47.75, 'y' : -58.96},
+                  85 : {'x' : -17.07, 'y' : -73.93},  86 : {'x' : 15.77, 'y' : -74.21},
+                  87 : {'x' : 46.71, 'y' : -59.79},   88 : {'x' : 68.19, 'y' : -33.26},
+                  89 : {'x' : 45.00, 'y' : 0.00},     90 : {'x' : 30.00, 'y' : 30.00},
+                  91 : {'x' : -0.00, 'y' : 45.00},    92 : {'x' : -30.00, 'y' : 30.00},
+                  93 : {'x' : -45.00, 'y' : 0.00},    94 : {'x' : -30.00, 'y' : -30.00},
+                  95 : {'x' : -0.00, 'y' : -45.00},   96 : {'x' : 30.00, 'y' : -30.00},
+                  97 : {'x' : 15.00, 'y' : 0.00},     98 : {'x' : -15.00, 'y' : 0.00},
+                  99 : {'x' : -41.15, 'y' : 123.44},  100 : {'x' : -13.71, 'y' : 123.44},
+                  101 : {'x' : 13.71, 'y' : 123.44},  102 : {'x' : 41.15, 'y' : 123.44},
+                  103 : {'x' : -82.29, 'y' : 96.00},  104 : {'x' : -54.86, 'y' : 96.00},
+                  105 : {'x' : -27.43, 'y' : 96.00},  106 : {'x' : 0.00, 'y' : 96.00},
+                  107 : {'x' : 27.43, 'y' : 96.00},   108 : {'x' : 54.86, 'y' : 96.00},
+                  109 : {'x' : 82.29, 'y' : 96.00},   110 : {'x' : -109.72, 'y' : 68.58},
+                  111 : {'x' : -82.29, 'y' : 68.58},  112 : {'x' : -54.86, 'y' : 68.58},
+                  113 : {'x' : -27.43, 'y' : 68.58},  114 : {'x' : 0.00, 'y' : 68.58},
+                  115 : {'x' : 27.43, 'y' : 68.58},   116 : {'x' : 54.86, 'y' : 68.58},
+                  117 : {'x' : 82.29, 'y' : 68.58},   118 : {'x' : 109.72, 'y' : 68.58},
+                  119 : {'x' : -123.44, 'y' : 41.15}, 120 : {'x' : -96.00, 'y' : 41.15},
+                  121 : {'x' : -68.58, 'y' : 41.15},  122 : {'x' : -41.15, 'y' : 41.15},
+                  123 : {'x' : -13.71, 'y' : 41.15},  124 : {'x' : 13.71, 'y' : 41.15},
+                  125 : {'x' : 41.15, 'y' : 41.15},   126 : {'x' : 68.58, 'y' : 41.15},
+                  127 : {'x' : 96.00, 'y' : 41.15},   128 : {'x' : 123.44, 'y' : 41.15},
+                  129 : {'x' : -123.44, 'y' : 13.71}, 130 : {'x' : -96.00, 'y' : 13.71},
+                  131 : {'x' : -68.58, 'y' : 13.71},  132 : {'x' : -41.15, 'y' : 13.71},
+                  133 : {'x' : -13.71, 'y' : 13.71},  134 : {'x' : 13.71, 'y' : 13.71},
+                  135 : {'x' : 41.15, 'y' : 13.71},   136 : {'x' : 68.58, 'y' : 13.71},
+                  137 : {'x' : 96.00, 'y' : 13.71},   138 : {'x' : 123.44, 'y' : 13.71},
+                  139 : {'x' : -123.44, 'y' : -13.71},        140 : {'x' : -96.00, 'y' : -13.71},
+                  141 : {'x' : -68.58, 'y' : -13.71}, 142 : {'x' : -41.15, 'y' : -13.71},
+                  143 : {'x' : -13.71, 'y' : -13.71}, 144 : {'x' : 13.71, 'y' : -13.71},
+                  145 : {'x' : 41.15, 'y' : -13.71},  146 : {'x' : 68.58, 'y' : -13.71},
+                  147 : {'x' : 96.00, 'y' : -13.71},  148 : {'x' : 123.44, 'y' : -13.71},
+                  149 : {'x' : -123.44, 'y' : -41.15},        150 : {'x' : -96.00, 'y' : -41.15},
+                  151 : {'x' : -68.58, 'y' : -41.15}, 152 : {'x' : -41.15, 'y' : -41.15},
+                  153 : {'x' : -13.71, 'y' : -41.15}, 154 : {'x' : 13.71, 'y' : -41.15},
+                  155 : {'x' : 41.15, 'y' : -41.15},  156 : {'x' : 68.58, 'y' : -41.15},
+                  157 : {'x' : 96.00, 'y' : -41.15},  158 : {'x' : 123.44, 'y' : -41.15},
+                  159 : {'x' : -109.72, 'y' : -68.58},        160 : {'x' : -82.29, 'y' : -68.58},
+                  161 : {'x' : -54.86, 'y' : -68.58}, 162 : {'x' : -27.43, 'y' : -68.58},
+                  163 : {'x' : 0.00, 'y' : -68.58},   164 : {'x' : 27.43, 'y' : -68.58},
+                  165 : {'x' : 54.86, 'y' : -68.58},  166 : {'x' : 82.29, 'y' : -68.58},
+                  167 : {'x' : 109.72, 'y' : -68.58}, 168 : {'x' : -82.29, 'y' : -96.00},
+                  169 : {'x' : -54.86, 'y' : -96.00}, 170 : {'x' : -27.43, 'y' : -96.00},
+                  171 : {'x' : 0.00, 'y' : -96.00},   172 : {'x' : 27.43, 'y' : -96.00},
+                  173 : {'x' : 54.86, 'y' : -96.00},  174 : {'x' : 82.29, 'y' : -96.00},
+                  175 : {'x' : -41.15, 'y' : -123.44},        176 : {'x' : -13.71, 'y' : -123.44},
+                  177 : {'x' : 13.71, 'y' : -123.44}, 178 : {'x' : 41.15, 'y' : -123.44},
+                  179 : {'x' : 197.15, 'y' : 0.00},   180 : {'x' : 193.53, 'y' : 37.62},
+                  181 : {'x' : 182.79, 'y' : 73.85},  182 : {'x' : 165.34, 'y' : 107.38},
+                  183 : {'x' : 139.41, 'y' : 139.41}, 184 : {'x' : 110.25, 'y' : 163.44},
+                  185 : {'x' : 77.03, 'y' : 181.48},  186 : {'x' : 40.99, 'y' : 192.84},
+                  187 : {'x' : 0.00, 'y' : 197.15},   188 : {'x' : -37.62, 'y' : 193.53},
+                  189 : {'x' : -73.85, 'y' : 182.79}, 190 : {'x' : -107.38, 'y' : 165.34},
+                  191 : {'x' : -139.41, 'y' : 139.41},        192 : {'x' : -163.44, 'y' : 110.25},
+                  193 : {'x' : -181.48, 'y' : 77.03}, 194 : {'x' : -192.84, 'y' : 40.99},
+                  195 : {'x' : -197.15, 'y' : 0.00},  196 : {'x' : -193.53, 'y' : -37.62},
+                  197 : {'x' : -182.79, 'y' : -73.85},        198 : {'x' : -165.34, 'y' : -107.38},
+                  199 : {'x' : -139.41, 'y' : -139.41},       200 : {'x' : -110.25, 'y' : -163.44},
+                  201 : {'x' : -77.03, 'y' : -181.48},        202 : {'x' : -40.99, 'y' : -192.84},
+                  203 : {'x' : -0.00, 'y' : -197.15}, 204 : {'x' : 37.62, 'y' : -193.53},
+                  205 : {'x' : 73.85, 'y' : -182.79}, 206 : {'x' : 107.38, 'y' : -165.34},
+                  207 : {'x' : 139.41, 'y' : -139.41},        208 : {'x' : 163.44, 'y' : -110.25},
+                  209 : {'x' : 181.48, 'y' : -77.03}, 210 : {'x' : 192.84, 'y' : -40.99},
+                  211 : {'x' : -197.15, 'y' : 0.00},  212 : {'x' : -193.53, 'y' : 37.62},
+                  213 : {'x' : -182.79, 'y' : 73.85}, 214 : {'x' : -165.34, 'y' : 107.38},
+                  215 : {'x' : -139.41, 'y' : 139.41},        216 : {'x' : -110.25, 'y' : 163.44},
+                  217 : {'x' : -77.03, 'y' : 181.48}, 218 : {'x' : -40.99, 'y' : 192.84},
+                  219 : {'x' : -0.00, 'y' : 197.15},  220 : {'x' : 37.62, 'y' : 193.53},
+                  221 : {'x' : 73.85, 'y' : 182.79},  222 : {'x' : 107.38, 'y' : 165.34},
+                  223 : {'x' : 139.41, 'y' : 139.41}, 224 : {'x' : 163.44, 'y' : 110.25},
+                  225 : {'x' : 181.48, 'y' : 77.03},  226 : {'x' : 192.84, 'y' : 40.99},
+                  227 : {'x' : 197.15, 'y' : 0.00},   228 : {'x' : 193.53, 'y' : -37.62},
+                  229 : {'x' : 182.79, 'y' : -73.85}, 230 : {'x' : 165.34, 'y' : -107.38},
+                  231 : {'x' : 139.41, 'y' : -139.41},        232 : {'x' : 110.25, 'y' : -163.44},
+                  233 : {'x' : 77.03, 'y' : -181.48}, 234 : {'x' : 40.99, 'y' : -192.84},
+                  235 : {'x' : 0.00, 'y' : -197.15},  236 : {'x' : -37.62, 'y' : -193.53},
+                  237 : {'x' : -73.85, 'y' : -182.79},        238 : {'x' : -107.38, 'y' : -165.34},
+                  239 : {'x' : -139.41, 'y' : -139.41},       240 : {'x' : -163.44, 'y' : -110.25},
+                  241 : {'x' : -181.48, 'y' : -77.03},        242 : {'x' : -192.84, 'y' : -40.99},
+              };
+
 function ExtractChannelWaveforms(data, whichs2, hidelist){
     // Extract channel waveforms from dict and return in dygraph format   
       // where first element [0] is channel number              
@@ -66,44 +191,80 @@ function ExtractChannelWaveforms(data, whichs2, hidelist){
 function UnzipWaveforms(data){
     // Unzip compressed waveforms and put the sum and filtered into one dict 
     // Return value is this dict 
-    var filtered_waveform = [];
-    var sum_waveform = [];
+    var veto_waveform = [];
+    var tpc_waveform = [];
 
-    //bottleneck is transfer. so use browser to decompress waveform                
-    for(i=0;i<data['filtered_waveform'].length;i++){
-        if(data['filtered_waveform'][i]=="z"){
-            nzeros=parseInt(data['filtered_waveform'][i+1]);
-            for(j=0;j<nzeros;j++)
-                filtered_waveform.push(0.);
-            i=i+1;
-            continue;
-        }
-        else
-            filtered_waveform.push(parseFloat(data['filtered_waveform'][i]));
+    // Get veto and sum waveforms
+    var idx_veto = -1;
+    var idx_tpc  = -1;
+    for( i=0; i<data['sum_waveforms'].length; i+=1){
+        if(data['sum_waveforms'][i]['name'] == 'veto_raw')
+            idx_veto = i;
+        else if(data['sum_waveforms'][i]['name'] == 'tpc_raw')
+            idx_tpc = i;
     }
-    for(i=0; i<data['sum_waveform'].length;i++){
-        if(data['sum_waveform'][i]=="z"){
-            nzeros = parseInt(data['sum_waveform'][i+1]);
-            for(j=0; j<nzeros; j++)
-                sum_waveform.push(0.);
+    if( idx_veto < 0 || idx_tpc < 0 )
+        return;
+    //bottleneck is transfer. so use browser to decompress waveform
+    for(i=0;i<data['sum_waveforms'][idx_veto]['samples'].length;i++){
+        if(data['sum_waveforms'][idx_veto]['samples'][i]=="z"){
+            nzeros=parseInt(data['sum_waveforms'][idx_veto]['samples'][i+1]);
+            for(j=0;j<nzeros;j++)
+                veto_waveform.push(0.);
             i=i+1;
             continue;
         }
         else
-            sum_waveform.push(parseFloat(data['sum_waveform'][i]));
+            veto_waveform.push(parseFloat(data['sum_waveforms'][idx_veto]['samples'][i]));
+    }
+    for(i=0; i<data['sum_waveforms'][idx_tpc]['samples'].length;i++){
+        if(data['sum_waveforms'][idx_tpc]['samples'][i]=="z"){
+            nzeros = parseInt(data['sum_waveforms'][idx_tpc]['samples'][i+1]);
+            for(j=0; j<nzeros; j++)
+                tpc_waveform.push(0.);
+            i=i+1;
+            continue;
+        }
+        else
+            tpc_waveform.push(parseFloat(data['sum_waveforms'][idx_tpc]['samples'][i]));
     }
 
     // Put together                                                                
     var total_data = [];
-    for(i=0;i<sum_waveform.length;i++)
-        if(i<filtered_waveform.length)
-            total_data.push([i,sum_waveform[i],filtered_waveform[i]]);
+    for(i=0;i<tpc_waveform.length;i++)
+        if(i<veto_waveform.length)
+            total_data.push([i,tpc_waveform[i],veto_waveform[i]]);
     return total_data;
 };
 
-function draw_full_waveform( div, unzipped_data ){
+function draw_full_waveform( div, unzipped_data, height ){
     
-    draw_waveform( div, unzipped_data, "" );
+    draw_waveform( div, unzipped_data, "", height );
+}
+
+function get_peaks(data, peaktype){
+    peaks = [];
+    for(x=0;x<data['peaks'].length;x+=1){
+        if( data['peaks'][x]['type'] != peaktype)
+            continue;
+        if(peaks.length == 0 )
+            peaks.push(x);
+        else{
+            for(index=0;index<peaks.length;index+=1){
+                if(peaktype=='s1' &&
+                    data['peaks'][x]['n_contributing_channels'] > data['peaks'][peaks[index]]['n_contributing_channels']) {
+                    peaks.splice(index, 0, x);
+                    break;
+                }
+                else if(peaktype=='s2' &&
+                    data['peaks'][x]['area'] > data['peaks'][peaks[index]]['area']){
+                    peaks.splice(index, 0, x);
+                    break;
+                }
+            }
+        }
+    }
+    return peaks;
 }
 function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
     
@@ -113,15 +274,18 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
 	return;
     }
 
+    // Get list of s1 indices (by coinc) or s2s (by area)
+    var peaks = get_peaks(data, peaktype);
+
     // Check that the S1 is there
-    if( data[peaktype].length < ID+1 ){
+    if( peaks.length < ID+1 ){
 	console.log( "tpc_3d::draw_d1 - ERROR requested S1 out of bounds");
 	return;
     }
     
     // Compute boundaries
-    leftb = data[peaktype][ID]['left'];
-    rightb = data[peaktype][ID]['right'];
+    leftb = data['peaks'][peaks[ID]]['left'];
+    rightb = data['peaks'][peaks[ID]]['right'];
     buffer = Math.ceil( .1*( rightb - leftb ));
     leftb = leftb - buffer;
     if( leftb < 0 ) leftb = 0;
@@ -131,10 +295,10 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
     // Slice the waveform around the S1
     waveform = unzipped_data.slice( leftb, rightb );
     
-    draw_waveform( div, waveform, title );   
+    draw_waveform( div, waveform, title, 320 );
 }
 
-function draw_waveform( div, thedata, thetitle ){
+function draw_waveform( div, thedata, thetitle, height ){
     
     graph = new Dygraph( div, thedata, 
 			 { 
@@ -147,19 +311,23 @@ function draw_waveform( div, thedata, thetitle ){
 			     rollPeriod: 1,
 			     labels: ["bin (10ns)", "sum_waveform", "filtered_waveform"],
 			     ylabel: "p.e.",
-			     xlabel: "bin (10ns)",
+			   //  xlabel: "bin (10ns)",
 			     colors: ['#09E042', '#0995E0'],
-                      });    
+                 height: height,
+                      });
 }
 
 function draw_hit_location( scene, data, hit_locs )
 // Draw a little circle at hit location
 {
     var imm_to_threejs = 10.;
-
-    posx = data['position']['x']*imm_to_threejs*-1;  // -1 to get geometry right
-    posz = data['position']['y']*imm_to_threejs;
-
+    peaks = get_peaks(data, 's2');
+    if(peaks.length != 0){
+        posx = data['peaks'][peaks[0]]['reconstructed_positions'][0]['x']*imm_to_threejs*-1;  // -1 to get geometry right
+        posz = data['peaks'][peaks[0]]['reconstructed_positions'][0]['y']*imm_to_threejs;
+    }
+    else
+        return;
     // Right now we have no z position so set random y
     posy = Math.random() * 1000 + 100;
 
@@ -191,10 +359,10 @@ function draw_hit_location( scene, data, hit_locs )
 function draw_hitpattern( scene, camera, renderer, hits, data )
 // Draw the hit pattern
 {
-    var iScaleMultiplier = 3;
+    var iScaleMultiplier = 2.5;
     var iPositionTopArray = 1200;
     var iPositionBottomArray = 0;
-    var iPmtHeightCorrection = 3000;
+    var iPmtHeightCorrection = 500;
     var iPmtSpeedFactor = 5;
 
     // Clear hits array first
@@ -206,22 +374,27 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
     // This will hold the heights, which
     cylinder_heights = [];
 
+    peaks = get_peaks(data, 's1');
+    if(peaks.length == 0)
+        return;
     // Loop through hits and define 'pmt' size and color
-    for(x=0;x<data['s2s'][0]['hits'].length;x++){
+    for(x=0;x<data['peaks'][peaks[0]]['hits'].length;x++){
 
 	// This makes a RELATIVE amplitude (height of pmt
 	// is only determined by other hits in S2)
-	amp = data['s2s'][0]['hits'][x][3]/data['s2s'][0]['area'];
-	
-	if( amp == 0. ) amp = 0.00001;
+	amp = data['peaks'][peaks[0]]['hits'][x]['area']/data['peaks'][peaks[0]]['area'];
+	channel = parseInt(data['peaks'][peaks[0]]['hits'][x]['channel']);
+        amp*=20;
+    console.log(x.toLocaleString() + amp.toString());
+	if( amp == 0. ) amp = 0.01;
 	if( amp > 1. ) amp = 1.;
-	
 	var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
-
+    console.log("amp");
+        console.log(amp);
 	// The color will be determined such that the largest hit is 
 	// at the 'top' of the pallete and the smallest should be at the bottom
-	colz = GetColor( data['s2s'][0]['hits'][x][3]/data['s2s'][0]['max_hit'] );
+	colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
 	
 	// Set color
 	hit.material.color.setRGB( colz[0],
@@ -236,11 +409,11 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
 	// Look up what this does
 	hit.overdraw = true;
 
-	hit.position.x = data['s2s'][0]['hits'][x][1]*iScaleMultiplier;
-        hit.position.z = data['s2s'][0]['hits'][x][2]*iScaleMultiplier;
+	hit.position.x = g_pmt_map[channel]['x']*iScaleMultiplier;
+        hit.position.z = g_pmt_map[channel]['y']*iScaleMultiplier;
 	
 	// Draw at proper y position
-	if( parseInt( data['s2s'][0]['hits'][x] ) <= 98 )
+	if( channel <= 98 )
 	    hit.position.y = iPositionTopArray;
 	else
 	    hit.position.y = iPositionBottomArray;
@@ -250,6 +423,42 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
 
 	scene.add( hit );
     } //end loop through hits
+
+    // If you want all PMTs represented
+    for( x=0; x< 243; x++){
+        var haspmt = false;
+        for(y=0;y<data['peaks'][peaks[0]]['hits'].length;y++){
+            if(data['peaks'][peaks[0]]['hits'][y]['channel']== x.toString()) {
+                haspmt = true;
+                break;
+            }
+        }
+        if(haspmt) continue;
+        console.log(x);
+        var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
+				 new THREE.MeshLambertMaterial({color:0xffff00}));
+	    colz = GetColor(.0003 ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
+
+	    // Set color
+	    hit.material.color.setRGB( colz[0], colz[1], colz[2] );
+	    // Make it glow
+        hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
+	    // Look up what this does
+	    hit.overdraw = true;
+	    hit.position.x = g_pmt_map[x.toString()]['x']*iScaleMultiplier;
+        hit.position.z = g_pmt_map[x.toString()]['y']*iScaleMultiplier;
+
+	    // Draw at proper y position
+	    if( x.toString() <= 98 || (x.toString() >= 179 && x.toString()<=210) )
+	        hit.position.y = iPositionTopArray;
+	    else
+	        hit.position.y = iPositionBottomArray;
+
+	    hits.push( hit );
+	    cylinder_heights.push( iPmtHeightCorrection *.0003 );
+
+	    scene.add( hit );
+    }
 
     // Now to actually animate the thing
     var currentLen = 0;
@@ -286,7 +495,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
     requestAnimationFrame( hitsAnimation );
 }
 
-function draw_tpc(scene, camera, renderer, path)
+function draw_tpc(scene, camera, renderer, path, callback, callback_arg)
 //This is the main animation function
 //It is responsible for drawing the main animation loop
 // Do not confuse this with MakeAnimation below, which draws the electron cartoon
@@ -324,6 +533,7 @@ function draw_tpc(scene, camera, renderer, path)
 		    mesh.geometry.computeVertexNormals();
 		    scene.add(mesh);
 		    mesh.position.y = 900;
+             callback(callback_arg);
 		}); // end load function
 }
 
@@ -376,7 +586,7 @@ function GetColor( amp )
     return colz;
 }
 
-function MakeAnimation(xv, yv, zv, s1, s2, threeScene, threeCamera, threeRenderer, options){
+function MakeAnimation(xv, yv, zv, s1, s2, threeScene, threeCamera, threeRenderer, options, callback, el){
     /*
       Makes a TPC animation including photons and drifting e-
 
@@ -426,7 +636,7 @@ function MakeAnimation(xv, yv, zv, s1, s2, threeScene, threeCamera, threeRendere
     });*/
     var p_material = new THREE.PointCloudMaterial({
 	color: 0xAAFFFF,
-	size: 25,
+	size: 3,
 	opacity: 0.3,
 	map: THREE.ImageUtils.loadTexture( options['imagepath']),
 //	    "{{STATIC_URL}}images/particle_1.png"),
@@ -669,6 +879,7 @@ function MakeAnimation(xv, yv, zv, s1, s2, threeScene, threeCamera, threeRendere
 	    threeScene.remove(photon_system);
 	    threeScene.remove(electron_system);
 	    threeScene.remove(s1_light);
+        callback(el);
 	    return;
 	}
 
