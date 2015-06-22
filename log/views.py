@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from log.models import LogEntryForm, LogSearchForm, LogCommentForm
 from bson.json_util import dumps
+from django.conf import settings
 
 
 @login_required
@@ -16,8 +17,8 @@ def get_dispatcher_log(request):
     """
     Make the dispatcher log page
     """
-    c = MongoClient("localhost", 27017)
-    d = c['online']
+    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+    d = c[settings.LOG_DB_NAME]
     mongo_collection = d['log']
 
     mongo_query = {"sender": "default_sender"}
@@ -32,8 +33,8 @@ def log(request):
     """
     Make the main log page
     """
-    c = MongoClient("localhost", 27017)
-    d = c['online']
+    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+    d = c[settings.LOG_DB_NAME]
     mongo_collection = d['log']
 
     mongo_query = {}
@@ -84,8 +85,8 @@ def new_comment(request):
     """
     Add a new comment to a log entry.
     """
-    c = MongoClient("localhost")
-    d = c['online']
+    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+    d = c[settings.LOG_DB_NAME]
     mongo_collection = d['log']
 
     if request.method == 'POST':
@@ -116,9 +117,10 @@ def new_comment(request):
 @login_required(login_url="/login/")
 def new_log_entry(request):
 
-    c = MongoClient("localhost", 27017)
-    d = c['online']
+    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+    d = c[settings.LOG_DB_NAME]
     mongo_collection = d['log']
+
     if request.method == 'POST':
 
         # Pull data from POST request form

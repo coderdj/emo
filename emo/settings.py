@@ -15,6 +15,16 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# MongoDB connectivity
+MONITOR_DB_NAME = "online"
+MONITOR_DB_ADDR = "localhost"
+MONITOR_DB_PORT = 27017
+RUNS_DB_NAME = "online"
+RUNS_DB_ADDR = "localhost"
+RUNS_DB_PORT = 27017
+LOG_DB_NAME = "online"
+LOG_DB_ADDR = "localhost"
+LOG_DB_PORT = 27017
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

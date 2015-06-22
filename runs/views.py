@@ -6,22 +6,18 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
 from bson.json_util import dumps
+from django.conf import settings
 
 
 @login_required
 def runs(request):
 
     filter_query = {}
-    # These options will be set somewhere else later?
-    online_db_name = "online"
-    runs_db_collection = "runs"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
 
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[ online_db_name ]
-    collection = db[ runs_db_collection ]
+    client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    db = client[ settings.RUNS_DB_NAME ]
+    collection = db[ "runs" ]
     fields = collection.distinct( "runmode" )
     fields.insert( 0, "All" )
     fieldslist = zip (fields, fields)
@@ -54,15 +50,11 @@ def runs(request):
 @login_required
 def rundetail ( request ):
 
-    # These options will have to be set somewhere else later
-    online_db_name = "online"
-    runs_db_collection = "runs"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[ online_db_name ]
-    collection = db[ runs_db_collection ]
-    
+    # Connect to pymongo
+    client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    db = client[ settings.RUNS_DB_NAME ]
+    collection = db[ "runs" ]
+
     if request.method == 'POST':
         
         # A new comment on a run

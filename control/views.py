@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 import datetime
 import pytz
 import numpy as np
+from django.conf import settings
 
 @login_required
 def GetStatusUpdate(request):
@@ -14,17 +15,10 @@ def GetStatusUpdate(request):
     :param request:
     :return: JSON dump of the mongo doc
     """
-
-    # These options will be set somewhere else later?
-    online_db_name = "online"
-    runs_db_collection = "daq_status"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
-
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[ online_db_name ]
-    collection = db[ runs_db_collection ]
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "daq_status" ]
 
     detectors = collection.distinct("detector")
     ret = []
@@ -43,16 +37,11 @@ def GetNodeUpdates(request):
     :param request:
     :return:
     """
-    # These options will be set somewhere else later?
-    online_db_name = "online"
-    runs_db_collection = "daq_rates"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
 
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[ online_db_name ]
-    collection = db[ runs_db_collection ]
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "daq_rates" ]
 
     nodes = collection.distinct('node')
 
@@ -71,16 +60,10 @@ def GetNodeHistory(request):
     :return:
     """
 
-    # These options will be set somewhere else later?
-    online_db_name = "online"
-    runs_db_collection = "daq_rates"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
-
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[online_db_name]
-    collection = db[runs_db_collection]
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "daq_rates" ]
 
     # Right now set nseconds to last 2 days. Will be a configurable query soon.
     nseconds = 48 * 60 * 60
@@ -163,16 +146,8 @@ def start_run(request):
 
     insert_doc = {}
 
-
-
-    # These options will be set somewhere else later?
-    online_db_name = "online"
-    runs_db_collection = "daq_control"
-    mongodb_address = "localhost"
-    mongodb_port = 27017
-
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[ online_db_name ]
-    collection = db[ runs_db_collection ]
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "daq_control" ]
 

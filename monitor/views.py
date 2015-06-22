@@ -13,6 +13,7 @@ from bokeh.models import Range1d
 from bokeh.io import hplot, vplot, gridplot
 import time
 from django.shortcuts import render
+from django.conf import settings
 
 
 g_pmt_map = {0: {'x': 0, 'y': 0},
@@ -140,10 +141,9 @@ g_pmt_map = {0: {'x': 0, 'y': 0},
              }
 
 # These options will be set somewhere else later?
-online_db_name = "online"
-runs_db_collection = "runs"
-mongodb_address = "localhost"
-mongodb_port = 27017
+online_db_name = settings.MONITOR_DB_NAME
+mongodb_address = settings.MONITOR_DB_ADDR
+mongodb_port = settings.MONITOR_DB_PORT
 
 # Connect to pymongo
 client = MongoClient(mongodb_address, mongodb_port)
