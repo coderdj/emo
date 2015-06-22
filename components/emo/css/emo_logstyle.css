@@ -1,0 +1,67 @@
+.emo-log-line {
+    background-color: white;
+    border: 1px solid black;
+
+}
+.panel-heading a:after {
+      font-family: 'Glyphicons Halflings';
+      content: "\e114";
+      float: right;
+      color: grey;
+  }
+  .panel-heading a.collapsed:after {
+      content: "\e080";
+  }
+  .hiddenRow {
+      padding: 0 !important;
+  }
+  .outlinerow{
+      border 1px solid #AAAAAA;
+      box-shader: 3px 3px 3px #BBBBBB;
+      background-color: white;
+  }
+  .bubble {
+      position: relative;
+      background-color:#d9edf7;
+      #margin: 20;
+      margin-top: 10px;
+      margin-left: 5%;
+      margin-right: 5%;
+      margin-bottom: 20px;
+      border-width:5px;
+      padding:10px;
+      text-align:left;
+      width:90%;
+      -moz-border-radius:10px;
+      -webkit-border-radius:10px;
+      -webkit-box-shadow: 1px 1px 3px rgba(0,0,0,0.25);
+      -moz-box-shadow: 1px 1px 3px rgba(0,0,0,0.25);
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.25);
+
+  }
+  .bubble:after {
+      position: absolute;
+      display: block;
+      content: "";
+      border-color: #d9edf7 transparent transparent transparent;
+      border-style: solid;
+      border-width: 10px;
+      height:0;
+      width:0;
+      position:absolute;
+      bottom:-19px;
+      left:1em;
+  }
+  .searchtoolbar{
+      padding-top:0px;
+      height: 60px;
+      background-color: white;
+      width: 100%;
+      border-bottom: 1px solid #AAAAAA;
+      box-shadow: 3px 3px 3px #BBBBBB;
+      margin-bottom: 20px;
+      font-size: 24px;
+      line-height: 2.0;
+      padding-left: 10px;
+      padding-right: 10px;
+  }
