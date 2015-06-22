@@ -21,7 +21,6 @@ numba==0.18.2
 numexpr==2.4.3
 numpy==1.9.2
 pandas==0.16.1
-pax==3.0.0
 pep8==1.5.7
 prettytable==0.7.2
 pyflakes==0.8.1

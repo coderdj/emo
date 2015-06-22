@@ -264,14 +264,15 @@ $('.main-menu').on('click', 'a', function (e) {
 			var recentTime;
 			for (x = 0; x < data.length; x++) {
 				//data = $.parseJSON(data, true);
-				if (data[x]['state'] == "Running")
-					status = "Running";
-				else if (data[x]['state'] == 'Error')
-					status = "Error";
+				status = data[x]['state'];
+					//if (data[x]['state'] == "Running")
+					//status = "Running";
+					//else if (data[x]['state'] == 'Error')
+					//status = "Error";
 
 				//var docdate = new Date(data[x]['createdAt'].match(/\d+/)[0] * 1);
 				//docdate = data[x]['createdAt'];
-
+					
 				var docdate = new Date(data[x]['createdAt']['$date']);
 				tdiff = currentTime - docdate;
 				if (tdiff < maxtdiff) {

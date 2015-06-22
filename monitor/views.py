@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect
 import pickle
 from bokeh.plotting import figure
 from bokeh.resources import CDN
@@ -532,21 +532,26 @@ def get_noise_spectra(request):
         docs = collection.find().sort("_id", 1)
     except:
         return render(request, "monitor/event_detail.html", {})
+    if(docs.count() == 0):
+        return HttpResponsePermanentRedirect("/monitor/noise.html")
+
 
     plots=[]
     for doc in docs:
         plot = figure(title=doc['name'], background_fill=(200, 200, 200, 0.3),
-                  width=250, plot_height=200, logo=None, tools="save,box_zoom,reset",
+                  width=350, plot_height=300, logo=None, tools="save,box_zoom,reset",
                   x_axis_label = "Energy [p.e.]", y_axis_label = "counts", title_text_font_size='12pt')
 
-        dat = doc['data']
-        dat.pop()
-        trim = np.trim_zeros(dat, trim='b')
-        edges = []
-        for i in range(0, len(trim)+1):
-            edges.append(i)
+        hist, edges = np.histogram(doc['data'], density=True, bins=100)
 
-        plot.quad(top=trim, bottom=0, left=edges[:-1], right=edges[1:], fill_color="#036564", line_color="#033649")
+        #dat = doc['data']
+        #dat.pop()
+        #trim = np.trim_zeros(dat, trim='b')
+        #edges = []
+        #for i in range(0, len(trim)+1):
+        #    edges.append(i)
+
+        plot.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:], fill_color="#036564", line_color="#033649")
         plot.legend.orientation = "top_left"
         plots.append(plot)
 
@@ -554,9 +559,9 @@ def get_noise_spectra(request):
     moreplots = []
     for chunk in splitlist:
         if(len(chunk)==3):
-            theplot = hplot(chunk[0], chunk[1], chunk[2])
+            theplot = gridplot([[chunk[0], chunk[1], chunk[2]]])
         elif(len(chunk)==2):
-            theplot = hplot(chunk[0], chunk[1])
+            theplot = gridplot([[chunk[0], chunk[1]]])
         else:
             theplot = chunk[0]
         script, div = components(theplot)
@@ -566,6 +571,6 @@ def get_noise_spectra(request):
     #script, div = components(full_plot)
 
     #ret = {"script": script, "div": div, 'run_name': doc['run'] }
-    ret = {"plots": moreplots, 'run_name': doc['run']}
+    ret = {"plots": moreplots, 'run_name': collection_name}
     return render(request, "monitor/event_detail.html", ret)
 
