@@ -62,8 +62,8 @@ a.show-sidebar:hover {
   color:#000;
 }
 #sidebar-left {
-  #position:relative;
-  position: fixed;
+    position:relative;
+#position: fixed;
   z-index: inherit;
   padding-bottom: 3000px !important;
   margin-bottom: -3000px !important;
@@ -142,7 +142,7 @@ a.show-sidebar:hover {
   -moz-border-radius: 0 4px 4px 0;
   border-radius: 0 4px 4px 0;
   padding: 0;
-  background: #6AA6D6 url(../img/devoops_pattern_b10.png) 0 0 repeat;
+  background: #6AA6D6; /*url(../img/devoops_pattern_b10.png) 0 0 repeat;*/
   box-shadow: none;
   visibility:hidden;
 }
