@@ -7,7 +7,8 @@
 <link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
 <link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
 <link href="{% static "css/summernote.css" %}" rel="stylesheet">
-
+<script src="{% static "DataTables-1.10.7/media/js/jquery.dataTables.min.js"%}"></script>
+<link href="{% static "DataTables-1.10.7/media/css/jquery.dataTables.min.css"%}" rel="stylesheet" />
 
   <script type="text/javascript">
     $(function() {
@@ -29,6 +30,24 @@
         height: 20px;
         width: 70%;
         margin-top:10px;
+    }
+    #t_user{
+       background-color:blue;
+       color:white;
+    }
+    #t_warning{
+       background-color: yellow;
+    }
+    #t_error{
+       background-color: red;
+       color: white;
+    }
+    td.details-control {
+     background: url('{%static "img/details_open.png" %}') no-repeat center center;
+     cursor: pointer;
+    }
+    tr.shown td.details-control {
+       background: url('{%static "img/details_close.png" %}') no-repeat center center;
     }
 </style>
 
@@ -61,66 +80,142 @@
 </div>
 </div>
 
-<table class="table table-condensed table-hover" style="background-color:white;padding:0;">
+<table class="display" id="logtable"> 
+  <thead>
+    <tr>
+      <th>Expand</th>
+      <th> Time (UTC)</th>
+      <th> Sender </th>
+      <th> Message </th>
+      <th>Comments</th>
+      <th>Flag</th>
+    </tr>
+  </thead>
   <tbody>
-  <tr>
-    <th style="width:250px"> Time (UTC)</th>
-    <th style="width:100px"> Sender </th>
-    <th> Message </th>
-    <th style="pull-right;"></th>
-  </tr>
-      {% for logEntry in log_list %}
-      <!-- syntax coloring -->
-      {% if logEntry.priority == 2 %}
-      <tr class="warning accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
-          onclick="summernoteform('{{ logEntry|private:"_id" }}')">
-      {% elif logEntry.priority == 3 %}
-      <tr class="danger accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
-          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
-      {% elif logEntry.priority == 4 %}
-      <tr class="danger accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
-          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
-      {% elif logEntry.priority == 0 %}
-      <tr class="info accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
-          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
-      {% else %}
-      <tr class="accordion-toggle" data-toggle="collapse" data-target=".{{ logEntry|private:"_id" }}"
-          onclick="summernoteform('{{ logEntry|private:'_id' }}')">
-      {% endif %}
-      <td style="color:black;"><strong> {{ logEntry.time }} </strong></td>
-      <td style="color:black;">{{logEntry.sender}}</td>
-      <td style="color:black;">{% autoescape off %}{{logEntry.message}}{% endautoescape %}</td>
-      <td style="pull-right"> <span class="glyphicon glyphicon-comment">&nbsp{{ logEntry.comments|length }}</span></td>
-      </tr>
-<!-- from here -->
-      <tr class="active">
-	        <td colspan="4" class="hiddenRow">
-                <div class="accordian-body collapse {{ logEntry|private:"_id" }}" style="background-color:white">
-	                 <p><b>&nbsp;Showing {{ logEntry.comments|length }} user comments </b></p>
-	                 {% for comment in logEntry.comments %}
-	                 <div class="bubble">
-	                     <p><small><i>{{ comment.user }}&nbsp;wrote on &nbsp;{{ comment.date }}
-	                     </i></small></p>
-	                    {% autoescape off %} {{comment.text }} {% endautoescape %}
-	                 </div>
-                     {% endfor %}
-	                <form action="/log/new_comment/" method="post">
-                    {% csrf_token %}
-                    <textarea id="{{ logEntry|private:"_id" }}_formtext" name="content">something to add?</textarea>
-                     <br>
-                     <input type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>
-                     <button class="btn btn-info" type="submit" value="{{ logEntry|private:"_id" }}" name="log_id" style="padding-bottom:10px;margin-bottom:15px;margin-left:15px;">New comment</button>
-                     </form>
-	            </div>
-	        </td>
-      </tr>
-      {% empty %}
-      <li>No messages to display.</li>
-      {% endfor %}
+    <tr>
+      <td style="width:10px" class="details-control"></td>
+      <td style="color:black;"></td>
+      <td style="color:black;"></td>
+      <td style="color:black;"></td>
+      <td style="pull-right"> <span class="glyphicon glyphicon-comment">&nbsp</span></td>
+      <td></td>
+    </tr>
   </tbody>
 </table>
 
 <script>
+function format ( d ) {
+    // `d` is the original data object for the row
+    var ret =
+   '<table cellpadding="5" cellspacing="0" border="0" style="width:100%;margin-bottom:10px;">';
+ 
+      if(d.comments != null){
+      for( x=0; x<d.comments.length; x+=1){
+          var m = new Date(d.comments[x].date['$date']);
+             var dateString = m.getUTCFullYear() +
+                 "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " " +
+                m.getUTCHours() + ":" + m.getUTCMinutes() + ":" + m.getUTCSeconds();
+
+        ret += '<tr style="border-width:1px;border-color:#EEEEEE;border-style:solid;">'+
+          '<td style="width:15%">'+dateString+'</td>'+
+          '<td style="width:10%">'+d.comments[x].user+'</td>'+
+          '<td style="min-width:60%">'+ d.comments[x].text+ '</td>'+
+        '</tr>';
+     }}
+ret += '</table>';
+     console.log(d);
+     ret += "<form action='/log/new_comment/' method='post'>" +
+				     "{% csrf_token %}" +     
+            '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content">something to add?</textarea>' +                                                     
+             '<br>' +                                                            
+             '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +                                                                      
+             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="padding-bottom:10px;margin-bottom:15px;">New comment</button>' +                                                     
+                     '</form>';
+     return ret;
+}
+
+$(document).ready(function(){
+
+   var thedata = {{ log_list|safe }};
+	var table = $('#logtable').DataTable({
+	  "data": thedata,
+          "columns": [
+            {
+                "className":      'details-control',
+                "orderable":      false,
+                "data":           null,
+                "defaultContent": ''
+            },
+            { "data": "time", "width": "15%", "render": function (data) {
+	      var m = new Date(data['$date']);
+	     var dateString = m.getUTCFullYear() +
+		 "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " " + 
+		m.getUTCHours() + ":" + m.getUTCMinutes() + ":" + m.getUTCSeconds();
+	     return dateString;
+    } },
+            { "data": "sender" },
+            { "data": "message", "width": "60%" },
+            { "data": "comments", "render":function(data){if(data==null) return 0; return data.length} },
+            { "data": "priority",
+              "render": function(data){
+                  if(data==1)
+		    return "info";
+                  else if(data == 0)
+                    return "user";
+                  else if(data==2 || data ==7)
+                    return "warning";
+                  else if(data == 3 || data==8)
+                    return "error";
+                  else if(data == 4 || data==9)
+                    return "fatal";
+                  else if(data==5)
+                    return "command";
+                  else { console.log(data); return "";}
+          }},],
+          
+          "order": [[ 1, "desc" ]],
+          "iDisplayLength": 50,
+          "createdRow": function ( row, data, index ) {				  
+            $('td', row).eq(5).css('font-weight', 'bold');
+            if ( data['priority'] == 2) {
+                $('td', row).eq(5).css('background-color', '#ffd800');
+            }
+            else if(data['priority'] == 3 || data['priority']==4){
+                $('td', row).eq(5).css('background-color', '#e86850');
+                $('td', row).eq(5).css('color', 'white');
+            }
+            else if(data['priority'] == 0){
+                $('td', row).eq(5).css('background-color', '#587498');
+                $('td', row).eq(5).css('color', 'white');
+
+            }
+            else if(data['priority'] == 5){
+                $('td', row).eq(5).css('background-color', '#587058');
+                $('td', row).eq(5).css('color', 'white');
+            }
+        }
+     });
+
+ // Add event listener for opening and closing details
+    $('#logtable tbody').on('click', 'td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+ 
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( format(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    } );
+});
+
+
+
 
 //$(document).ready(function(){
 var summernoteform = function (name) {

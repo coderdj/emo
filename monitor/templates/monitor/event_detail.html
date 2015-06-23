@@ -11,7 +11,14 @@
 {% endblock %}
 {% block content %}
      <div class="col-xs-12">
-        <h5 id="run_name">{{ run_name }}</h5>
+       <br>
+        <h3 id="run_name">Noise report for run {{ run_name }}</h3>	
+	{% if approved %}
+	<span>Approved by {{ approved_user }} on {{ approved_date|date:"DATETIME_FORMAT" }} </span>
+	{% else %}
+	<a class="btn btn-info" href="/monitor/noise_report?run={{ run_name }};approved=true">Approve this report</a>
+	{% endif %}	
+	<br>
     </div>
    <div class="col-xs-12" id="grid" style="overflow-x:scroll;">
        {%  for plot in plots %}

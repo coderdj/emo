@@ -74,7 +74,7 @@ def log(request):
         search_form = LogSearchForm()
 
     print(mongo_query)
-    log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:max_entries]
+    log_list = dumps(mongo_collection.find(mongo_query).sort("_id", -1)[:max_entries])
 
     return render(request, 'log/log.html', {"log_list": log_list, "form": search_form})
 
