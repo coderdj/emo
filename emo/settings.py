@@ -22,7 +22,7 @@ MONITOR_DB_PORT = 27017
 RUNS_DB_NAME = "online"
 RUNS_DB_ADDR = "localhost"
 RUNS_DB_PORT = 27017
-LOG_DB_NAME = "online"
+LOG_DB_NAME = "log"
 LOG_DB_ADDR = "localhost"
 LOG_DB_PORT = 27017
 
