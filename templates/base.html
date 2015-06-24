@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
 
-
+	<script type="text/javascript">  var global_can_start_runs = false;</script>
 
 {% block head %}
 {% endblock %}
@@ -228,7 +228,6 @@
 </script>
 
 <script type="text/javascript">
-
 	function DoUpdate(Url){
 		$.getJSON(Url, function(data) {
 	                // Now do some aggregations. data is a list of status docs for the detectors. Status can
@@ -300,11 +299,13 @@
 			    document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
 			    document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
 			    		"No open alerts: </strong> You seem to be in the clear.</div>";
-                        }
+		            global_can_start_runs = true;
+		        }
                         else{
                             document.getElementById("alerts").innerHTML = '<i style="color:red;" class="fa fa-exclamation"></i>';
 		            document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong sty\
 le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?priority=-2'>log page</log></div>";
+			    global_can_start_runs = false;
                         }
 			setTimeout(function() {
            		DoUpdate( Url );

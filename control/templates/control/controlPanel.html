@@ -65,9 +65,11 @@ border-style=solid;border-width:1px;">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-          <h4 class="modal-title">Start a new run</h4>
+          <h4 class="modal-title">You can't start a new run</h4>
         </div>
-        <form method="POST" action="/control/start_run" id="run_start_form">
+	<span style="padding:10px;" id="no_start_runs">You have open issues! Deal with them in the 
+	  <a href="/log?priority=-2">log page</a> before starting any new runs. </span>
+	<form method="POST" action="/control/start_run" id="run_start_form">
         <div class="modal-body" style="min-height:200px;overflow-y:auto;">
             <div class="col-xs-12" id="top-selector">
                 <ul class="nav nav-pills">
@@ -144,6 +146,7 @@ border-style=solid;border-width:1px;">
                 </div>
             </div>
         </div>
+	
         <div class="modal-footer">
           <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
           <a href="#" class="btn btn-success">Start Run</a>
@@ -171,6 +174,17 @@ border-style=solid;border-width:1px;">
 
   // Page update poll
   function UpdatePage( thechart ){
+  
+     // No starting runs if there are open alerts
+     if(global_can_start_runs){ 
+        document.getElementById('run_start_form').style.display = 'block';
+        document.getElementById('no_start_message').style.display = 'none';
+     } 
+     else{ 
+        document.getElementById('run_start_form').style.display = 'none';
+        document.getElementById('no_start_runs').style.display = 'block';
+     }
+     console.log(global_can_start_runs);
 
       //TextUpdate();
       //updateData( chart, pointUpdateUrl );
