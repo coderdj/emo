@@ -5,7 +5,8 @@ from django import forms
 class LogCommentForm(forms.Form):
     redirect_url = forms.CharField(max_length=200)
     log_id = forms.CharField(max_length=100)
-    content = forms.CharField(max_length=5000)
+    content = forms.CharField(max_length=5000, required=False)
+    close_issue = forms.BooleanField(required=False)
 
 
 class LogEntryForm(forms.Form):

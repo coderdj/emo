@@ -93,22 +93,34 @@ def new_comment(request):
 
         comment = LogCommentForm(request.POST)
         if comment.is_valid():
-
-            # Pull data from the form
+            
+            # Get data
             redirect_url = comment.cleaned_data['redirect_url']
             doc_id = comment.cleaned_data['log_id']
-            text = comment.cleaned_data['content']
             user = request.user.username
+            date = pytz.utc.localize(datetime.datetime.now())
 
-            # If the entry exists append the comment to it
-            comment_dict = {
-                "text": text,
-                "date":    pytz.utc.localize(datetime.datetime.now()),
-                "user":  user,
-                "priority": 0
-                }
+            # First close the issue if it's an issue closing request
+            if "close_issue" in comment.cleaned_data and comment.cleaned_data['close_issue'] is True:
+                mongo_collection.update({"_id": ObjectId(doc_id)}, 
+                                        {"$inc": {"priority": 5},
+                                         "$set": {"closed_user": user},
+                                         "$set": {"closed_date": date}})
 
-            mongo_collection.update({"_id": ObjectId(doc_id)}, {"$push": {"comments": comment_dict}})
+            # Now do the update to a comment if there is one
+            if 'content' in comment.cleaned_data:
+                text = comment.cleaned_data['content']
+                user = request.user.username
+
+                # If the entry exists append the comment to it
+                comment_dict = {
+                    "text": text,
+                    "date": date,
+                    "user":  user,
+                    "priority": 0
+                    }
+
+                mongo_collection.update({"_id": ObjectId(doc_id)}, {"$push": {"comments": comment_dict}})
 
             return HttpResponsePermanentRedirect(redirect_url)
     return HttpResponsePermanentRedirect('/log/')

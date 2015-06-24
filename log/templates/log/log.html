@@ -126,11 +126,14 @@ ret += '</table>';
      console.log(d);
      ret += "<form action='/log/new_comment/' method='post'>" +
 				     "{% csrf_token %}" +     
-            '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content">something to add?</textarea>' +                                                     
+            '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +  
              '<br>' +                                                            
-             '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +                                                                      
-             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="padding-bottom:10px;margin-bottom:15px;">New comment</button>' +                                                     
-                     '</form>';
+             '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +  
+             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;">New comment</button>';
+     if(d.priority == 2 || d.priority ==3 || d.priority ==4 ){
+             ret += '&nbsp;<input type="checkbox" name="close_issue">Close Issue</input>';
+     }
+      ret +=  '</form>';
      return ret;
 }
 
@@ -162,12 +165,18 @@ $(document).ready(function(){
 		    return "info";
                   else if(data == 0)
                     return "user";
-                  else if(data==2 || data ==7)
-                    return "warning";
-                  else if(data == 3 || data==8)
-                    return "error";
-                  else if(data == 4 || data==9)
-                    return "fatal";
+                  else if(data==2)
+                    return "open warning";
+                  else if(data==7)
+                    return "closed warning";
+                  else if(data == 3)
+                    return "open error";
+		  else if(data==8)
+	            return "closed error";
+                  else if(data == 4)
+                    return "open fatal";
+                  else if(data==9)
+                    return "closed fatal";
                   else if(data==5)
                     return "command";
                   else { console.log(data); return "";}
@@ -177,10 +186,10 @@ $(document).ready(function(){
           "iDisplayLength": 50,
           "createdRow": function ( row, data, index ) {				  
             $('td', row).eq(5).css('font-weight', 'bold');
-            if ( data['priority'] == 2) {
+            if ( data['priority'] == 2 || data['priority']==7) {
                 $('td', row).eq(5).css('background-color', '#ffd800');
             }
-            else if(data['priority'] == 3 || data['priority']==4){
+            else if(data['priority'] == 3 || data['priority']==4 || data['priority'] == 8 || data['priority']==9){
                 $('td', row).eq(5).css('background-color', '#e86850');
                 $('td', row).eq(5).css('color', 'white');
             }
