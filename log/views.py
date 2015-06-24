@@ -40,7 +40,7 @@ def log(request):
     mongo_query = {}
 
     # Set a default value for max entries
-    max_entries = 100
+    max_entries = 100000
 
     if request.method == "GET":
 
@@ -56,7 +56,10 @@ def log(request):
             if search_form.cleaned_data['run_name'] != "":
                 mongo_query['run'] = search_form.cleaned_data['run_name']
             if search_form.cleaned_data['priority'] != "" and search_form.cleaned_data['priority'] != '-1':
-                mongo_query['priority'] = int(search_form.cleaned_data['priority'])
+                if search_form.cleaned_data['priority'] == '-2':
+                    mongo_query['priority'] = {"$gt": 1, "$lt": 5}
+                else:
+                    mongo_query['priority'] = int(search_form.cleaned_data['priority'])
             if search_form.cleaned_data['start_date'] is not None:
                 mongo_query['date'] = {"$gt": datetime.datetime.combine(
                     search_form.cleaned_data['start_date'],

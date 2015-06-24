@@ -7,16 +7,19 @@ import pytz
 import numpy as np
 from django.conf import settings
 
+client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+logclient = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+
 @login_required
 def GetStatusUpdate(request):
 
     """
-    Gets the most recent Dispatcher status update
+    Gets the most recent Dispatcher status update and searches to log to see
+    if there are open issues. Run in main event loop.
     :param request:
     :return: JSON dump of the mongo doc
     """
     # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
     collection = db[ "daq_status" ]
 
@@ -25,10 +28,19 @@ def GetStatusUpdate(request):
     for det in detectors:
         ret_doc = collection.find_one({"detector":det}, sort= [ ("_id", -1) ] )
         ret.append(ret_doc)
-    print(ret)
+    
+    retdict = {"status": ret}
+
+    logdb = logclient[settings.LOG_DB_NAME]
+    logcollection = logdb["log"]
+    if logcollection.find({"priority": {"$gt": 1},
+                           "priority": {"$lt": 5}}).count() != 0:
+        retdict["issues"] = True
+    else:
+        retdict["issues"] = False
 
     if len(ret) != 0:
-        return HttpResponse( dumps(ret), content_type = 'application/json')
+        return HttpResponse( dumps(retdict), content_type = 'application/json')
 
 def GetNodeUpdates(request):
 

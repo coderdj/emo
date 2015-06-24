@@ -231,26 +231,17 @@
 
 	function DoUpdate(Url){
 		$.getJSON(Url, function(data) {
-
-			// Now do some aggregations. data is a list of status docs for the detectors. Status can
+	                // Now do some aggregations. data is a list of status docs for the detectors. Status can
 			// either be RUNNING, IDLE, or ERROR. Last update is most recent update
-			connected = false;
+	                connected = false;
 			status = "NONE";
 			var currentTime = new Date();
 			var maxtdiff = 1000000;
 			var recentTime;
-			for (x = 0; x < data.length; x++) {
-				//data = $.parseJSON(data, true);
-				status = data[x]['state'];
-					//if (data[x]['state'] == "Running")
-					//status = "Running";
-					//else if (data[x]['state'] == 'Error')
-					//status = "Error";
-
-				//var docdate = new Date(data[x]['createdAt'].match(/\d+/)[0] * 1);
-				//docdate = data[x]['createdAt'];
+			for (x = 0; x < data['status'].length; x++) {
+				status = data['status'][x]['state'];
 					
-				var docdate = new Date(data[x]['createdAt']['$date']);
+				var docdate = new Date(data['status'][x]['createdAt']['$date']);
 				tdiff = currentTime - docdate;
 				if (tdiff < maxtdiff) {
 					maxtdiff = tdiff;
@@ -273,16 +264,16 @@
 
 			status_more = "<strong><div class='row emo-status-menu-entry'><div class='col-xs-2'>Detector</div>" +
 					"<div class='col-xs-2'>Status</div><div class=col-xs-2>Mode</div><div class='col-xs-6'>Run name</div></div></strong>";
-			for (x = 0; x < data.length; x++) {
+			for (x = 0; x < data['status'].length; x++) {
 				status_more += "<div class='row emo-status-menu-entry'><div class='col-xs-2'><strong>" +
-						data[x]['detector'] + "</strong></div>" + "<div class='col-xs-2'>";
-				if( data[x]['state'] == "Running" ) {
-					status_more += "<strong style='color:green;'> Running </strong></div><div class='col-xs-2'>" + data[x]['mode'] +
+						data['status'][x]['detector'] + "</strong></div>" + "<div class='col-xs-2'>";
+				if( data['status'][x]['state'] == "Running" ) {
+					status_more += "<strong style='color:green;'> Running </strong></div><div class='col-xs-2'>" + data['status'][x]['mode'] +
 							"</div><div class=col-xs-6>" +
-							data[x]['currentRun'] + "</div></div>";
+							data['status'][x]['currentRun'] + "</div></div>";
 				}
 				else{
-					status_more += "<strong style='color:red;'>" + data[x]['state'] + "</strong> </div></div>";
+					status_more += "<strong style='color:red;'>" + data['status'][x]['state'] + "</strong> </div></div>";
 				}
 			}
 			status_more+="</div>";
@@ -305,9 +296,16 @@
 						"directly.</div>";
 
 			}
-			document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-			document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
-					"No open alerts: </strong> You seem to be in the clear.</div>";
+		        if( data["issues"] == false ){
+			    document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+			    document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
+			    		"No open alerts: </strong> You seem to be in the clear.</div>";
+                        }
+                        else{
+                            document.getElementById("alerts").innerHTML = '<i style="color:red;" class="fa fa-exclamation"></i>';
+		            document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong sty\
+le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?priority=-2'>log page</log></div>";
+                        }
 			setTimeout(function() {
            		DoUpdate( Url );
       			}, 10000 );

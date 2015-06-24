@@ -164,43 +164,43 @@ function UpdateDetectorText(dataUrl, divname){
                 "<div class='col-xs-2'>Started by</div><div class='col-xs-2'>Start time</div><div class='col-xs-2'>Current/last run</div></strong></div>";
             var currentTime = new Date();
 
-            for ( var x=0; x<data.length; x+=1 ){
+            for ( var x=0; x<data['status'].length; x+=1 ){
 
-                if( data[x]['detector'] == 'tpc')
+                if( data['status'][x]['detector'] == 'tpc')
                     html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
                         "<div class='col-xs-2'><h4>TPC</h4></div>";
-                else if( data[x]['detector'] == 'muon_veto')
+                else if( data['status'][x]['detector'] == 'muon_veto')
                     html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
                         "<div class='col-xs-2'><h4>Muon Veto</h4></div>";
                 else
                     html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
-                        "<div class='col-xs-2'><h4>"+data[x]['detector']+"</h4></div>";
+                        "<div class='col-xs-2'><h4>"+data['status'][x]['detector']+"</h4></div>";
 
                 // Reformat date for display in JS
-                var docdate = new Date(data[x]['createdAt']['$date']);
+                var docdate = new Date(data['status'][x]['createdAt']['$date']);
                 var update_seconds = Math.round( (currentTime - docdate)/1000 );
 
                 // Put state with coloring to make it pop a little
-                if( data[x]['state'] == "Running" && update_seconds < 30 )
+                if( data['status'][x]['state'] == "Running" && update_seconds < 30 )
                     html_string += "<div class='col-xs-2' style='color:green;height:100%;'><h5>Running</h5></div>";
-                else if( data[x]['state'] == "Idle" && update_seconds < 30 )
+                else if( data['status'][x]['state'] == "Idle" && update_seconds < 30 )
                     html_string += "<div class='col-xs-2' style='color:red;height:100%;'><h5>Idle</h5></div>";
-                else if( data[x]['state'] == "Error" && update_seconds < 30 )
+                else if( data['status'][x]['state'] == "Error" && update_seconds < 30 )
                     html_string += "<div class='col-xs-2' style='color:red;height:100%'><h5>Error</h5></div>";
                 else
                     html_string += "<div class='col-xs-2' style='color:#AAAAAA;height:100%;'><h5>Unknown</h5></div>";
 
                 // If running we can provide a bunch more information
-                if( data[x]['state'] == "Running" ) {
-                    var startdate = new Date(data[x]['startTime']['$date']);
+                if( data['status'][x]['state'] == "Running" ) {
+                    var startdate = new Date(data['status'][x]['startTime']['$date']);
 
-                    html_string += "<div class='col-xs-2'><h6>" + data[x]['mode'] + "</h6></div>";
-                    html_string += "<div class='col-xs-2'><h6>" + data[x]['startedBy'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['mode'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['startedBy'] + "</h6></div>";
                     html_string += "<div class='col-xs-2'><h6>" + startdate + "</h6></div>";
-                    html_string += "<div class='col-xs-2'><h6>" + data[x]['currentRun'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
                 }
                 else
-                    html_string += "<div class='col-xs-2 col-xs-offset-6'><h6>" + data[x]['currentRun'] + "</h6></div>";
+                    html_string += "<div class='col-xs-2 col-xs-offset-6'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
 
 
                 // close row

@@ -183,7 +183,6 @@ border-style=solid;border-width:1px;">
 
   function DrawLogWindow( logdiv, Url ) {
       $.getJSON(Url, function(data){
-          console.log(data);
           var html_string = "<table class='table table-condensed borderless' style='color:#eeeeee;background-color:#2f2f2f;'><tbody>";
           for ( x=0; x<data.length; x+=1 ){
                 html_string += "<tr><td>" /*+ logEntry['time'].strptime("%Y-%M-%D %h:%m:%s") */+ "</td>" +

@@ -15,7 +15,7 @@ class LogEntryForm(forms.Form):
     detector = forms.CharField(max_length=200, initial="none", required=False)
 
 
-PRIORITY_CHOICES = (
+PRIORITY_CHOICES = (    
     (-1, "All"),
     (0, "User Messages"),
     (1, "Info"),
@@ -26,6 +26,7 @@ PRIORITY_CHOICES = (
     (8, "Closed Errors"),
     (9, "Closed Fatal Errors"),
     (99, "Debug Output"),
+    (-2, "Open issues"),
 )
 
 
