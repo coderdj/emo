@@ -247,7 +247,6 @@
 					recentTime = docdate;
 				}
 			}
-
 			if (status == "Running"){
 				document.getElementById("status").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
 			}
@@ -282,13 +281,13 @@
 				document.getElementById("contact").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
 					"Network connection established: </strong> Most recent status " +
-					"check-in: " + Math.round(tdiff / 1000).toString() + " seconds ago.</div>";
+					"check-in: " + Math.round(maxtdiff / 1000).toString() + " seconds ago.</div>";
 			}
 			else {
 				document.getElementById("contact").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
 					"No connection to the DAQ database: </strong> Most recent status " +
-					"check-in: " + Math.round(tdiff / 1000).toString() + " seconds ago.</div>";
+					"check-in: " + Math.round(maxtdiff / 1000).toString() + " seconds ago.</div>";
 				document.getElementById("status").innerHTML = '<i style="color:#AAAAAA;" class="fa fa-question-circle"></i>';
 				document.getElementById("status_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
 					"We can't connect: </strong> So we don't really know what the status is. Consider logging into the DAQ cluster " +
@@ -307,10 +306,11 @@
 le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?priority=-2'>log page</log></div>";
 			    global_can_start_runs = false;
                         }
-			setTimeout(function() {
-           		DoUpdate( Url );
-      			}, 10000 );
 		});
+	        
+	        setTimeout(function() {
+                    DoUpdate( Url );
+                }, 10000 );
 	}
 	var UpdateUrl = "/control/get_status_update";
 	$(function(){
