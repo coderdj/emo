@@ -175,9 +175,15 @@
   </body>
 
 <script>
-// For google code prettification
+// General modifications
   !function ($) {
+    
     $(function(){
+
+    // Bootstrap tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Google code prettification
       window.prettyPrint && prettyPrint()
     })
   }(window.jQuery)

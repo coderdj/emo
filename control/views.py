@@ -33,8 +33,7 @@ def GetStatusUpdate(request):
 
     logdb = logclient[settings.LOG_DB_NAME]
     logcollection = logdb["log"]
-    if logcollection.find({"priority": {"$gt": 1},
-                           "priority": {"$lt": 5}}).count() != 0:
+    if logcollection.find({"priority": {"$gt": 1, "$lt": 5}}).count() != 0:
         retdict["issues"] = True
     else:
         retdict["issues"] = False
@@ -42,6 +41,7 @@ def GetStatusUpdate(request):
     if len(ret) != 0:
         return HttpResponse( dumps(retdict), content_type = 'application/json')
 
+@login_required
 def GetNodeUpdates(request):
 
     """
@@ -64,6 +64,7 @@ def GetNodeUpdates(request):
     if len(ret) != 0:
         return HttpResponse( dumps(ret), content_type='application/json')
 
+@login_required
 def GetNodeHistory(request):
 
     """
@@ -153,8 +154,7 @@ def start_run(request):
 
     # Check that request is valid
     if request.method != "POST":
-        return
-
+        return HttpResponse({})
 
     insert_doc = {}
 
@@ -162,4 +162,4 @@ def start_run(request):
     client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
     collection = db[ "daq_control" ]
-
+    return HttpResponse({})

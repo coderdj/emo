@@ -13,9 +13,9 @@
 }
 
 </style>
-<div class="row" style="height:20px;margin:0px;">
+<div class="row" style="height:20px;margin:0px;margin-top:15px;">
   <div class="col-sm-3 col-xs-12">
-    <h4>DAQ Control Panel</h4>
+    <h3><strong>DAQ Control Panel</strong></h3>
   </div>
   <div class="col-sm-9 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
@@ -65,11 +65,12 @@ border-style=solid;border-width:1px;">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-          <h4 class="modal-title">You can't start a new run</h4>
+          <h4 class="modal-title">Start a new run</h4>
         </div>
-	<span style="padding:10px;" id="no_start_runs">You have open issues! Deal with them in the 
-	  <a href="/log?priority=-2">log page</a> before starting any new runs. </span>
-	<form method="POST" action="/control/start_run" id="run_start_form">
+	<span style="padding:10px;" id="no_start_runs"><br><h4><p><strong>Error: you have open alerts!</strong></p><p> Deal with them in the 
+	  <a href="/log?priority=-2">log page</a> before starting any new runs. </p></h4><br></span>
+	<form method="POST" action="" id="run_start_form">
+	  {% csrf_token %}
         <div class="modal-body" style="min-height:200px;overflow-y:auto;">
             <div class="col-xs-12" id="top-selector">
                 <ul class="nav nav-pills">
@@ -78,15 +79,25 @@ border-style=solid;border-width:1px;">
                     <li role="presentation"><a href="#" onclick="make_visible('Muon_Veto');">Muon Veto Only</a></li>
                 </ul>
             </div>
+	    <p><hr></p>
             <div class="col-xs-12" style="margin-top:20px;" id="global-options">
                 <div class="row">
-                    <div class="col-xs-6"><strong>Starting user:</strong></div>
-                    <div class="col-xs-6">{{ request.user.username }}</div>
-                    <input class="hidden" name="user" value="{{ request.user.username }}"/>
-                    </div>
+                  <div class="col-xs-6"><strong>Starting user:</strong></div>
+                  <div class="col-xs-6">{{ request.user.username }}</div>
+                  <input class="hidden" name="user" value="{{ request.user.username }}"/>
+                </div>
+		<div class="row">
+		  <div class="col-xs-6">
+		    <strong data-toggle="tooltip" 
+			    title="This allows you to override any warnings. It is recommended to only check this option if you know what the warnings are, why they are there, and why you can safely override them." 
+			    data-placement="bottom">Force this run to start:
+		    </strong>
+		  </div>
+		  <div class="col-xs-6"><input type="checkbox" name="force"></input>&nbsp; (Not recommended)</div>
+		</div>
                 <div class="row">
-                    <div class="col-xs-6"><strong>Comment:</strong></div>
-                    <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
+                  <div class="col-xs-6"><strong>Comment:</strong></div>
+                  <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
                 </div>
             </div>
             <div class="col-xs-12" id="tpc-options" style="display:block;margin-top:20px;">
@@ -149,11 +160,30 @@ border-style=solid;border-width:1px;">
 	
         <div class="modal-footer">
           <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
-          <a href="#" class="btn btn-success">Start Run</a>
+          <button type="submit" class="btn btn-success">Start Run</button>
         </div>
         </form>
       </div>
     </div>
+</div>
+
+<!-- This modal gives feedback on the progress of starting the current run -->
+<div class="modal" id="startRunModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title">Start a new run</h4>
+      </div>
+      <div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	<div id="start_run_modal_content">
+	</div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -172,13 +202,26 @@ border-style=solid;border-width:1px;">
   var graphic_range = (48*60*60).toString();
   var graphic_bin = "600";
 
+  // Submit run start form
+  $('#run_start_form').submit(function(e){
+     console.log("submitted");
+     $.post('/control/start_run', $(this).serialize(), function(data){  
+        console.log("in function");
+        $('#startRunModal').modal('show');
+        document.getElementById("start_run_modal_content").innerHTML="Command received.";
+        //$('.message').html(data.message);
+        // of course you can do something more fancy with your respone
+      });
+      e.preventDefault();
+   });
+
   // Page update poll
   function UpdatePage( thechart ){
   
      // No starting runs if there are open alerts
      if(global_can_start_runs){ 
         document.getElementById('run_start_form').style.display = 'block';
-        document.getElementById('no_start_message').style.display = 'none';
+        document.getElementById('no_start_runs').style.display = 'none';
      } 
      else{ 
         document.getElementById('run_start_form').style.display = 'none';
@@ -286,7 +329,7 @@ $(".btn-group button").on("click", function() {
         graphic_range = $(this)[0].value;
     else
         graphic_bin = $(this)[0].value;
-    console.log($(this)[0].value);
+    //console.log($(this)[0].value);
     redraw_graphic();
 });
 </script>
