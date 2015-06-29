@@ -4,8 +4,8 @@ from django import forms
 
 class RunStartForm(forms.Form):
 
-    user = forms.CharField(label="User", max_length=100, required=False)
-    force = forms.BooleanField()
+    user = forms.CharField(label="User", max_length=100)
+    force = forms.BooleanField(required=False)
     comment = forms.CharField(required=False, max_length=5000)
     
     run_mode_tpc = forms.CharField(max_length=200, required=False)

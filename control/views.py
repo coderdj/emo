@@ -2,6 +2,7 @@ from django.shortcuts import HttpResponse
 from pymongo import MongoClient
 from bson.json_util import dumps
 from django.contrib.auth.decorators import login_required
+from control.models import RunStartForm
 import datetime
 import pytz
 import numpy as np
@@ -151,15 +152,48 @@ def start_run(request):
     """
     Requests a run start by writing a run start doc to the runs DB
     """
-
+    
     # Check that request is valid
     if request.method != "POST":
         return HttpResponse({})
+    
+    rs_form = RunStartForm(request.POST)
+        
+    if rs_form.is_valid():
 
-    insert_doc = {}
+        insert_doc = {}
+        
+        # Want to check which detectors this command is for
+        hasTPC = False
+        hasMV = False
 
-    # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
-    collection = db[ "daq_control" ]
+        insert_doc['force'] = False
+
+        # Make the insert doc
+        for key in rs_form.cleaned_data.keys():
+            if key == 'run_mode_tpc' and rs_form.cleaned_data[key] != "":
+                hasTPC = True
+            elif key == 'run_mode_mv' and rs_form.cleaned_data[key] != "":  
+                hasMV = True
+            insert_doc[key] = rs_form.cleaned_data[key]
+
+
+        # Which detector?
+        if hasTPC and hasMV:
+            insert_doc['detector'] = 'all'
+        elif hasTPC:
+            insert_doc['detector'] = 'tpc'
+        elif hasMV:
+            insert_doc['detector'] = 'muon_veto'
+        else:
+            return HttpResponse({})
+        insert_doc['command'] = "Start"
+        # Connect to pymongo
+        client = MongoClient(settings.MONITOR_DB_ADDR, 
+                             settings.MONITOR_DB_PORT)
+        db = client[ settings.MONITOR_DB_NAME ]
+        collection = db[ "daq_control" ]
+        collection.insert_one(insert_doc)
+        return HttpResponse({})
+        
     return HttpResponse({})
