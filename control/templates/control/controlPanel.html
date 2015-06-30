@@ -20,7 +20,7 @@
   <div class="col-sm-9 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
       <button data-toggle="modal" class="btn btn-success" href="#startRunModal">Start Run</button>
-      <button class="btn btn-danger">Stop Run</button>
+      <button class="btn btn-danger" data-toggle="modal" href="#runStopModal">Stop Run</button>
     </ul>
   </div>
 </div><!-- end row -->
@@ -122,8 +122,7 @@ border-style=solid;border-width:1px;">
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <input type="radio" name="baselines_tpc" value="1" checked="checked">Auto
-                  &nbsp; <input type="radio" name="baselines_tpc" value="2">Off
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc" checked="checked"></div>
                 </label>
               </div>
             </div>
@@ -131,8 +130,7 @@ border-style=solid;border-width:1px;">
               <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
               <div class="col-xs-6">
                 <label>
-                  <input type="radio" name="noise_tpc" value="1" checked="checked">On
-                  &nbsp; <input type="radio" name="noise_tpc" value="2">Off
+                  <div class="col-xs-6"><input type="checkbox" name="noise_tpc" checked="checked"></div>
                 </label>
               </div>
             </div>
@@ -148,8 +146,7 @@ border-style=solid;border-width:1px;">
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <input type="radio" name="baselines_mv" value="1" checked="checked">Auto
-                  &nbsp; <input type="radio" name="baselines_mv" value="2">Off
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv" checked="checked"></div>
                 </label>
               </div>
             </div>
@@ -157,8 +154,7 @@ border-style=solid;border-width:1px;">
               <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
               <div class="col-xs-6">
                 <label>
-                  <input type="radio" name="noise_mv" value="1" checked="checked">On  
-                  &nbsp; <input type="radio" name="noise_mv" value="2">Off
+		  <div class="col-xs-6"><input type="checkbox" name="noise_mv" checked="checked"></div>
                 </label>
               </div>
             </div>
@@ -167,7 +163,8 @@ border-style=solid;border-width:1px;">
 	
         <div class="modal-footer">
           <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
-          <button type="submit" class="btn btn-success">Start Run</button>
+          <button type="submit" class="btn btn-success">
+	    Start Run</button>
         </div>
       </form>
     </div>
@@ -183,15 +180,70 @@ border-style=solid;border-width:1px;">
         <h4 class="modal-title">Start a new run</h4>
       </div>
       <div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	<div id="loading_bar"></div>
 	<div id="start_run_modal_content">
 	</div>
       </div>
       <div class="modal-footer">
-        <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
-      </div>
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>      
     </div>
   </div>
 </div>
+
+<!-- This modal gives feedback on the progress of starting the current run -->
+<div class="modal" id="runStopModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="" id="run_stop_form">
+        {% csrf_token %}
+	<div class="modal-header">
+          <button type="button" class="close" 
+		  data-dismiss="modal" aria-hidden="true">×</button>
+          <h4 class="modal-title">Stop the run</h4>
+	</div>
+	<div class="modal-body" style="min-height:200px;overflow-y:auto;">
+          <div id="stop_run_modal_content">
+	    <p><hr></p>
+            <div class="col-xs-12" style="margin-top:20px;" id="global-options">
+              <div class="row">
+		<div class="col-xs-6"><strong>User:</strong></div>
+		<div class="col-xs-6">{{ request.user.username }}</div>
+		<input class="hidden" name="user" 
+		       value="{{ request.user.username }}">
+              </div>
+	      <div class="row">
+		<div class="col-xs-6"><strong>Detector:</strong></div>
+		<div class='col-xs-6'>
+                  <label>
+                    <input type="radio" name="detector" value="all" 
+			   checked="checked">All &nbsp; 
+		    <input type="radio" name="detector" 
+			   value="tpc">TPC &nbsp;
+		    <input type="radio" name="detector"
+                           value="muon_veto">Muon Veto
+                  </label>
+		</div>
+              </div>	    
+	      <div class="row">
+		<div class="col-xs-6"><strong>Comment:</strong></div>
+		<div class="col-xs-6">
+		  <textarea form="run_stop_form" 
+			    rows="4" name="comment"></textarea>
+		</div>
+              </div>
+            </div>	    
+          </div>
+	</div>
+	<div class="modal-footer">
+	  <button type="submit" class="btn btn-danger">Stop the Run</button>
+	  <a href="#" data-dismiss="modal" class="btn btn-success">Cancel</a>    
+	</div>
+      </form>
+    </div>
+  </div>
+<div>
+
 
 
 <script type="text/javascript">
@@ -208,21 +260,90 @@ border-style=solid;border-width:1px;">
   var chart;
   var graphic_range = (48*60*60).toString();
   var graphic_bin = "600";
+  var feedback_count = 0;
+  var feedbackURL = "/control/run_start_feedback";
+  var feedback_html = "";
+
+  // Run feedback function
+  function FeedbackLoop(){
+    $.getJSON(feedbackURL, function(data){
+      console.log(data);
+      if("messages" in data){
+      console.log("here");
+      
+      for( x=0; x<data['messages'].length; x+=1 ){
+			console.log("in for");
+        // Put messages into feedback modal
+	if(data['messages'][x]['replyenum'] == 11)
+	  feedback_html += "<p><strong>Received affirmation: </strong>" + 
+		           data['messages'][x]['message'] + "</p>";
+        else if( data['messages'][x]['replyenum'] == 12)
+	  feedback_html += "<p><strong>Action taken: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+	else if( data['messages'][x]['replyenum'] == 13)
+          feedback_html += "<p><strong>Start: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+        else if( data['messages'][x]['replyenum'] == 19){
+          feedback_html += "<p><strong>Finish: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+	  feedback_count = 10000;
+          document.getElementById("loading_bar").innerHTML="";
+        }
+        else if( data['messages'][x]['replyenum'] == 18){
+          feedback_html += "<p><strong style='color:red'>ERROR: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+          feedback_count = 10000;
+          document.getElementById("loading_bar").innerHTML="";
+        }
+        else
+          feedback_html += "<p><strong style='color:blue'>Unknown: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+        console.log(feedback_html);
+        document.getElementById("start_run_modal_content").innerHTML=feedback_html; 
+      }// end for
+      }
+    });
+    feedback_count += 1;
+    if(feedback_count < 60)
+       setTimeout(function() { FeedbackLoop(); }, 500 );
+    else if(feedback_count < 10000) {
+       feedback_html += "<p><strong>TIMED OUT </strong></p>";
+       document.getElementById("loading_bar").innerHTML="";
+    }
+    document.getElementById("start_run_modal_content").innerHTML=feedback_html;
+
+  }
 
   // Submit run start form
   $('#run_start_form').submit(function(e){
      console.log("submitted");
      $.post('/control/start_run', $(this).serialize(), function(data){  
         console.log("in function");
-        $('#startRunModal').modal('show');
+        //$('#startRunModal').modal('show');
         document.getElementById("start_run_modal_content").innerHTML="Command received.";
         //$('.message').html(data.message);
         // of course you can do something more fancy with your respone
    });
-     $("#startRunModal").modal("hide")
-      e.preventDefault();
-      $('#runFeedbackModal').modal('show');
+   $("#startRunModal").modal("hide")
+    e.preventDefault();
+    $("#runFeedbackModal").modal('show');
+    feedback_count = 0;
+    feedback_html = "";
+    document.getElementById("loading_bar").innerHTML = "<img src='{% static 'img/ajax-loader.gif'%}'/>";
+    FeedbackLoop();
    });
+
+  // Submit run stop form
+  $('#run_stop_form').submit(function(e){
+     console.log("Clicked stop");
+     $.post('/control/stop_run', $(this).serialize(), function(data){
+        console.log("Stopped the run");
+   });
+   $("#runStopModal").modal("hide")
+      e.preventDefault();
+
+   });
+
 
   // Page update poll
   function UpdatePage( thechart ){

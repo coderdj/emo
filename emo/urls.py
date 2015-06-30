@@ -22,9 +22,9 @@ urlpatterns = [
 
     url(r'^$', TemplateView.as_view( template_name='base.html')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^login/$', 'django.contrib.auth.views.login',
+    url(r'^login', 'django.contrib.auth.views.login',
         {'template_name': 'login.html'}, name='login'),
-    url(r'^logout/$', views.logout_page,name='logout'), #must add
+    url(r'^logout', views.logout_page,name='logout'), #must add
     url(r'^profile/$', views.profile, name='profile'),
 
     # Documentation
