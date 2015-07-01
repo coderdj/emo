@@ -376,14 +376,16 @@ def noise_directory(request):
     ndb = client[noise_db_name]
     collection = ndb[noise_directory_collection]
 
-    max_entries = 1000
+    max_entries = 100000
     run_list = collection.find().sort("_id", -1)[:max_entries]
 
     retvals = []
     for run in run_list:
         thedict = { "run_name": run["run_name"], 
                     "collection": run["collection"],
-                    "date": run["date"],                         
+                    "date": run["date"], 
+                    "dateSort": time.strftime("%Y%m%d",
+                                            run["date"].timetuple())
                     }
         if "comments" in run:
             thedict["comments"] = run["comments"]
