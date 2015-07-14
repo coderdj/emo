@@ -13,14 +13,14 @@
 }
 
 </style>
-<div class="row" style="height:20px;margin:0px;">
+<div class="row" style="height:20px;margin:0px;margin-top:15px;">
   <div class="col-sm-3 col-xs-12">
-    <h4>DAQ Control Panel</h4>
+    <h3><strong>DAQ Control Panel</strong></h3>
   </div>
   <div class="col-sm-9 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
       <button data-toggle="modal" class="btn btn-success" href="#startRunModal">Start Run</button>
-      <button class="btn btn-danger">Stop Run</button>
+      <button class="btn btn-danger" data-toggle="modal" href="#runStopModal">Stop Run</button>
     </ul>
   </div>
 </div><!-- end row -->
@@ -61,97 +61,189 @@ border-style=solid;border-width:1px;">
     <!-- Here is the modal for starting runs -->
 
 <div class="modal" id="startRunModal">
-	<div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-          <h4 class="modal-title">Start a new run</h4>
-        </div>
-        <form method="POST" action="/control/start_run" id="run_start_form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title">Start a new run</h4>
+      </div>
+      <span style="padding:10px;" id="no_start_runs"><br>
+	<h4>
+	  <p>
+	    <strong>Error: you have open alerts!</strong>
+	  </p>
+	  <p> Deal with them in the 
+	    <a href="/log?priority=-2">log page</a> before starting any new runs. 
+	  </p>
+	</h4>
+	<br>
+      </span>
+      <form method="POST" action="" id="run_start_form">
+	{% csrf_token %}
         <div class="modal-body" style="min-height:200px;overflow-y:auto;">
-            <div class="col-xs-12" id="top-selector">
-                <ul class="nav nav-pills">
-                    <li role="presentation" class="active"><a href="#" onclick="make_visible('both');">Combined</a></li>
-                    <li role="presentation"><a href="#" onclick="make_visible('TPC');">TPC Only</a></li>
-                    <li role="presentation"><a href="#" onclick="make_visible('Muon_Veto');">Muon Veto Only</a></li>
-                </ul>
+          <div class="col-xs-12" id="top-selector">
+            <ul class="nav nav-pills">
+              <li role="presentation" class="active"><a href="#" onclick="make_visible('both');">Combined</a></li>
+              <li role="presentation"><a href="#" onclick="make_visible('TPC');">TPC Only</a></li>
+              <li role="presentation"><a href="#" onclick="make_visible('Muon_Veto');">Muon Veto Only</a></li>
+            </ul>
+          </div>
+	  <p><hr></p>
+          <div class="col-xs-12" style="margin-top:20px;" id="global-options">
+            <div class="row">
+              <div class="col-xs-6"><strong>Starting user:</strong></div>
+              <div class="col-xs-6">{{ request.user.username }}</div>
+              <input class="hidden" name="user" value="{{ request.user.username }}">
             </div>
-            <div class="col-xs-12" style="margin-top:20px;" id="global-options">
-                <div class="row">
-                    <div class="col-xs-6"><strong>Starting user:</strong></div>
-                    <div class="col-xs-6">{{ request.user.username }}</div>
-                    <input class="hidden" name="user" value="{{ request.user.username }}"/>
-                    </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Comment:</strong></div>
-                    <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
-                </div>
+	    <div class="row">
+	      <div class="col-xs-6">
+		<strong data-toggle="tooltip" 
+			title="This allows you to override any warnings. It is recommended to only check this option if you know what the warnings are, why they are there, and why you can safely override them." 
+			data-placement="bottom">Force this run to start:
+		</strong>
+	      </div>
+	      <div class="col-xs-6"><input type="checkbox" name="override">
+		&nbsp; (Not recommended)</div>
+	    </div>
+            <div class="row">
+              <div class="col-xs-6"><strong>Comment:</strong></div>
+              <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
             </div>
-            <div class="col-xs-12" id="tpc-options" style="display:block;margin-top:20px;">
-                <h4>TPC Options:</h4>
-                <hr>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Run mode:</strong></div>
-                    <div class="col-xs-6"><select id="tpc_run_mode" name="opt_tpc_run_mode"></select></div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Do baselines:</strong></div>
-                    <div class='col-xs-6'>
-                       <label>
-                         <input type="radio" name="opt_tpc_baselines" value="1" checked="checked">Auto
-
-                       &nbsp; <input type="radio" name="opt_tpc_baselines" value="2">Off
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
-                    <div class="col-xs-6">
-                        <label>
-                         <input type="radio" name="opt_tpc_noise" value="1" checked="checked">On
-
-                       &nbsp; <input type="radio" name="opt_tpc_noise" value="2">Off
-                        </label>
-                    </div>
-                </div>
+          </div>
+          <div class="col-xs-12" id="tpc-options" style="display:block;margin-top:20px;">
+            <h4>TPC Options:</h4>
+            <hr>
+            <div class="row">
+              <div class="col-xs-6"><strong>Run mode:</strong></div>
+              <div class="col-xs-6"><select id="run_mode_tpc" name="run_mode_tpc"></select>
+	      </div>
             </div>
-            <div class="col-xs-12" id="muon-veto-options" style="display:block;margin-top:20px;">
-                <h4>Muon Veto Options</h4>
-                <hr>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Run mode:</strong></div>
-                    <div class="col-xs-6"><select id="muon_veto_run_mode" name="opt_muon_run_mode"></select></div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Do baselines:</strong></div>
-                    <div class='col-xs-6'>
-                        <label>
-                         <input type="radio" name="opt_muon_baselines" value="1" checked="checked">Auto
-
-                       &nbsp; <input type="radio" name="opt_muon_baselines" value="2">Off
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
-                    <div class="col-xs-6">
-                        <label>
-                         <input type="radio" name="opt_muon_noise" value="1" checked="checked">On
-
-                       &nbsp; <input type="radio" name="opt_muon_noise" value="2">Off
-                        </label>
-                    </div>
-                </div>
+            <div class="row">
+              <div class="col-xs-6"><strong>Do baselines:</strong></div>
+              <div class='col-xs-6'>
+                <label>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc" checked="checked"></div>
+                </label>
+              </div>
             </div>
+            <div class="row">
+              <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
+              <div class="col-xs-6">
+                <label>
+                  <div class="col-xs-6"><input type="checkbox" name="noise_tpc" checked="checked"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="col-xs-12" id="muon-veto-options" style="display:block;margin-top:20px;">
+            <h4>Muon Veto Options</h4>
+            <hr>
+            <div class="row">
+              <div class="col-xs-6"><strong>Run mode:</strong></div>
+              <div class="col-xs-6"><select id="run_mode_mv" name="run_mode_mv"></select></div>
+            </div>
+            <div class="row">
+              <div class="col-xs-6"><strong>Do baselines:</strong></div>
+              <div class='col-xs-6'>
+                <label>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv" checked="checked"></div>
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
+              <div class="col-xs-6">
+                <label>
+		  <div class="col-xs-6"><input type="checkbox" name="noise_mv" checked="checked"></div>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
+	
         <div class="modal-footer">
           <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
-          <a href="#" class="btn btn-success">Start Run</a>
+          <button type="submit" class="btn btn-success">
+	    Start Run</button>
         </div>
-        </form>
-      </div>
+      </form>
     </div>
+  </div>
 </div>
+
+<!-- This modal gives feedback on the progress of starting the current run -->
+<div class="modal" id="runFeedbackModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title">Start a new run</h4>
+      </div>
+      <div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	<div id="loading_bar"></div>
+	<div id="start_run_modal_content">
+	</div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>      
+    </div>
+  </div>
+</div>
+
+<!-- This modal gives feedback on the progress of starting the current run -->
+<div class="modal" id="runStopModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="" id="run_stop_form">
+        {% csrf_token %}
+	<div class="modal-header">
+          <button type="button" class="close" 
+		  data-dismiss="modal" aria-hidden="true">×</button>
+          <h4 class="modal-title">Stop the run</h4>
+	</div>
+	<div class="modal-body" style="min-height:200px;overflow-y:auto;">
+          <div id="stop_run_modal_content">
+	    <p><hr></p>
+            <div class="col-xs-12" style="margin-top:20px;" id="global-options">
+              <div class="row">
+		<div class="col-xs-6"><strong>User:</strong></div>
+		<div class="col-xs-6">{{ request.user.username }}</div>
+		<input class="hidden" name="user" 
+		       value="{{ request.user.username }}">
+              </div>
+	      <div class="row">
+		<div class="col-xs-6"><strong>Detector:</strong></div>
+		<div class='col-xs-6'>
+                  <label>
+                    <input type="radio" name="detector" value="all" 
+			   checked="checked">All &nbsp; 
+		    <input type="radio" name="detector" 
+			   value="tpc">TPC &nbsp;
+		    <input type="radio" name="detector"
+                           value="muon_veto">Muon Veto
+                  </label>
+		</div>
+              </div>	    
+	      <div class="row">
+		<div class="col-xs-6"><strong>Comment:</strong></div>
+		<div class="col-xs-6">
+		  <textarea form="run_stop_form" 
+			    rows="4" name="comment"></textarea>
+		</div>
+              </div>
+            </div>	    
+          </div>
+	</div>
+	<div class="modal-footer">
+	  <button type="submit" class="btn btn-danger">Stop the Run</button>
+	  <a href="#" data-dismiss="modal" class="btn btn-success">Cancel</a>    
+	</div>
+      </form>
+    </div>
+  </div>
+<div>
+
 
 
 <script type="text/javascript">
@@ -168,9 +260,103 @@ border-style=solid;border-width:1px;">
   var chart;
   var graphic_range = (48*60*60).toString();
   var graphic_bin = "600";
+  var feedback_count = 0;
+  var feedbackURL = "/control/run_start_feedback";
+  var feedback_html = "";
+
+  // Run feedback function
+  function FeedbackLoop(){
+    $.getJSON(feedbackURL, function(data){
+      console.log(data);
+      if("messages" in data){
+      console.log("here");
+      
+      for( x=0; x<data['messages'].length; x+=1 ){
+			console.log("in for");
+        // Put messages into feedback modal
+	if(data['messages'][x]['replyenum'] == 11)
+	  feedback_html += "<p><strong>Received affirmation: </strong>" + 
+		           data['messages'][x]['message'] + "</p>";
+        else if( data['messages'][x]['replyenum'] == 12)
+	  feedback_html += "<p><strong>Action taken: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+	else if( data['messages'][x]['replyenum'] == 13)
+          feedback_html += "<p><strong>Start: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+        else if( data['messages'][x]['replyenum'] == 19){
+          feedback_html += "<p><strong>Finish: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+	  feedback_count = 10000;
+          document.getElementById("loading_bar").innerHTML="";
+        }
+        else if( data['messages'][x]['replyenum'] == 18){
+          feedback_html += "<p><strong style='color:red'>ERROR: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+          feedback_count = 10000;
+          document.getElementById("loading_bar").innerHTML="";
+        }
+        else
+          feedback_html += "<p><strong style='color:blue'>Unknown: </strong>" +
+                           data['messages'][x]['message'] + "</p>";
+        console.log(feedback_html);
+        document.getElementById("start_run_modal_content").innerHTML=feedback_html; 
+      }// end for
+      }
+    });
+    feedback_count += 1;
+    if(feedback_count < 60)
+       setTimeout(function() { FeedbackLoop(); }, 500 );
+    else if(feedback_count < 10000) {
+       feedback_html += "<p><strong>TIMED OUT </strong></p>";
+       document.getElementById("loading_bar").innerHTML="";
+    }
+    document.getElementById("start_run_modal_content").innerHTML=feedback_html;
+
+  }
+
+  // Submit run start form
+  $('#run_start_form').submit(function(e){
+     console.log("submitted");
+     $.post('/control/start_run', $(this).serialize(), function(data){  
+        console.log("in function");
+        //$('#startRunModal').modal('show');
+        document.getElementById("start_run_modal_content").innerHTML="Command received.";
+        //$('.message').html(data.message);
+        // of course you can do something more fancy with your respone
+   });
+   $("#startRunModal").modal("hide")
+    e.preventDefault();
+    $("#runFeedbackModal").modal('show');
+    feedback_count = 0;
+    feedback_html = "";
+    document.getElementById("loading_bar").innerHTML = "<img src='{% static 'img/ajax-loader.gif'%}'/>";
+    FeedbackLoop();
+   });
+
+  // Submit run stop form
+  $('#run_stop_form').submit(function(e){
+     console.log("Clicked stop");
+     $.post('/control/stop_run', $(this).serialize(), function(data){
+        console.log("Stopped the run");
+   });
+   $("#runStopModal").modal("hide")
+      e.preventDefault();
+
+   });
+
 
   // Page update poll
   function UpdatePage( thechart ){
+  
+     // No starting runs if there are open alerts
+     if(global_can_start_runs){ 
+        document.getElementById('run_start_form').style.display = 'block';
+        document.getElementById('no_start_runs').style.display = 'none';
+     } 
+     else{ 
+        document.getElementById('run_start_form').style.display = 'none';
+        document.getElementById('no_start_runs').style.display = 'block';
+     }
 
       //TextUpdate();
       //updateData( chart, pointUpdateUrl );
@@ -183,7 +369,6 @@ border-style=solid;border-width:1px;">
 
   function DrawLogWindow( logdiv, Url ) {
       $.getJSON(Url, function(data){
-          console.log(data);
           var html_string = "<table class='table table-condensed borderless' style='color:#eeeeee;background-color:#2f2f2f;'><tbody>";
           for ( x=0; x<data.length; x+=1 ){
                 html_string += "<tr><td>" /*+ logEntry['time'].strptime("%Y-%M-%D %h:%m:%s") */+ "</td>" +
@@ -213,13 +398,13 @@ border-style=solid;border-width:1px;">
              if(data!=null){
                 if("tpc" in data){
                     for(x=0;x<data['tpc'].length;x++){
-                        $("#tpc_run_mode").append("<option name='"+data['tpc'][x]+"'>"+
+                        $("#run_mode_tpc").append("<option name='"+data['tpc'][x]+"'>"+
                                 data['tpc'][x]+"</option>");
                     }
                 }
                  if("muon_veto" in data){
                     for(x=0;x<data['muon_veto'].length;x++){
-                        $("#muon_veto_run_mode").append("<option name='"+data['muon_veto'][x]+"'>"+
+                        $("#run_mode_mv").append("<option name='"+data['muon_veto'][x]+"'>"+
                                 data['muon_veto'][x]+"</option>");
                     }
                 }
@@ -274,7 +459,7 @@ $(".btn-group button").on("click", function() {
         graphic_range = $(this)[0].value;
     else
         graphic_bin = $(this)[0].value;
-    console.log($(this)[0].value);
+    //console.log($(this)[0].value);
     redraw_graphic();
 });
 </script>

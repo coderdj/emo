@@ -376,14 +376,16 @@ def noise_directory(request):
     ndb = client[noise_db_name]
     collection = ndb[noise_directory_collection]
 
-    max_entries = 1000
+    max_entries = 100000
     run_list = collection.find().sort("_id", -1)[:max_entries]
 
     retvals = []
     for run in run_list:
         thedict = { "run_name": run["run_name"], 
                     "collection": run["collection"],
-                    "date": run["date"],                         
+                    "date": run["date"], 
+                    "dateSort": time.strftime("%Y%m%d",
+                                            run["date"].timetuple())
                     }
         if "comments" in run:
             thedict["comments"] = run["comments"]
@@ -391,7 +393,7 @@ def noise_directory(request):
             thedict["approved"] = True
             thedict["approved_date"] = run["approved"]["date"]
             thedict["approved_user"] = run["approved"]["user"]
-        thedict["channels"] = db[run["run_name"]].count()
+        thedict["channels"] = ndb[run["run_name"]].count()
         retvals.append(thedict)    
 
     return render(request, 'monitor/noise.html', {"run_list": retvals})
@@ -431,6 +433,7 @@ def get_noise_spectra(request):
                                     upsert = False)
         except: 
             return HttpResponsePermanentRedirect("/monitor/noise.html")
+        return HttpResponsePermanentRedirect("/monitor/noise.html")
 
     # Get the control doc for the header
     control_doc = None

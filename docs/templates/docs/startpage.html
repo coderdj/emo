@@ -113,10 +113,17 @@ the interface as well. These entries are threaded. Log entries tagged as ERROR o
 require user intervention in order to continue operating the DAQ. The log is at online.log.</p>
 <pre class="prettyprint">
 doc: {
-	"message": string,
-	"time": datetime,
-	"sender": string,
-	"priority": int,
+        "_id": ObjectId,         # automatic
+        "priority": int,         # required
+        "time": ISODate,         # required
+        "detector": string,      # optional
+        "run": string,           # optional
+        "message": string,       # required
+        "sender": string,        # required 
+
+        # Added for closed warnings/errors
+        "closedby": string,      # required if closed issue
+        "closed_date": datetime  # required if closed issue        
 }
 </pre>
 <br><p>

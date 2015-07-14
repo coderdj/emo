@@ -2,21 +2,25 @@ from django.shortcuts import HttpResponse
 from pymongo import MongoClient
 from bson.json_util import dumps
 from django.contrib.auth.decorators import login_required
+from control.models import RunStartForm, RunStopForm
 import datetime
 import pytz
 import numpy as np
 from django.conf import settings
 
+client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+logclient = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+
 @login_required
 def GetStatusUpdate(request):
 
     """
-    Gets the most recent Dispatcher status update
+    Gets the most recent Dispatcher status update and searches to log to see
+    if there are open issues. Run in main event loop.
     :param request:
     :return: JSON dump of the mongo doc
     """
     # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
     collection = db[ "daq_status" ]
 
@@ -25,11 +29,20 @@ def GetStatusUpdate(request):
     for det in detectors:
         ret_doc = collection.find_one({"detector":det}, sort= [ ("_id", -1) ] )
         ret.append(ret_doc)
-    print(ret)
+    
+    retdict = {"status": ret}
+
+    logdb = logclient[settings.LOG_DB_NAME]
+    logcollection = logdb["log"]
+    if logcollection.find({"priority": {"$gt": 1, "$lt": 5}}).count() != 0:
+        retdict["issues"] = True
+    else:
+        retdict["issues"] = False
 
     if len(ret) != 0:
-        return HttpResponse( dumps(ret), content_type = 'application/json')
+        return HttpResponse( dumps(retdict), content_type = 'application/json')
 
+@login_required
 def GetNodeUpdates(request):
 
     """
@@ -52,6 +65,7 @@ def GetNodeUpdates(request):
     if len(ret) != 0:
         return HttpResponse( dumps(ret), content_type='application/json')
 
+@login_required
 def GetNodeHistory(request):
 
     """
@@ -131,6 +145,56 @@ def GetNodeHistory(request):
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
 
+@login_required
+def stop_run(request):
+
+    """
+    Sends a stop command
+    """    
+    # Check that request is there
+    if request.method != "POST":
+        return HttpResponse({})
+
+    rs_form = RunStopForm(request.POST)
+    if not rs_form.is_valid():
+        return HttpResponse({})
+
+    insert_doc = {}
+    insert_doc['command'] = "Stop"
+    insert_doc['detector'] = rs_form.cleaned_data['detector']
+    insert_doc['user'] = rs_form.cleaned_data['user']
+    insert_doc['comment'] = rs_form.cleaned_data['comment']
+
+    # Connect to pymongo                                                         
+    client = MongoClient(settings.MONITOR_DB_ADDR,
+                         settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "daq_control" ]
+    collection.insert_one(insert_doc)
+    return HttpResponse({})
+
+@login_required
+def GetDispatcherReply(request):
+
+    # Connect to pymongo                                                            
+    client = MongoClient(settings.MONITOR_DB_ADDR,
+                         settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+    collection = db[ "dispatcherreply" ]    
+    cursor = collection.find({}).sort("_id", 1)
+    
+    retdict = {}
+    if cursor.count() > 0:
+        retdict = {"messages": []}
+
+        for doc in cursor:
+            retdict['messages'].append({"message": doc["message"],
+                                        "replyenum": doc["replyenum"]})
+            collection.delete_one({"_id": doc['_id']})
+
+    return HttpResponse(dumps(retdict), content_type="application/json")
+
+    
 
 @login_required
 def start_run(request):
@@ -138,16 +202,91 @@ def start_run(request):
     """
     Requests a run start by writing a run start doc to the runs DB
     """
-
+    
     # Check that request is valid
     if request.method != "POST":
-        return
+        return HttpResponse({})
+    rs_form = RunStartForm(request.POST)
+        
+    if rs_form.is_valid():
 
+        insert_doc = {}
+        
+        # Want to check which detectors this command is for
+        hasTPC = False
+        hasMV = False
 
-    insert_doc = {}
+        insert_doc['force'] = False
 
-    # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
-    collection = db[ "daq_control" ]
+        # Make the insert doc
+        for key in rs_form.cleaned_data.keys():
+            if key == 'run_mode_tpc' and rs_form.cleaned_data[key] != "":
+                hasTPC = True
+            elif key == 'run_mode_mv' and rs_form.cleaned_data[key] != "":  
+                hasMV = True
+            insert_doc[key] = rs_form.cleaned_data[key]
+            
+        # Connect to pymongo                                                        
+        client = MongoClient(settings.MONITOR_DB_ADDR,
+                             settings.MONITOR_DB_PORT)
+        db = client[ settings.MONITOR_DB_NAME ]
+        run_collection = db['run_modes']
 
+        print(insert_doc)
+        # Do the run mode stuff
+        if hasTPC:
+            if "baselines_tpc" in insert_doc:
+                if insert_doc["baselines_tpc"] == True:
+                    run_collection.find_one_and_update({"name": 
+                                                    insert_doc['run_mode_tpc']},
+                                                   {"$set":{"baseline_mode": 1}})
+                else:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_tpc']},
+                                                   {"$set":{"baseline_mode": 0}})
+
+            if "noise_tpc" in insert_doc:
+                if insert_doc['noise_tpc'] == True:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_tpc']},
+                                                   {"$set":{"noise_spectra_enable": 1}})
+                else:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_tpc']},
+                                                   {"$set":{"noise_spectra_enable": 0}})
+        if hasMV:
+            if "baselines_mv" in insert_doc:
+                if insert_doc["baselines_mv"] == True:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_mv']},
+                                                   {"$set":{"baseline_mode": 1}})
+                else:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_mv']},
+                                                   {"$set":{"baseline_mode": 0}})
+            if "noise_mv" in insert_doc:
+                if insert_doc['noise_mv'] == True:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_mv']},
+                                                   {"$set":{"noise_spectra_enable": 1}})
+                else:
+                    run_collection.find_one_and_update({"name":
+                                                    insert_doc['run_mode_mv']},
+                                                   {"$set":{"noise_spectra_enable": 0}})
+
+        # Which detector?
+        if hasTPC and hasMV:
+            insert_doc['detector'] = 'all'
+        elif hasTPC:
+            insert_doc['detector'] = 'tpc'
+        elif hasMV:
+            insert_doc['detector'] = 'muon_veto'
+        else:
+            return HttpResponse({})
+        insert_doc['command'] = "Start"
+
+        collection = db[ "daq_control" ]
+        collection.insert_one(insert_doc)
+        return HttpResponse({})
+        
+    return HttpResponse({})

@@ -8,7 +8,9 @@ urlpatterns = [
     url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),
     url(r'^get_node_updates',views.GetNodeUpdates,name='get_node_updates'),
     url(r'^get_node_history', views.GetNodeHistory,name='get_node_history'),
-    url(r'$start_run', views.start_run, name='start_run'),
+    url(r'^start_run', views.start_run, name='start_run'),
+    url(r'^stop_run', views.stop_run, name='stop_run'),
+    url(r'^run_start_feedback', views.GetDispatcherReply, name='run_start_feedback'),
     url(r'$', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanel.html"))),
 

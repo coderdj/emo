@@ -2,6 +2,23 @@
 {% load staticfiles %}
 
 {% block head %}
+<style type="text/css">
+
+  .Loading {
+      display:    block;
+      position:   fixed;
+      z-index:    1000;
+      top:        0;
+      left:       0;
+      height:     100%;
+      width:      100%;
+      background: rgba( 255, 255, 255, .8 )
+      url('{{STATIC_URL}}images/ajax-loader.gif')
+      50% 50%
+      no-repeat;
+  }
+</style>
+
 
   <script src="{% static "js/pace.min.js"%}"></script>
   <link href="{% static "css/pace.css"%}" rel="stylesheet" />
@@ -10,6 +27,8 @@
 <link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
 {% endblock %}
 {% block content %}
+    <div class="Loading"><div style="margin-top:200px;margin-left:300px;"><p><h3>Generating your noise report</h3></p><p><img src="{% static 'img/ajax-loader.gif'%}"/></p></div></div>
+
      <div class="col-xs-12">
        <br>
         <h3 id="run_name">Noise report for run {{ run_name }}</h3>	
@@ -27,6 +46,20 @@
 </div>
 <script type="text/javascript">
     $(function(){
+            $(".Loading").hide();
+
+
+    var divHeight = document.getElementById('grid').offsetHeight;
+    function checkDiv(){
+        var divHeight2 = document.getElementById('grid').offsetHeight;
+        console.log(divHeight);
+        console.log(divHeight2);
+    setTimeout(function() {
+                    checkDiv();
+                }, 1000 );
+
+    } // end checkdiv
+    checkDiv();
 
 
     });

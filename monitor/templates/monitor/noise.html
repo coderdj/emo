@@ -25,6 +25,7 @@
     <th style="width:50px;"> Channels </th>
     <th> Comments </th>
     <th style="pull-right;width:50px;"></th>
+    <th>DT</th>
   </tr>
   </thead>
   <tbody>
@@ -46,6 +47,7 @@
         <td> <span class="glyphicon glyphicon-comment">&nbsp0</span></td>
   {% endif %}
     <td><a class="btn btn-info btn-tiny" style="margin:0" href="/monitor/noise_report?run={{ run.collection }}">View/Approve</a></td>
+    <td>{{run.dateSort}}</td>
       </tr>
 {% endfor %}
 </tbody></table>
@@ -54,6 +56,14 @@
   $(document).ready(function(){
      $('#noisetable').DataTable({
         "order": [[ 0, "desc" ]],
+        "aoColumns": [
+          {"iDataSort": 4},
+          {"bSortable": true},
+          {"bSortable": true},
+          {"bSortable": true},
+          {"bSortable": true},
+          {"bVisible": false}
+         ],
         "iDisplayLength": 100,});
      });
 </script>
