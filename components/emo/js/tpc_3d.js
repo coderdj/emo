@@ -269,7 +269,7 @@ function get_peaks(data, peaktype){
 function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
     
     // Check for invalid peak types
-    if( peaktype != 's1s' && peaktype != 's2s' ){
+    if( peaktype != 's1' && peaktype != 's2' ){
 	console.log(" tpc_3d::draw_peak ERROR unknown peak type " + peaktype );
 	return;
     }
@@ -279,6 +279,7 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
 
     // Check that the S1 is there
     if( peaks.length < ID+1 ){
+        console.log(peaks);
 	console.log( "tpc_3d::draw_d1 - ERROR requested S1 out of bounds");
 	return;
     }
@@ -385,13 +386,13 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
 	amp = data['peaks'][peaks[0]]['hits'][x]['area']/data['peaks'][peaks[0]]['area'];
 	channel = parseInt(data['peaks'][peaks[0]]['hits'][x]['channel']);
         amp*=20;
-    console.log(x.toLocaleString() + amp.toString());
+    //console.log(x.toLocaleString() + amp.toString());
 	if( amp == 0. ) amp = 0.01;
 	if( amp > 1. ) amp = 1.;
 	var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
-    console.log("amp");
-        console.log(amp);
+    //console.log("amp");
+    //    console.log(amp);
 	// The color will be determined such that the largest hit is 
 	// at the 'top' of the pallete and the smallest should be at the bottom
 	colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
@@ -434,7 +435,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
             }
         }
         if(haspmt) continue;
-        console.log(x);
+        //console.log(x);
         var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
 	    colz = GetColor(.0003 ); ///data['peaks'][peaks[0]]['hits'][0]['area']);

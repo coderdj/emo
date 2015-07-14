@@ -9,7 +9,7 @@
 <script src="{% static "js/threex.fullscreen.js"%}"></script>
 <script src="{% static "js/OrbitControls.js"%}"></script>
 <script src="{% static "emo/js/tpc_3d.js"%}"></script>
-    <script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
+<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
 
 
 
@@ -25,44 +25,80 @@
   
   <!--<div class="col-xs-3" id="infoPanel" style="position:absolute;top:5px;left:5px;width:230px;height:73%;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;"> -->
   <div class="row" style="height:70% !important;min-height:500px;z-index:1;">
-    <div class="col-xs-3" id="infoPanel" style="height:100% !important;margin-top:10px;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;">
+    <div class="col-xs-3" style="height:100% !important;margin-top:10px;background:rgba(0,0,0,.5);z-index:1;padding:5px;"><!--id="infoPanel" style="height:100% !important;margin-top:10px;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;"-->
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true"
+                       aria-controls="collapseOne">
+                    Options
+                    </a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <div id="playpause" style="height:40px;display:inline-block;">
+                            <span class="glyphicon glyphicon-pause" style="font-size:40px" onclick="PlayPause(1)"></span>
+                        </div>
+                        <div id="fullscreen" style="height:40px;align:right;display:inline-block;">
+                            <span class="glyphicon glyphicon-fullscreen" onclick="MakeFullScreen()" style="font-size:35px"></span>
+                        </div>
+                        <div id="audioonoff" style="height:40px;align:right;display:inline-block;">
+                            <span class="glyphicon glyphicon-volume-off" onclick="ToggleAudio()" style="font-size:35px"></span>
+                        </div>
+                        <div id="lightsonoff" style="height:40px;align:right;display:inline-block;">
+                            <span class="glyphicon glyphicon-certificate" onclick="Lights()" style="font-size:35px"></span>
+                        </div>
+                        <div class="row" style="margin:0">
+                            <button class="btn btn-default btn-xs" onclick="ToggleTPC()" style="margin-bottom:10px">
+                                TPC Visibility
+                            </button>
+                        </div>
+                        <div class="row" style="margin:0">
+                            <button class="btn btn-danger btn-xs" id="button_anim" onclick="ToggleAnimations()" style="margin-bottom:10px">
+                                Animations
+                            </button>
+                        </div>
+                        <div class="row" style="margin:0">
+                            <button class="btn btn-default btn-xs" onclick="ColorToggle()" style="margin-bottom:10px">
+                                Color
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTwo">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Event Info
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                    <div class="panel-body">
+                        <span style="font-size:10pt"><strong>Run name: </strong><div id="runName" style="font-size:10pt"></div></span>
+                        <!--<span>Mode: <div id="runMode"></div></span> -->
+                        <span style="font-size:10pt"><strong>Event number: </strong><span id="eventNumber"></span></span>
+                        <!--<span>Event number: <div id="eventNum"></div></span> -->
+                        <span style="font-size:10pt"><strong>Timestamp: </strong><span id="eventTime"></span></span>
+                        <span style="font-size:10pt"><strong>S2s: </strong><ul id="s2s_list" style="list-style-type:none;"></ul></span>
+                        <span style="font-size:10pt"><strong>S1s: </strong><ul id="s1s_list" style="list-style-type:none;"></ul></span>
+                        <span style="font-size:10pt"><strong>Position (x,y,z): </strong><div id="position"></div></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
 
-      <div id="infoPanel_title" class="infoPanel_title" style="height:30px;margin-top:2px;margin-bottom:2px;width:100%">
-      <span style="height:25px;">Event info</span>
-    </div>
-    <hr style="margin:0;">
-    <div class="row" style="margin:0;margin-top:2px;">
-      <div id="playpause" style="height:40px;display:inline-block;"><span class="glyphicon glyphicon-pause" style="font-size:40px" onclick="PlayPause(1)"></span></div> 
-      <div id="fullscreen" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-fullscreen" onclick="MakeFullScreen()" style="font-size:35px"></span></div>
-      <div id="audioonoff" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-volume-off" onclick="ToggleAudio()" style="font-size:35px"></span></div>
-      <div id="lightsonoff" style="height:40px;align:right;display:inline-block;"><span class="glyphicon glyphicon-certificate" onclick="Lights()" style="font-size:35px"></span></div>
-    </div>
-    <div class="row" style="margin:0">
-      <button class="btn btn-default btn-xs" onclick="ToggleTPC()" style="margin-bottom:10px">TPC Visibility</button>
-    </div>
-    <div class="row" style="margin:0">
-      <button class="btn btn-danger btn-xs" id="button_anim" onclick="ToggleAnimations()" style="margin-bottom:10px">Animations</button>
-    </div>
-    <div class="row" style="margin:0">
-      <button class="btn btn-default btn-xs" onclick="ColorToggle()" style="margin-bottom:10px">Color</button>
-    </div>              
-  <hr style="margin:0">
-  <span style="font-size:10pt">Run name: <div id="runName" style="font-size:10pt"></div></span>
-    <!--<span>Mode: <div id="runMode"></div></span> -->
-    <span style="font-size:10pt">Event number: <div id="eventNumber"></div></span>
-    <!--<span>Event number: <div id="eventNum"></div></span> -->
-    <span style="font-size:10pt">Timestamp: <div id="eventTime"></div></span>
-    <span style="font-size:10pt">S2s: <ul id="s2s_list" style="list-style-type:none;"></ul></span>
-    <span style="font-size:10pt">S1s: <ul id="s1s_list" style="list-style-type:none;"></ul></span>
 
-    <span style="font-size:10pt">Position (x,y,z): <div id="position"></div></span>
-  </div>
-
-    <div class="col-xs-3 col-xs-offset-6 plotPanel" id="plotPanel" style="margin-top:10px;height:100%;background:rgba(0,0,0,.5);color:white;z-index:1;border-width:1px;border-color:white;border-style:solid;padding:5px;">
-    <div id="plotPanel_title" class="plotPanel_title" style="height:30px;margin-top:2px;margin-bottom:2px;width:100%">
+    <div class="col-xs-3 col-xs-offset-6 plotPanel" id="plotPanel" style="margin-top:10px;height:100%;background:rgba(0,0,0,.5);color:white;z-index:1;padding:5px;">
+   <!-- <div id="plotPanel_title" class="plotPanel_title" style="height:30px;margin-top:2px;margin-bottom:2px;width:100%">
       <span style="height:25px;">Waveforms</span>
     </div>
-    <hr style="margin:0;">
+    <hr style="margin:0;">-->
     <div id="s1_plot" style="width:100%;height:45%">
     </div>
     <div id="s2_plot" style="width:100%;height:45%">
@@ -93,7 +129,7 @@
 
   //GLOBALS  
   var waveformUrlBase="{% url 'get_event_as_json' %}";
-  var tpc_geometry_path = "{% static "emo/js/emo_tpc_model.js" %}";
+  var tpc_geometry_path = "{% static 'emo/js/emo_tpc_model.js' %}";
   var S1s = [];
   var S2s = [];
   var loaded = false;
@@ -364,8 +400,8 @@
 	        var total_data = UnzipWaveforms(data);
             console.log(total_data);
 	      
-	        //draw_peak( "s1_plot", data, total_data, 0, "s1s", "S1[0]" );
-	        //draw_peak( "s2_plot", data, total_data, 0, "s2s", "S2[0]" );
+	        draw_peak( "s1_plot", data, total_data, 0, "s1", "S1[0]" );
+	        draw_peak( "s2_plot", data, total_data, 0, "s2", "S2[0]" );
             var divheight = document.getElementById("full_plot").offsetHeight;
             console.log(divheight);
 	        draw_full_waveform( "full_plot", total_data, divheight );
