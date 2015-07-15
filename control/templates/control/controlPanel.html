@@ -359,11 +359,12 @@ border-style=solid;border-width:1px;">
      }
 
       //TextUpdate();
-      //updateData( chart, pointUpdateUrl );
+     //updateData( chart, pointUpdateUrl );
+      update_graphic();
       UpdateDetectorText(dataUrl, "info_panel_header");
       UpdateNodes( "info_panel_nodes", pointUpdateUrl );
       setTimeout( function() {
-           UpdatePage( thechart );
+	UpdatePage( thechart );			     
       }, updateFreq );
   };
 
@@ -378,7 +379,24 @@ border-style=solid;border-width:1px;">
           html_string += "</tbody></table>"
           document.getElementById( logdiv).innerHTML = html_string;
       });
-  }
+  }        
+    function update_graphic(){
+       // update points if needed
+       var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
+       $.getJSON( historyUrlWithOptions, function(data) {
+          var thechart=$("#rates_panel").highcharts();
+          if(thechart.series.length != data.length){
+             redraw_graphic();
+             return;
+          }
+          for( x=0; x<data.length; x++ ){
+              thechart.series[x].update({
+                data: data[x]["data"],
+              },true);
+          }
+       });
+    }
+         
     function redraw_graphic(){
         var thechart=$("#rates_panel").highcharts();
         while( thechart.series.length > 0 ) {

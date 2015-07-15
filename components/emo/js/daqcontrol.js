@@ -192,7 +192,8 @@ function UpdateDetectorText(dataUrl, divname){
 
                 // If running we can provide a bunch more information
                 if( data['status'][x]['state'] == "Running" ) {
-                    var startdate = new Date(data['status'][x]['startTime']['$date']);
+                    //var startdate = new Date(data['status'][x]['startTime']);
+		    var startdate = data['status'][x]['startTime'];
 
                     html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['mode'] + "</h6></div>";
                     html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['startedBy'] + "</h6></div>";

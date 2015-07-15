@@ -285,8 +285,15 @@ def start_run(request):
             return HttpResponse({})
         insert_doc['command'] = "Start"
 
+        # Clear reply collection
+        reply_collection = db[ "dispatcherreply" ]
+        reply_collection.drop()
+
+
         collection = db[ "daq_control" ]
         collection.insert_one(insert_doc)
+
+
         return HttpResponse({})
         
     return HttpResponse({})
