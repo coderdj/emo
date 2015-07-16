@@ -220,9 +220,13 @@ def start_run(request):
 
         # Make the insert doc
         for key in rs_form.cleaned_data.keys():
-            if key == 'run_mode_tpc' and rs_form.cleaned_data[key] != "":
+            #if key == 'run_mode_tpc' and rs_form.cleaned_data[key] != "":
+            if key == 'detector' and (rs_form.cleaned_data[key]=='tpc' 
+                                      or rs_form.cleaned_data[key]=='all'):
                 hasTPC = True
-            elif key == 'run_mode_mv' and rs_form.cleaned_data[key] != "":  
+            #elif key == 'run_mode_mv' and rs_form.cleaned_data[key] != "":  
+            elif key == 'detector' and (rs_form.cleaned_data[key]=='muon_veto'
+                                        or rs_form.cleaned_data[key]=='all'):
                 hasMV = True
             insert_doc[key] = rs_form.cleaned_data[key]
             
