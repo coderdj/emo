@@ -45,7 +45,7 @@ def runs(request):
         filter_form = run_search_form( fieldslist )
 
     retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
-    return render( request, 'runs/runs.html', {"runs_list": retset, "form" : filter_form } )
+    return render( request, 'runs/runs.html', {"runs_list": dumps(retset), "form" : filter_form } )
 
 @login_required
 def rundetail ( request ):

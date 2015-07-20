@@ -3,21 +3,25 @@
 {% block content %}
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
+<script src="{% static "DataTables-1.10.7/media/js/jquery.dataTables.min.js"%}"></script>
+<link href="{% static "DataTables-1.10.7/media/css/jquery.dataTables.min.css"%}" rel="stylesheet" />
+<script src="{% static "DataTables-1.10.7/extensions/TableTools/js/dataTables.tableTools.min.js"%}"></script>
+<link href="{% static "DataTables-1.10.7/extensions/TableTools/css/dataTables.tableTools.min.css"%}" rel="stylesheet"/>
 
- <script>
-    $(function() {
-        $( "#id_startdate" ).datepicker({
-            changeMonth: true,
-            changeYear: true
-        });
-    });
-    $(function() {
-        $( "#id_enddate" ).datepicker({
-            changeMonth: true,
-            changeYear: true
-        });
-    });
-  </script>
+<script>
+  $(function() {
+     $( "#id_startdate" ).datepicker({
+       changeMonth: true,
+       changeYear: true
+     });
+  });
+  $(function() {
+     $( "#id_enddate" ).datepicker({
+        changeMonth: true,
+        changeYear: true
+     });
+  });
+</script>
 
 <style type="text/css">
     #id_startdate, #id_enddate, #id_mode, #id_custom{
@@ -25,11 +29,18 @@
         width: 70%;
         margin-top:10px;
     }
+    td.runs-expand {
+     background: url('{%static "img/details_open.png" %}') no-repeat center center;
+     cursor: pointer;
+    }
+    tr.shown td.runs-expand {
+       background: url('{%static "img/details_close.png" %}') no-repeat center center;
+    }
 
 
 </style>
 
-<div class="col-xs-12 emo-search-bar">
+<div class="col-xs-12 emo-search-bar" style="margin-bottom:15px;">
     <form method="GET" action="/runs/">
         <div class="row">
             <div class="col-xs-1" style="line-height:40px;"><strong>Filter:</strong></div>
@@ -44,190 +55,267 @@
     </form>
 </div>
 
-    <br>
-<div class="container" style="margin:0;padding:0;margin-top:40px;width:99%">
-{% for runInfo in runs_list %}
+<div class="row" style="margin-bottom:8px;margin-left:5px;">
+  <span><strong>Click rows to select runs. Then download selected as: </strong></span>&nbsp;
+  <button class="btn btn-info" id='download_as_runlist'>Runs List</button>
+  <button class="btn btn-info" id='download_as_raw'>Raw Paths</button>
+  <button class="btn btn-info" id='download_as_processed'>Processed Paths</button>
+</div>
+    
+<table class="display" id="runstable">
+  <thead>
+    <tr>
+      <th>Detail</th>
+      <th>Run name</th>
+      <th>Date</th>
+      <th>Mode</th>
+      <th>Comments</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="width:10px" class="runs-expand"></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="pull-right"> 
+	<span class="glyphicon glyphicon-comment">&nbsp</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-<!--<div class="beforeentry">Today</div>
 
-<!--
-<div class="beforeentry">{{ runInfo.starttimestamp|date:"M Y" }} </div>-->
+<script>
+  function format(d){
+  // This function defines the style for an expanded table row
+  var ret = '';
+  var ret = "<div class='row'><div class='col-xs-12 col-sm-6'><table style='width:100%;margin-bottom:10px;'><tbody>";
+    ret += '<tr><td><strong>Run name</strong></td><td>'+d.name+'</td></tr>';
+    ret += '<tr><td><strong>Detectors</strong></td><td>';
+    for(x=0;x<d.detectors.length;x+=1){
+      ret+=d.detectors[x];
+      if(x!=d.detectors.length) ret+=', ';
+    }
+    ret += '</td></tr>';
+    ret += '<tr><td><strong>Data Period</strong></td><td>period 0</td></tr>';
+    ret += '<tr><td><strong>Run Mode</strong></td><td>'+d.name+'</td></tr>';
+    ret += '<tr><td><strong>Starting User</strong></td><td>'+d.user+'</td></tr>';
+    ret += '<tr><td><strong>Start Date</strong></td><td>';
+console.log(d.starttimestamp);
+    var start = new Date(d.starttimestamp['$date']);
+    
+    ret += start.getUTCFullYear() +
+            "/"+ (start.getUTCMonth()+1) +"/"+ start.getUTCDate() + " " +
+            start.getUTCHours() + ":" + start.getUTCMinutes() + ":" + 
+            start.getUTCSeconds();    
+    ret += '</td></tr>';   
+    ret += '<tr><td><strong>End Date</strong></td><td>';
+    if('endtimestamp' in d){
+       var end = new Date(d.endtimestamp['$date']);
 
-<div class="entry" id="{{ runInfo.name }}">
-  <div class="header">
-    <div class="row">
-      <div class="col-xs-1 col-sm-1 entry-icon                                                                                                                
-                  {% if runInfo.shorttype == 'write' %}                                                                                                       
-                  entry-icon-1                                                                                                                                
-                  {% elif runInfo.shorttype == 'dump' %}                                                                                                      
-                  entry-icon-2                                                                                                                                
-                  {% elif runInfo.shorttype == 'muon' %}                                                                                                      
-                  entry-icon-3                                                                                                                                
-                  {% endif %}">{{runInfo.shorttype}}
-                  </div>
-                  <div class="col-xs-6 col-sm-6">
-                  <div class="entry-title">{{runInfo.name}}</div>
-          			<div class="entry-date">Started by {{runInfo.user}} on {{ runInfo.starttimestamp|date:"d M"}} at {{ runInfo.starttimestamp|time:"H:i"}}</div>
-        				</div>
-        				<div class="col-xs-2 col-sm-2 entry-status" style="color:#689f38;"> {{ runInfo.stage }} 
-        				</div>
-       			 <div class="col-xs-2 col-sm-2 entry-messages">
-        				<td style="pull-right">
-        					<span class="glyphicon glyphicon-comment"> {{ runInfo.comments|length }}</span>
-        				</td>
-       			 </div>
-      </div>
-    </div>
+    ret += end.getUTCFullYear() +
+            "/"+ (end.getUTCMonth()+1) +"/"+ end.getUTCDate() + " " +
+            end.getUTCHours() + ":" + end.getUTCMinutes() + ":" +
+            end.getUTCSeconds();
+    }
+    else ret+='None';
+    ret+='</td></tr>';
+    ret+='</tbody></table></div>';
+    ret+= '<div class="col-xs-12 col-sm-6"><table style="width:100%;margin-bottom:10px;"><tbody>';
+    ret += '<tr><td>Valid triggers</td><td>NA</td></tr>';
+    ret += '<tr><td>Good run?</td><td>Sure</td></tr>';
+    ret += '<tr><td>Raw data location</td><td>NA</td></tr>';
+    ret += '<tr><td>Processed data locations</td><td>NA</td></tr>';
+    ret += '<tr><td>More</td><td>...</td></tr>';
+    ret += '<tr><td>More</td><td>...</td></tr>';
+    ret += '<tr><td>More</td><td>...</td></tr>';
+    ret+='</tbody></table></div></div>';
 
-  </div>
-  {% endfor %}
-  <br>
-  <p style="padding-left:5px;"><a href="../" class="btn btn-info btn-large">&laquo; Back</a></p>
-  </div>
-  <!-- Template for expanded header -->
-<script type="text/template" id="header-template">
-  <div class="entry-header">
-    <!-- Override icon class for collapse button -->
-    <div class="col-sm-1 col-xs-1" style="text-align:left;color:#AAAAAA;line-height:1.4;font-size:26px;height:40px;">
-      <span class="glyphicon glyphicon-chevron-up" onclick="entryCollapse()" style="font-size:20px;"></span>
-    </div>
-    <div class="col-sm-3 col-xs-3 entry-title" style="margin-left:0;padding-left:0;border-left:0;text-align:left;font-size:20px;">{RunName}</div>
-    <!-- Override messages class for right side nav buttons -->
-    <div class="entry-messages" style="font-size:16px;line-height:1.7;">
-      <a style="font-size:24px;" id="runinfo_button" onclick="DrawInfo('runinfo')">Info</a>&nbsp;&nbsp;&nbsp;
-      <a id="readerinfo_button" onclick="DrawInfo('JSON')">JSON</a>&nbsp;&nbsp;&nbsp;
-      <!--<a id="triggerinfo_button" onclick="DrawInfo('triggerinfo')">Trigger</a>&nbsp;&nbsp;&nbsp;
-      <a id="processorinfo_button" onclick="DrawProcessor()">Processor</a>&nbsp;&nbsp;&nbsp;-->
-      <a id="comments_button" onclick="DrawInfo('comments')">Comments</a>&nbsp;&nbsp;&nbsp;
-    </div>
-  </div>
-  <div class="entry-content" id="entry-content" style="overflow-x:hidden;overflow-y:auto;width:100%;">
-    Data not found.
-  </div>
+
+    
+    ret += '<div class="panel-group" style="width:100%;margin:0;" id="accordion" role="tablist" aria-multiselectable="true">';
+  /*    ret +='<div class="panel panel-default">   <div class="panel-heading" role="tab" id="headingOne"> <h4 class="panel-title"> <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true"   aria-controls="collapseOne">Info</a></h4> </div><div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">  <div class="panel-body">';
+*/	    
+    //INFO BODY
+
+    ret+='</div></div></div>';
+
+      ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingTwo"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false"   aria-controls="collapseTwo">JSON</a></h4> </div><div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">  <div class="panel-body">';
+    // JSON
+	 ret+='<pre class="prettyprint" style="width:100%;max-height:400px;overflow-y:scroll;">' + JSON.stringify(d, null, '\t') + "</pre>";
+    ret+='</div></div></div>';
+
+
+    ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false"   aria-controls="collapseThree">Comments</a></h4> </div><div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body">';
+
+ // Comments
+    if("comments" in d){
+    for(i=0;i<d.comments.length;i+=1){
+	ret += '<div class="bubble"><p><b>';
+        ret += d.comments[i]["user"];
+        ret += ' </b>&nbsp; wrote on &nbsp; ';
+        var date = new Date(d.comments[i]["date"]['$date']);
+
+	ret += date.getUTCDate() + "." + (date.getUTCMonth()+1) + 
+               "." + date.getUTCFullYear() + " at " + 
+            date.getUTCHours() + ":" + date.getUTCMinutes() + ":" +
+            date.getUTCSeconds();
+        ret += '<p>{% autoescape off %}';
+        ret += d.comments[i]["text"];
+        ret += '{% endautoescape %}</p></p></div>';
+    }
+    }
+    else 
+       ret += '<p>No comments yet</p>';
+    // Form for new comment
+    ret += "<form action='/log/new_comment/' method='post'>" +
+      "{% csrf_token %}" +
+      '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +
+      '<br>' +
+      '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +
+      '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;">New comment</button>';
+      
+      ret +=  '</form>';
+        ret+='</div></div></div>';
+    ret += '</div>'; //close panel group
+
+  return ret;
+  }
+  
+  $(document).ready(function(){
+
+  // For row selection and list printing
+  var selected = [];
+  var thedata = {{ runs_list|safe }};
+  var table = $('#runstable').DataTable({
+	"dom": 'T<"clear">lfrtip',
+     "data": thedata,
+     "aLengthMenu": [
+        [ 50, 100, 200, 500, -1],
+        [ 50, 100, 200, 500, "All"]
+	],
+     "columns": [
+      {
+         "className": 'runs-expand',
+         "orderable": false,
+         "data":      null,
+         "defaultContent": '',
+         "width":     '20px'
+      },
+      {
+         "data":    "name"
+      },
+      { 
+         "data":    "starttimestamp",
+         "width":   "15%",
+         "render":  function(data){
+                      var m = new Date(data['$date']);
+                      var dateString = m.getUTCFullYear() + "/" +
+                                       (m.getUTCMonth()+1) + "/" + 
+                                       m.getUTCDate() + " " + 
+                                       m.getUTCHours() + ":" + 
+                                       m.getUTCMinutes() + ":" + 
+                                       m.getUTCSeconds();
+                      return dateString;
+                     }
+       },
+       {
+          "data":    "runmode",
+       },
+       {
+          "data":    "comments",
+          "width":   '10px',
+          "render":  function(data){
+                        if(data==null) return 0;
+                        return data.length;
+                     }
+        }
+     ],
+     "order":     [[ 2, "desc" ]],
+     "iDisplayLength": 100,
+//     "rowCallback": function( row, data ) {
+  //          if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+    //            $(row).addClass('selected');
+      //      }
+      //  },
+     "tableTools": {
+        sRowSelect: 'multi',
+        aButtons: [
+          {
+               sExtends: 'select_all',
+               sButtonText: 'Select All',
+               fnClick: function (nButton, oConfig, oFlash) {
+               TableTools.fnGetInstance('runstable').fnSelectAll(true);
+            }
+          }, 
+	  "select_none",
+        ]
+      },
+    }); // end table declaration
+      
+  // Event listener for opening and closing details
+  $('#runstable tbody').on('click', 'td.runs-expand', function(){
+  
+      var tr = $(this).closest('tr');
+      var row = table.row(tr);
+
+      if( row.child.isShown() ){
+         // The row is open. Close it
+         row.child.hide();
+         tr.removeClass('shown');
+      }
+      else {
+         // Open the row
+         row.child( format(row.data()) ).show();
+         tr.addClass('shown');
+      }
+  
+  }); // End expand click listener
+
+/*  $('#runstable tbody').on('click', 'tr', function () {
+        var id = this.id;
+        var index = $.inArray(id, selected);
+
+        if ( index === -1 ) {
+            selected.push( id );
+        } else {
+            selected.splice( index, 1 );
+        }
+ 
+        $(this).toggleClass('selected');
+    } );
+*/
+
+$('#download_as_runlist').click( function () {
+
+   console.log(table.rows('.selected').data());
+
+   var runsList = "";
+   for(i=0; i<table.rows('.selected').data().length; i+=1){
+       runsList+=table.rows('.selected').data()[i]['name']+"\n";
+   }
+   console.log(runsList);
+
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' 
+					+ encodeURIComponent(runsList));
+  element.setAttribute('download', 'runs.txt');
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+} );
+
+
+    }); // end document ready function
+
 </script>
-<!-- Template for Info panel -->
-<script type="text/template" id="info-template">
-  <div class="col-sm-12 col-xs-12" style="padding-left:0px;border-left:0px;margin-left:0px;margin-right:0px;">
-      {basicinfo}
-  </div>
-  <div class="col-sm-6 col-xs-6">
-  </div>
-</script>
-
 
 <script type="text/javascript">
-var lastDiv = '';
-var lastDivID = '';
-var lastDivHandler = '';
-var htmlcontent = '';
-var lastdata = '';
-var lastpanel = '#runinfo_button';
-var lastupdateurl = '';
-
-  function entryCollapse(){
-      // Get ID of parent of parent of parent (entry)                                                                                                           
-      lastDiv.animate({height:'40',marginTop:'-1px',marginBottom:'0px'},
-                      300,
-                      function(){
-                          document.getElementById(lastDivID).innerHTML = htmlcontent;
-                          lastDiv.on('click',lastDivHandler);
-                          lastDiv = '';
-                          lastDivID = '';
-                          lastDivHandler = '';
-                          htmlcontent = '';
-                      });
-  };
-
- $('.entry').click(function(){
-      if(lastDivID != $(this).attr('id') ){
-
-          if(lastDiv != ''){ //neat hack to wait for animation to finish                                                                                        
-              document.getElementById(lastDivID).innerHTML = "";
-                lastDiv.animate({height:'40',marginTop:'-1px'
-                                 ,marginBottom:'0px'},300);
-              document.getElementById(lastDivID).innerHTML = htmlcontent;
-              lastDiv.on('click',lastDivHandler);
-              lastDiv.fadeIn("fast");
-          }
-          lastDivID = $(this).attr('id');
-          lastDiv=$(this);
-          htmlcontent = document.getElementById($(this).attr('id')).innerHTML;
-          $(this).animate({height:'300',marginTop:'10px',marginBottom:'10px'},300)
-          // Get the data                                                                                                                                       
-          var updateUrl = "/runs/rundetail" + "?run="; 
-            updateUrl += ($(this).attr('id'));
-           
-          lastupdateurl = updateUrl;
-          var theid = ($(this).attr('id'));
-          console.log(updateUrl)
-          $.getJSON( updateUrl, function(data) {
-              lastdata=data;
-              console.log(data);
-              document.getElementById(theid).innerHTML = $('#header-template').html().replace('{RunName}', data['name']);
-              DrawInfo('runinfo');
-              //document.getElementById(theid).innerHTML = thisHTML;                                                                                            
-              lastDivHandler = ($._data(lastDiv.get(0), "events"))['click'][0];
-                lastDiv.off('click',lastDivHandler);
-          });
-      }
-  })
- function DrawInfo(butwho){
-      // For drawing the info panel                                                                                                                             
-      var basicinfo = '';
-      if(lastpanel != '')
-          $(lastpanel).animate({fontSize:"16px"},0);
-      lastpanel = '#'+butwho + "_button";
-      $(lastpanel).animate({fontSize:"24px"},10);
-
-     if(butwho == 'JSON'){
-         basicinfo = '<pre class="prettyprint" style="width:105%;">' + JSON.stringify(lastdata, null, '\t') + "</pre>";
-     }
-      else if(butwho != 'comments'){
-         basicinfo = "<div class='col-xs-12' style='padding:2%'> " +
-                " <div class='row'><div class='col-sm-6 col-xs-12'><strong>Run name: </strong>" + lastdata['name'] + "</div>" +
-                 "<div class='col-sm-6 col-xs-12'><strong>Run mode: </strong>" + lastdata['runmode'] + "</div></div>" +
-                "<div class='row'>" +
-                 "<div class='col-sm-4 col-xs-12'><strong>Raw size: </strong>" + lastdata['size'] + "</div>" +
-                "<div class='col-sm-4 col-xs-12'><strong>Processed size: </strong>" + lastdata['procsize'] + "</div>" +
-                "<div class='col-sm-4 col-xs-12'><strong>Events: </strong>" + lastdata['events'] + "</div></div>" +
-                " Note: this section should be filled more later once we know what we want to see quickly.";
-
-          basicinfo += '</div>';
-      }
-      else { //comments!                                                                                                                                        
-          if( !( butwho in lastdata ) || lastdata[butwho].length==0){
-              basicinfo += '<h6>No comments yet</h6>';
-          }
-          else{
-              for( i=0; i<lastdata[butwho].length;i+=1){
-                  basicinfo+='<div class="bubble"><p><b>';
-                  basicinfo+=lastdata[butwho][i][2];
-                  basicinfo+='</b>&nbsp; wrote on &nbsp ';
-                  basicinfo+=lastdata[butwho][i][1];
-                  basicinfo+='<p>{% autoescape off %}';
-                  basicinfo+=lastdata[butwho][i][3];
-                  basicinfo+='{% endautoescape %}</p></p></div>';
-              }
-          }
-          basicinfo+= '<br><button class="btn btn-info" onclick="NewComment()" style="margin-bottom:20px;width:80%;margin-left:10%;margin-right:10%;">Add a New\
- Comment</button><br>';
-      }
-      document.getElementById("entry-content").innerHTML = $('#info-template').html().replace('{basicinfo}', basicinfo);
-     window.prettyPrint && prettyPrint()
-
-  };
-
-function NewComment(){
-    title = "New comment to run: "+lastDivID;
-    console.log(lastupdateurl);
-    message = "<form action='" + lastupdateurl + "' method='post'>{% csrf_token %}<textarea type='text' id='text' name='text' class='form-control'  placeholder\
-='New comment...' ></textarea><hr><input class='btn btn-info btn-lg' type=submit value='New comment'/></form>";
- BootstrapDialog.show({
-     			title: title,
-     		//	top: 40px;
-            message: message,
-  });
-};
 // Get a runs list
 function DownloadList(whichone){
     startdate = document.getElementById("id_startdate").value;
