@@ -93,9 +93,13 @@
   var ret = "<div class='row'><div class='col-xs-12 col-sm-6'><table style='width:100%;margin-bottom:10px;'><tbody>";
     ret += '<tr><td><strong>Run name</strong></td><td>'+d.name+'</td></tr>';
     ret += '<tr><td><strong>Detectors</strong></td><td>';
-    for(x=0;x<d.detectors.length;x+=1){
-      ret+=d.detectors[x];
-      if(x!=d.detectors.length) ret+=', ';
+    var count = 0;
+    for(var key in d.detectors){
+      count += 1;
+      if (d.detectors.hasOwnProperty(key)) {
+	      ret += key;
+       }
+       if(count!=d.detectors.length) ret+=', ';
     }
     ret += '</td></tr>';
     ret += '<tr><td><strong>Data Period</strong></td><td>period 0</td></tr>';

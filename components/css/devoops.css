@@ -62,11 +62,12 @@ a.show-sidebar:hover {
   color:#000;
 }
 #sidebar-left {
-    position:relative;
-#position: fixed;
+  position:relative;
+# position: absolute;
+#top:0;
   z-index: inherit;
-  padding-bottom: 3000px !important;
-  margin-bottom: -3000px !important;
+  padding-bottom: 10000px !important;
+  margin-bottom: -10000px !important;
   background: #6AA6D6; /*url(../img/devoops_pattern_b10.png) 0 0 repeat;*/
   -webkit-transition: 0.2s;
   -moz-transition: 0.2s;
