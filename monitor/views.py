@@ -533,6 +533,7 @@ def get_calendar_events(request):
             endtimestamp = run["endtimestamp"]
         ret.append({"title": run['name'],
                     #"start": run['starttimestamp'].isoformat()})#,
+                    "mode": run['runmode'],
                     "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S")})
                     #                    "end": endtimestamp})
     print(ret)
