@@ -1,7 +1,9 @@
 from django.shortcuts import render, HttpResponse
 from pymongo import MongoClient
 import json
-from runs.models import run_comment, run_search_form
+import pytz
+from bson.objectid import ObjectId
+from runs.models import run_comment, run_search_form, RunCommentForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
@@ -30,22 +32,34 @@ def runs(request):
             if filter_form.cleaned_data[ 'custom' ] is not "":
                 filter_query = json.loads( filter_form.cleaned_data['custom'] )
             if filter_form.cleaned_data[ 'startdate' ] is not None:
-                filter_query[ 'starttimestamp' ]= { "$gt" : datetime.datetime.combine(filter_form.cleaned_data['startdate'],
-                                                                        datetime.datetime.min.time() )}
+                filter_query[ 'starttimestamp' ]= { "$gt" 
+                                                    : datetime.datetime.combine
+                                                    (filter_form.cleaned_data
+                                                     ['startdate'],
+                                                     datetime.datetime.min.time() )}
             if filter_form.cleaned_data[ 'enddate' ] is not None:
                 if 'starttimestamp' in filter_query.keys():
-                    filter_query['starttimestamp']['$lt'] = datetime.datetime.combine(filter_form.cleaned_data['enddate'],
-                                                                        datetime.datetime.max.time() )
+                    filter_query['starttimestamp']['$lt'] = (
+                        datetime.datetime.combine(
+                            filter_form.cleaned_data['enddate'],
+                            datetime.datetime.max.time() )
+                        )
                 else:
-                    filter_query[ 'starttimestamp' ]= { "$lt" : datetime.datetime.combine(filter_form.cleaned_data['enddate'],
-                                                                                        datetime.datetime.max.time() )}
-            if filter_form.cleaned_data[ 'mode' ] is not "" and filter_form.cleaned_data['mode'] != 'All':
-                filter_query['runmode'] = filter_form.cleaned_data['mode']
+                    filter_query[ 'starttimestamp' ]= { "$lt" : 
+                                                        datetime.datetime.combine(
+                            filter_form.cleaned_data
+                            ['enddate'],
+                            datetime.datetime.max.time
+                            () )}
+                if ( filter_form.cleaned_data[ 'mode' ] is not "" and 
+                     filter_form.cleaned_data['mode'] != 'All' ) :
+                    filter_query['runmode'] = filter_form.cleaned_data['mode']
     else:
         filter_form = run_search_form( fieldslist )
 
     retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
-    return render( request, 'runs/runs.html', {"runs_list": dumps(retset), "form" : filter_form } )
+    return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
+                                               "form" : filter_form } )
 
 @login_required
 def rundetail ( request ):
@@ -94,3 +108,41 @@ def download_list ( request ):
     
     ret = {}
     return HttpResponse( json.dumps( ret ), type = 'application/json' )
+
+@login_required
+def new_comment(request):
+
+    """                                                                         
+    Add a new comment to a run entry.
+    """
+    c = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    d = c[settings.RUNS_DB_NAME]
+    mongo_collection = d['runs']
+
+    if request.method == 'POST':
+
+        comment = RunCommentForm(request.POST)
+        if comment.is_valid():
+
+            # Get data                                                          
+            doc_id = comment.cleaned_data['run_id']
+            user = request.user.username
+            date = pytz.utc.localize(datetime.datetime.now())
+
+            # Now do the update to a comment if there is one                    
+            if 'content' in comment.cleaned_data:
+                text = comment.cleaned_data['content']
+                user = request.user.username
+
+                # If the entry exists append the comment to it                  
+                comment_dict = {
+                    "text": text,
+                    "date": date,
+                    "user":  user,
+                    }
+
+                mongo_collection.update({"_id": ObjectId(doc_id)}, {"$push": 
+                                                                    {"comments": 
+                                                                     comment_dict}})
+
+    return HttpResponsePermanentRedirect('/runs/')

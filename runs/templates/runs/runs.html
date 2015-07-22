@@ -173,12 +173,11 @@ console.log(d.starttimestamp);
     else 
        ret += '<p>No comments yet</p>';
     // Form for new comment
-    ret += "<form action='/log/new_comment/' method='post'>" +
+    ret += "<form action='/runs/newcomment' method='post'>" +
       "{% csrf_token %}" +
       '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +
-      '<br>' +
-      '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +
-      '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;">New comment</button>';
+      '<br>' +     
+      '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="run_id" style="margin-bottom:15px;">New comment</button>';
       
       ret +=  '</form>';
         ret+='</div></div></div>';

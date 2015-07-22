@@ -1,6 +1,10 @@
 from django.db import models
 from django import forms
 
+class RunCommentForm(forms.Form):
+    run_id = forms.CharField(max_length=100)
+    content = forms.CharField(max_length=5000, required=False)
+
 class run_comment(forms.Form):
     text = forms.CharField(max_length=5000)
 
