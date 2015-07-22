@@ -61,6 +61,7 @@ def runs(request):
     return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
                                                "form" : filter_form } )
 
+"""
 @login_required
 def rundetail ( request ):
 
@@ -102,7 +103,7 @@ def rundetail ( request ):
         return HttpResponsePermanentRedirect( '/' )
 
     return HttpResponse( dumps(rundoc), content_type = 'application/json')
-
+"""
 
 def download_list ( request ):
     

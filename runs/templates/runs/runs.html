@@ -139,19 +139,19 @@ console.log(d.starttimestamp);
 
     
     ret += '<div class="panel-group" style="width:100%;margin:0;" id="accordion" role="tablist" aria-multiselectable="true">';
-  /*    ret +='<div class="panel panel-default">   <div class="panel-heading" role="tab" id="headingOne"> <h4 class="panel-title"> <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true"   aria-controls="collapseOne">Info</a></h4> </div><div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">  <div class="panel-body">';
+  /*    ret +='<div class="panel panel-default">   <div class="panel-heading" role="tab" id="' + d._id['$oid'] + '_headingOne"> <h4 class="panel-title"> <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne' + d._id['$oid'] + '" aria-expanded="true"   aria-controls="collapseOne' + d._id['$oid'] + '">Info</a></h4> </div><div id="collapseOne' + d._id['$oid'] + '" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">  <div class="panel-body">';
 */	    
     //INFO BODY
 
     ret+='</div></div></div>';
 
-      ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingTwo"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false"   aria-controls="collapseTwo">JSON</a></h4> </div><div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">  <div class="panel-body">';
+      ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingTwo"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseTwo' + d._id['$oid'] + '">JSON</a></h4> </div><div id="collapseTwo' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">  <div class="panel-body">';
     // JSON
 	 ret+='<pre class="prettyprint" style="width:100%;max-height:400px;overflow-y:scroll;">' + JSON.stringify(d, null, '\t') + "</pre>";
     ret+='</div></div></div>';
 
 
-    ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false"   aria-controls="collapseThree">Comments</a></h4> </div><div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body">';
+    ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseThree' + d._id['$oid'] + '">Comments</a></h4> </div><div id="collapseThree' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body">';
 
  // Comments
     if("comments" in d){
