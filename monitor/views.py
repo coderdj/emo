@@ -15,7 +15,7 @@ import time
 import datetime
 from django.shortcuts import render
 from django.conf import settings
-
+import dateutil
 
 # These options will be set somewhere else later?
 online_db_name = settings.MONITOR_DB_NAME
@@ -491,3 +491,50 @@ def get_noise_spectra(request):
 
     return render(request, "monitor/event_detail.html", ret)
 
+@login_required
+def get_calendar_events(request):
+    '''
+    Gets runs from database and puts into calendar format.
+    Must take arguments "start" and "end" as ISO dates with
+    format "2013-12-01" as a GET request
+    '''
+
+    if request.method != 'GET':
+        return
+
+    if "start" not in request.GET or "end" not in request.GET:
+        return
+
+
+    runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    rundb = runs_client[settings.RUNS_DB_NAME]
+    run_coll = rundb["runs"]
+
+    start_time = dateutil.parser.parse(request.GET['start'])
+    end_time = dateutil.parser.parse(request.GET['end'])
+    docs =[]
+    try:
+        print("STARTEND")
+        print(start_time)
+        print(end_time)
+        docs = run_coll.find({
+                "starttimestamp": {"$gt": start_time,
+                                   "$lt": end_time  }
+                })
+    except:
+        print("Error finding event")
+        return HttpResponse({}, content_type="application/json")
+    
+    # format and return as http response
+    ret = []
+    for run in docs:
+        endtimestamp = run['starttimestamp']
+        if "endtimestamp" in run:
+            endtimestamp = run["endtimestamp"]
+        ret.append({"title": run['name'],
+                    #"start": run['starttimestamp'].isoformat()})#,
+                    "mode": run['runmode'],
+                    "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S")})
+                    #                    "end": endtimestamp})
+    print(ret)
+    return HttpResponse(dumps(ret), content_type="application/json")

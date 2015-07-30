@@ -16,6 +16,8 @@ class RunStartForm(forms.Form):
     baselines_mv = forms.BooleanField(required=False)
     noise_mv = forms.BooleanField(required=False)
 
+    detector = forms.CharField(max_length=200)
+
 class RunStopForm(forms.Form):
     
     user = forms.CharField(max_length=100)

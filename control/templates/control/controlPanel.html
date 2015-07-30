@@ -86,6 +86,7 @@ border-style=solid;border-width:1px;">
               <li role="presentation" class="active"><a href="#" onclick="make_visible('both');">Combined</a></li>
               <li role="presentation"><a href="#" onclick="make_visible('TPC');">TPC Only</a></li>
               <li role="presentation"><a href="#" onclick="make_visible('Muon_Veto');">Muon Veto Only</a></li>
+	      <input type="hidden" name="detector" value="all" id="input_detector">
             </ul>
           </div>
 	  <p><hr></p>
@@ -441,6 +442,7 @@ border-style=solid;border-width:1px;">
 
     function make_visible(which) {
         if(which=="TPC"){
+	    document.getElementById("input_detector").value="tpc";
             d = document.getElementById("tpc-options");
             if(d.style.display == 'none')
                 d.style.display = 'block';
@@ -449,6 +451,7 @@ border-style=solid;border-width:1px;">
                 d.style.display = 'none';
         }
         else if(which=="Muon_Veto"){
+            document.getElementById("input_detector").value="muon_veto";
             d = document.getElementById("tpc-options");
             if(d.style.display == 'block')
                 d.style.display = 'none';
@@ -457,6 +460,7 @@ border-style=solid;border-width:1px;">
                 d.style.display = 'block';
         }
         else{
+            document.getElementById("input_detector").value="all";
             d = document.getElementById("tpc-options");
             if(d.style.display == 'none')
                 d.style.display = 'block';
