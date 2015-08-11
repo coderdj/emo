@@ -159,7 +159,7 @@ function GetTimeString(startdate){
 function UpdateDetectorText(dataUrl, divname){
     $.getJSON( dataUrl, function(data){
 
-            var html_string = "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;background-color:#EEEEEE;color:#666666;'>"+
+            var html_string = "<div class='row emo-det-header' style='border-width:1px;border-style:solid;'>"+
             "<strong><div class='col-xs-2'>Detector</div><div class='col-xs-2'>Status</div><div class='col-xs-2'>Mode</div>" +
                 "<div class='col-xs-2'>Started by</div><div class='col-xs-2'>Start time</div><div class='col-xs-2'>Current/last run</div></strong></div>";
             var currentTime = new Date();
@@ -167,13 +167,13 @@ function UpdateDetectorText(dataUrl, divname){
             for ( var x=0; x<data['status'].length; x+=1 ){
 
                 if( data['status'][x]['detector'] == 'tpc')
-                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'><h4>TPC</h4></div>";
                 else if( data['status'][x]['detector'] == 'muon_veto')
-                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'><h4>Muon Veto</h4></div>";
                 else
-                    html_string += "<div class='row' style='border-width:1px;border-style:solid;border-color:#AAAAAA;color:#353535;'>" +
+                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'><h4>"+data['status'][x]['detector']+"</h4></div>";
 
                 // Reformat date for display in JS
@@ -216,7 +216,7 @@ function UpdateNodes( nodes_div, nodesUrl ){
 
         $.getJSON( nodesUrl, function(data) {
 
-            var html_string = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;border-color:#AAAAAA;background-color:#EEEEEE;color:#666666;'>" +
+            var html_string = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
                         "<div class='col-xs-2'>Num. digitizers</div>"+

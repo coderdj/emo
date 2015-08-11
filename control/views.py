@@ -39,6 +39,7 @@ def GetStatusUpdate(request):
     else:
         retdict["issues"] = False
 
+    client.close()
     if len(ret) != 0:
         return HttpResponse( dumps(retdict), content_type = 'application/json')
 
@@ -62,6 +63,7 @@ def GetNodeUpdates(request):
     for node in nodes:
         ret_doc = collection.find_one({"node":node}, sort=[("_id",-1)])
         ret.append(ret_doc)
+    client.close()
     if len(ret) != 0:
         return HttpResponse( dumps(ret), content_type='application/json')
 
@@ -111,6 +113,8 @@ def GetNodeHistory(request):
         n_entries_bin = 0
         bin_total = 0.
 
+        if ret_docs.count() == 0:
+            continue
         # Loop docs and pull data
         for doc in ret_docs:
 
@@ -137,11 +141,12 @@ def GetNodeHistory(request):
             n_entries_bin += 1.
             last_time = doc['timeseconds']
 
-        # Fill the rest with zeros up to current time
+        # Fill the rest with zeros up to current time        
         while nowtime_seconds-10 > last_time:
             last_time += bin_size
             ret_list.append([1000*(round(last_time)), 0.])
         ret.append( { "node": node, "data": ret_list } )
+    client.close()
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
 

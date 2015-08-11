@@ -178,10 +178,10 @@ border-style=solid;border-width:1px;">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title">Start a new run</h4>
+        <h4 class="modal-title">Start a new run </h4>
       </div>
       <div class="modal-body" style="min-height:200px;overflow-y:auto;">
-	<div id="loading_bar"></div>
+	<div style="display:block;margin-left:auto;margin-right:auto;" id="loading_bar"></div>
 	<div id="start_run_modal_content">
 	</div>
       </div>
@@ -330,7 +330,7 @@ border-style=solid;border-width:1px;">
     $("#runFeedbackModal").modal('show');
     feedback_count = 0;
     feedback_html = "";
-    document.getElementById("loading_bar").innerHTML = "<img src='{% static 'img/ajax-loader.gif'%}'/>";
+    document.getElementById("loading_bar").innerHTML = "<img style='display:block;margin-left:auto;margin-right:auto;' src='{% static 'img/ajax-loader.gif'%}'/>";
     FeedbackLoop();
    });
 
@@ -431,7 +431,7 @@ border-style=solid;border-width:1px;">
       });
 
      drawChart( chart, chartdiv, function(thechart) {
-          loadData( thechart, historyUrl, function(anotherchart) {
+	loadData( thechart, historyUrl, function(anotherchart) {
               UpdatePage( anotherchart );
           });
      });

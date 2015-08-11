@@ -1,4 +1,10 @@
+html, body{
+min-height: 100%;
 
+}
+#main{
+min-height: 100%;
+}
 .body-expanded, .modal-open {
   overflow-y:hidden;
   margin-right: 15px;
