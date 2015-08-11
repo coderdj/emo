@@ -282,9 +282,9 @@
       <ul class="sub-links">
 	<li><a href="/docs">Docs</a></li>
 	<li><a href="/docs/contact">Contact</a></li>
-	<li><a href="/docs/about">About</a></li>
-	<li><a href="https://mms.mongodb/com">MMS</a></li>
-	<li><a href="https://www.github.com/coderdj/emo">Github</a></li>
+	<li><a href="/docs/about">About</a></li>	
+	<li><a href="https://mms.mongodb/com">MMS (external)</a></li>
+	<li><a href="https://www.github.com/coderdj/emo">Github (external)</a></li>
       </ul>
 
     </div>
@@ -470,8 +470,12 @@ le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?prio
 //           $(".sidebar.left").sidebar().trigger("sidebar:open");
 
 		$(".sidebar-links div a").on('click', function(){
-                 $(".sidebar-links div").removeClass("selected");
-                 $(this).closest('div').addClass("selected");
+	         if($(this).closest('div').hasClass("selected"))
+                    $(".sidebar-links div").removeClass("selected");
+                 else{
+		    $(".sidebar-links div").removeClass("selected");
+                    $(this).closest('div').addClass("selected");
+	         }
                 });
 /*	   var links = $('.sidebar-links > a');
 					

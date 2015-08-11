@@ -158,13 +158,15 @@
         selected_row-=1;
      else if(pn == 1)
         selected_row +=1;
+     console.log(selected_row);
         if(selected_row<0 || selected_row>=50){
+           console.log("Getting data");
 	   if(document.getElementById("channelList").value != "none")
 	      getData(document.getElementById("channelList"), 'channel');
 	   else if(document.getElementById("moduleList").value != "none")
 	      getData(document.getElementById("moduleList"), "module");
            else
-	      getData(document.getElementById("channelList"), "collection"); 
+	      getData(document.getElementById("collectionList"), "collection"); 
          return;
        }
 
