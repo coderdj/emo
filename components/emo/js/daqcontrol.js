@@ -155,59 +155,141 @@ function GetTimeString(startdate){
         timestring="...just started";
     return timestring;
 }
+function GetStateHtml(data, index){
+    
+    if(data['status'].length <= index)
+	return "";
+    var status = data['status'][index]['state'];
+    if(status == "Running")
+	return "<span style='color:green;'>running</span>";
+    else if(status == "Idle")
+	return "<span style='color:red;'>idle</span>";
+    else if(status == "Error")
+	return "<span style='color:red;'>crashed!</span>";
+    else
+	return "<span>thinking</span>";
+
+}
+
+function FillOutRunInfo(det_name, det_data, status_id){
+    if(det_data['status'].length <= status_id)
+	return;
+    var run_name = "";
+    var run_mode = "";
+    var started_by = "";
+    var start_date = "";
+    if(det_data['status'][status_id]['state'] == "Running"){	
+	var data = det_data['status'][status_id];
+	run_name = data['currentRun'];
+	started_by = data['startedBy'];
+	run_mode = data['mode'];
+	start_date = "todo";
+    }
+    document.getElementById(det_name + "_runname");
+}
+function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
+  
+    var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
+
+    $.getJSON( dataUrl, function(detector_data){
+	
+	// Loop through status dict
+	for ( var status_id = 0; status_id < detector_data['status'].length; status_id += 1){
+
+	    // If we have a nicer name to display set it
+	    var display_name = detector_data['status'][status_id]['detector'];
+	    var det_name = display_name;
+	    if( display_name in aliases)
+		display_name = aliases[display_name];
+
+	    if ($('#'+div_id).find('#'+det_name+"_header").length) {
+		console.log("Found header");
+		document.getElementById(det_name+"_status").innerHTML = GetStateHtml(detector_data,status_id);
+	    }
+	    else{ // append a new header
+		console.log(detector_data);
+		var timestring="";
+		if(detector_data['status'][status_id].startTime!=""){
+		    startdate = new Date( detector_data['status'][status_id].startTime );
+		    timestring = GetTimeString( startdate );
+		}
+		html_str = "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
+		    + " DAQ is <a id='" + det_name + "_status'>" + 
+		    GetStateHtml(detector_data, status_id) + "</a><a style='font-size:10pt;color:black;'>&nbsp;" 
+		    + timestring + "</a>" + "</h2></div>";
+		//add a second line for the run information
+		html_str += ( "<div class='row col-xs-12'>" +
+			      "<div class='col-xs-3' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + det_name + "_runname'></span></div>" + 
+			      "<div class='col-xs-3' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + det_name + "_startedby'></span></div>" +  
+                              "<div class='col-xs-3' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + det_name + "_runmode'></span></div>" +  
+                              "<div class='col-xs-3' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + det_name + "_startdate'></span></div>" +  
+			      "</div><hr>");
+		$('#'+div_id).append(html_str);
+		if( detector_data['status'][status_id]['state'] == "Running")
+		    FillOutRunInfo(det_name, detector_data, status_id);
+	
+	    }
+
+	}
+
+	//$.getJSON( nodesUrl, function(nodes_data){
+    //});
+    });
+}
+
 
 function UpdateDetectorText(dataUrl, divname){
     $.getJSON( dataUrl, function(data){
 
-            var html_string = "<div class='row emo-det-header' style='border-width:1px;border-style:solid;'>"+
+        var html_string = "<div class='row emo-det-header' style='border-width:1px;border-style:solid;'>"+
             "<strong><div class='col-xs-2'>Detector</div><div class='col-xs-2'>Status</div><div class='col-xs-2'>Mode</div>" +
-                "<div class='col-xs-2'>Started by</div><div class='col-xs-2'>Start time</div><div class='col-xs-2'>Current/last run</div></strong></div>";
-            var currentTime = new Date();
-
-            for ( var x=0; x<data['status'].length; x+=1 ){
-
-                if( data['status'][x]['detector'] == 'tpc')
-                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
-                        "<div class='col-xs-2'><h4>TPC</h4></div>";
-                else if( data['status'][x]['detector'] == 'muon_veto')
-                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
-                        "<div class='col-xs-2'><h4>Muon Veto</h4></div>";
-                else
-                    html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
-                        "<div class='col-xs-2'><h4>"+data['status'][x]['detector']+"</h4></div>";
-
-                // Reformat date for display in JS
-                var docdate = new Date(data['status'][x]['createdAt']['$date']);
-                var update_seconds = Math.round( (currentTime - docdate)/1000 );
-
-                // Put state with coloring to make it pop a little
-                if( data['status'][x]['state'] == "Running" && update_seconds < 30 )
-                    html_string += "<div class='col-xs-2' style='color:green;height:100%;'><h5>Running</h5></div>";
-                else if( data['status'][x]['state'] == "Idle" && update_seconds < 30 )
-                    html_string += "<div class='col-xs-2' style='color:red;height:100%;'><h5>Idle</h5></div>";
-                else if( data['status'][x]['state'] == "Error" && update_seconds < 30 )
-                    html_string += "<div class='col-xs-2' style='color:red;height:100%'><h5>Error</h5></div>";
-                else
-                    html_string += "<div class='col-xs-2' style='color:#AAAAAA;height:100%;'><h5>Unknown</h5></div>";
-
-                // If running we can provide a bunch more information
-                if( data['status'][x]['state'] == "Running" ) {
-                    //var startdate = new Date(data['status'][x]['startTime']);
-		    var startdate = data['status'][x]['startTime'];
-
-                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['mode'] + "</h6></div>";
-                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['startedBy'] + "</h6></div>";
-                    html_string += "<div class='col-xs-2'><h6>" + startdate + "</h6></div>";
-                    html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
-                }
-                else
-                    html_string += "<div class='col-xs-2 col-xs-offset-6'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
-
-
-                // close row
-                html_string += "</div>";
-
+            "<div class='col-xs-2'>Started by</div><div class='col-xs-2'>Start time</div><div class='col-xs-2'>Current/last run</div></strong></div>";
+        var currentTime = new Date();
+	
+        for ( var x=0; x<data['status'].length; x+=1 ){
+	    
+            if( data['status'][x]['detector'] == 'tpc')
+                html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
+                "<div class='col-xs-2'><h4>TPC</h4></div>";
+            else if( data['status'][x]['detector'] == 'muon_veto')
+                html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
+                "<div class='col-xs-2'><h4>Muon Veto</h4></div>";
+            else
+                html_string += "<div class='row emo-det-row' style='border-width:1px;border-style:solid;'>" +
+                "<div class='col-xs-2'><h4>"+data['status'][x]['detector']+"</h4></div>";
+	    
+            // Reformat date for display in JS
+            var docdate = new Date(data['status'][x]['createdAt']['$date']);
+            var update_seconds = Math.round( (currentTime - docdate)/1000 );
+	    
+            // Put state with coloring to make it pop a little
+            if( data['status'][x]['state'] == "Running" && update_seconds < 30 )
+                html_string += "<div class='col-xs-2' style='color:green;height:100%;'><h5>Running</h5></div>";
+            else if( data['status'][x]['state'] == "Idle" && update_seconds < 30 )
+                html_string += "<div class='col-xs-2' style='color:red;height:100%;'><h5>Idle</h5></div>";
+            else if( data['status'][x]['state'] == "Error" && update_seconds < 30 )
+                html_string += "<div class='col-xs-2' style='color:red;height:100%'><h5>Error</h5></div>";
+            else
+                html_string += "<div class='col-xs-2' style='color:#AAAAAA;height:100%;'><h5>Unknown</h5></div>";
+	    
+            // If running we can provide a bunch more information
+            if( data['status'][x]['state'] == "Running" ) {
+                //var startdate = new Date(data['status'][x]['startTime']);
+		var startdate = data['status'][x]['startTime'];
+		
+                html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['mode'] + "</h6></div>";
+                html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['startedBy'] + "</h6></div>";
+                html_string += "<div class='col-xs-2'><h6>" + startdate + "</h6></div>";
+                html_string += "<div class='col-xs-2'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
             }
+            else
+                html_string += "<div class='col-xs-2 col-xs-offset-6'><h6>" + data['status'][x]['currentRun'] + "</h6></div>";
+	    
+	    
+            // close row
+            html_string += "</div>";
+	    
+        }
         document.getElementById(divname).innerHTML = html_string;
     });
 }

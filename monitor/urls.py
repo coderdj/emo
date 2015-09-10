@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^pax_display', login_required(TemplateView.as_view(template_name="monitor/pax_display.html"))),    
     url(r'^waveforms', login_required(TemplateView.as_view(template_name="monitor/waveformdisplay.html"))),
     url(r'^diagnostics', login_required(TemplateView.as_view(template_name="monitor/diagnostics.html"))),
+    url(r'^runstats_uptime', views.get_uptime, name='get_uptime'),
     url(r'^runstats', login_required(TemplateView.as_view(template_name="monitor/runstats.html"))),
     url(r'^get_aggregate_list', login_required(views.get_aggregate_list), name="get_aggregate_list"),
     url(r'^get_aggregate_plot', login_required(views.get_aggregate_plot), name="get_aggregate_plot"),

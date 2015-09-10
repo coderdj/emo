@@ -2,11 +2,16 @@
 {% load staticfiles %}
 {% block head %}
 
+<script src="{% static "emo/js/tpc_3d.js"%}"></script>
+<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
 <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<script src="{% static "js/three.js" %}"></script>
+<script src="{% static "js/OrbitControls.js"%}"></script>
+
 <script src="{%  static "bootstrap-fileinput-master/js/fileinput.min.js"%}"></script>
 <link rel="stylesheet" href="{% static "bootstrap-fileinput-master/css/fileinput.min.css" %}"/>
 <link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
-    <link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
+<link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
 
     <style type="text/css">
 
@@ -23,74 +28,324 @@
       50% 50%
       no-repeat;
   }
-    .emobox{
-        background-color: white;
-        border-width: 1px;
-        border-color: #444444;
-        border-style: solid;
-        min-height:40px;
-        margin: 10px;
-    }
+
 </style>
     {%  endblock %}
 {% block content %}
     <div class="Loading">Loading Next Event</div>
-    <div class="col-xs-12 emo-search-bar"><!-- style="position:absolute;z-index:2;">-->
-        <div class="row">
-            <div class="col-xs-12 col-sm-6 col-md-7" style="line-height:40px;">
-                <strong>Run: </strong>
-                <span id="run_name" style="font-size:12pt;"></span>&nbsp;&nbsp;
-                <strong>Event: </strong>
-                <span style="font-size:12pt" id="event_number"></span>&nbsp;&nbsp;
-                <strong>Collected: </strong><span id="event_date"></span>
+    <div class="row" style="margin:10px;min-height:300px;">
+      <div class="col-xs-9 col-sm-9 emobox" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
+	<div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">	  
+	  <div class="panel panel-default" style="height:100%;margin:0;">
+	    <div class="panel-heading">
+              <h4 style="margin:0">Peak: <span id="peak_id"></span></h4>
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-5 text-right">
-                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
-                        onclick="update_data()">Newest Event</button>
-                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
-                        onclick="loadjson()">Load from file</button>
-                <button class="btn btn-info btn-sm" style="height:30px;margin:6px;"
-                        onclick="savejson()">Save to file</button>
-            </div>
-        </div>
+            <span class="list-group-item" style="border:0">
+              <strong>Area: </strong>
+              <span id="peak_area"></span>
+            </span>
+            <span class="list-group-item" style="border:0">
+              <strong>Left: </strong><span id="peak_lt"></span>
+            </span>       
+	    <span class="list-group-item" style="border:0">
+              <strong>Right: </strong><span id="peak_rt"></span>
+            </span>
+	    <span class="list-group-item" style="border:0">
+              <strong>Coin: </strong><span id="peak_coin"></span>
+            </span>
+	    <div>
+              <div class="btn-group btn-group-xs" role="group"
+                   aria-label="Disp Control" style="padding:5px;">
+                <button class="btn btn-info btn-sm" id="btn_show_top"
+                        onclick="show_display(this,'top')">Top Array</button>
+		<button class="btn btn-default btn-sm" id="btn_show_bottom"
+                        onclick="show_display(this,'bottom')">Bottom Array</button>
+		<button class="btn btn-default btn-sm" id="btn_show_both"
+                        onclick="show_display(this,'both')">Front View</button>
+
+              </div>
+	    </div>
+	  </div>
+	</div>	
+	<div class="col-xs-5" id="peak_hitpattern" style="margin:0;padding:0;height:100%;min-height:300px;"></div>
+	<div class="col-xs-5" id="peak_zoom" style="min-height:300px;height:100%;padding:0px;"></div>
+      </div>
+      <div class="col-xs-3 col-sm-3">
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <h4 style="margin:0">Info/Control</h4>
+	  </div>
+	  <div style="margin:3px;margin-top:5px;">
+	    <div>
+	      <div class="btn-group btn-group-xs" role="group" 
+		   aria-label="Event Control">
+		<button class="btn btn-info btn-sm"
+			onclick="update_data()">Newest</button>
+	      </div>
+	       <div class="btn-group btn-group-xs" role="group"
+                   aria-label="Event Control">
+              <button class="btn btn-info btn-sm"
+                      onclick="loadjson()">Load file</button>
+              <button class="btn btn-info btn-sm"
+                      onclick="savejson()">Save file</button>
+	    </div>
+	       </div>
+	  </div>
+	  <div style="margin:3px;margin-top:5px;">
+	    <div>
+	      <div class="btn-group btn-group-xs" role="group" 
+		   aria-label="Peak Control">	      
+	      <button class="btn btn-default btn-sm" id="s1_button"
+		      onclick="ChooseS1()">S1</button>
+	      <button class="btn btn-success btn-sm" id="s2_button"
+		      onclick="ChooseS2()">S2</button>
+	      </div>
+	      <div class="btn-group btn-group-xs" role="group"
+                   aria-label="Peak Control">
+		<button class="btn btn-info btn-sm" onclick="PrevPeak();">
+		  <span class="glyphicon glyphicon-chevron-left"></span>
+		Prev Peak		 
+	      </button>
+              <button class="btn btn-info btn-sm" onclick="NextPeak();">Next Peak 
+	      <span class="glyphicon glyphicon-chevron-right"></span>
+	      </button>
+              </div>
+	      </div>
+	  </div>
+	  
+	  <div class="list-group" style="font-size:10pt">
+	    <span class="list-group-item">
+	      <strong>Run: </strong>
+              <span id="run_name"></span>
+	    </span>
+	    <span class="list-group-item">
+	      <strong>Event: </strong>                                             
+            <span id="event_number"></span>
+	    </span>
+	    <span class="list-group-item">
+              <strong>Collected: </strong><span id="event_date"></span> 
+	    </span>
+	    <span class="list-group-item" style="padding-left:0;padding-right:0"> 
+	      <div style="width:50%;padding-left:15px;float:left;overflow:hidden"><strong>S1s: </strong><span id="event_s1s"></span>
+		</div>
+	      <div style="width:50%;padding-right:15px;overflow:hidden">
+	      <strong>S2s: </strong><span id="event_s2s"></span>	      	      
+	      </div>
+            </span>
+	  </div>
+	</div>
+      </div>
     </div>
     <div class="col-xs-12 container" style="margin-top:10px;width:100%;">
-    <div class="col-xs-12 emobox" id="full_waveform"></div>
+    <div class="col-xs-12 emobox" id="full_waveform" style="padding-left:5px;padding-right:5px;"></div>
 
-    <div class="col-xs-12 col-sm-12 emobox" id="hit_patterns"></div>
-        </div>
 
 <script type="text/javascript">
+  var s1_index = -1;
+  var s2_index = -1;
+  var ns1 = 0;
+  var ns2 = 0;
+  var disp_type='s2';
+  var peaks = null;
+  //var event_data = null;
+  var scene= null;
+;
+  var camera =null;
+  var renderer = null;
+  var hits = [];
+  var tpc_geo_path = "{% static 'emo/js/emo_tpc_model.js' %}";
+
+  function show_display(obj, which){
+  $("#btn_show_top").removeClass("btn-info");
+  $("#btn_show_bottom").removeClass("btn-info");
+  $("#btn_show_both").removeClass("btn-info");
+  $("#btn_show_top").addClass("btn-default");
+  $("#btn_show_bottom").addClass("btn-default");
+  $("#btn_show_both").addClass("btn-default");
+
+  if(camera != null){
+     if(which == 'top'){
+        camera.position.set(0,375,0);
+      //  camera.lookAt(new THREE.Vector3(0, -1000, 0));
+
+     }
+     else if(which == 'bottom'){
+        camera.position.set(0, 530, 0);
+    //    camera.lookAt(new THREE.Vector3(0, 1000, 0));
+
+     }
+     else if(which == 'both'){
+        camera.position.set(-447, 754,-1208);
+  //      camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+     }  
+
+//     requestAnimationFrame();
+//      renderer.render(scene,camera);
+//      controls.update();
+  }
+  $(obj).addClass("btn-info");
+
+  }
+
+  function ChooseS1(){
+     $("#s2_button").removeClass("btn-success");
+     $("#s2_button").addClass("btn-default");
+     $("#s1_button").removeClass("btn-default");
+     $("#s1_button").addClass("btn-success");
+     disp_type = 's1';
+     if(s1_index != -1)
+        s1_index = 0;
+     DrawPeak();
+  }
+  function ChooseS2(){
+     $("#s1_button").removeClass("btn-success");
+     $("#s1_button").addClass("btn-default");
+     $("#s2_button").removeClass("btn-default");
+     $("#s2_button").addClass("btn-success");
+     disp_type = 's2';
+     if(s2_index != -1)
+        s2_index = 0;
+     DrawPeak();
+  }
+  function NextPeak(){
+     if(disp_type == 's1' && s1_index >= 0 && s1_index < ns1-1)
+        s1_index += 1;
+     else if(disp_type == 's2' && s2_index >= 0 && s2_index < ns2-1)
+        s2_index += 1;
+     else
+        return;
+     DrawPeak();
+  }
+  function PrevPeak(){
+     if(disp_type == 's1' && s1_index > 0)
+        s1_index -= 1;
+     else if(disp_type == 's2' && s2_index > 0)
+        s2_index -= 1;
+     else 
+        return;
+     DrawPeak();
+  }
+							    
+  function DrawPeak(){
+  //id area lt rt coin peak_$
+     if(currentdata == null) return;
+     if(disp_type == 's1' && (s1_index > ns1 || s1_index<0)) return;
+     if(disp_type == 's2' && (s2_index > ns2 || s2_index<0)) return;
+ 
+     // this is a list of indices of the peaks of your chosen type
+     peaks = get_peaks(currentdata, disp_type);
+     
+     // sanity check on returned object
+     var peak_index = s1_index;
+     if( disp_type == 's2' ) peak_index = s2_index;
+     if( peak_index > peaks.length || 
+          currentdata['peaks'].length < peaks[peak_index]) return;
+
+     currentpeak = currentdata['peaks'][peaks[peak_index]];
+	
+     // set text
+     document.getElementById("peak_id").innerHTML = disp_type + "[" 
+				      + peak_index.toString() + "]";
+     document.getElementById("peak_area").innerHTML = currentpeak['area'].toFixed(2);
+     document.getElementById("peak_lt").innerHTML = currentpeak['left'];
+     document.getElementById("peak_rt").innerHTML = currentpeak['right'];
+				      console.log(currentpeak);
+     document.getElementById("peak_coin").innerHTML = currentpeak['hits'].length;
+     var total_data = UnzipWaveforms(currentdata);
+     draw_peak( "peak_zoom", currentdata, total_data, peak_index, 
+				     disp_type, "" );
+     draw_hitpattern(scene, camera, renderer, hits, currentdata, 
+				      disp_type, peak_index);
+ //     DrawPeak(currentpeak, document.getElementById("peak_hitpattern"),
+   //           document.getElementById("peak_channels"));
+  }
+
 
     var currentdata = null;
     var file = null;
-    var data_url = "/monitor/get_event_for_display";
+    var data_url = "/monitor/get_event_for_display";  
+
+    function animate(){
+      requestAnimationFrame(animate);
+
+      renderer.render(scene,camera);
+      controls.update();
+//	var pos = "X: " + camera.position.x + " y: " + camera.position.y + " z: " + camera.position.z;
+//				      console.log(pos);
+    }
+
     $(document).ready(function() {
      //   update_data();
+     $("#loading").show();
+	console.log(document.getElementById("peak_hitpattern").offsetWidth);
+        var div = "peak_hitpattern";
+	var VIEW_ANGLE = 80;
+    var NEAR = .1;
+    var FAR = 10000;
+    var WIDTH = document.getElementById(div).offsetWidth;
+    var HEIGHT = document.getElementById(div).offsetHeight;
+    console.log(WIDTH);
+    var ASPECT = WIDTH/HEIGHT;
+        renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending,
+                                        alpha: true});
+        camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+        scene = new THREE.Scene();
+	initialize_mini_display(scene, camera, renderer, tpc_geo_path,
+		              "peak_hitpattern", 
+                              function(){ 
+                               console.log(camera);
+                               controls = new THREE.OrbitControls(camera,
+                                                            renderer.domElement);
+                               controls.target = (new THREE.Vector3(0, 500, 0));
+                               $("#loading").hide();
+                               animate();
+                               console.log("done");
+                               
+        });
     });
 
     function update_data(){
         console.log("HERE");
          $.getJSON(data_url, function(data){
              console.log(data);
-             draw_waveform(data);
+             draw_waveform_local(data);
              currentdata=data;
           });
     }
-    function draw_waveform(data){
-
+    function draw_waveform_local(data){
+       s1_index = -1;
+       s2_index = -1;
+       ns1 = 0;
+       ns2 = 0
+       disp_type = 's2';
+       
+       ns1 = getNPeaks(data, 's1');
+       ns2 = getNPeaks(data, 's2');
+	currentdata = data;
+       
+       if(ns1 > 0 ) s1_index = 0;
+       if(ns2 > 0 ) s2_index = 0;
         document.getElementById("full_waveform").innerHTML = "";
         $("#full_waveform").append(data['div']);
         $("#full_waveform").append(data['script']);
         Bokeh.Collections('Plot').at(0).set("plot_width", $("#full_waveform").width());
         Bokeh.Collections('Plot').at(1).set("plot_width", $("#full_waveform").width());
-        document.getElementById("hit_patterns").innerHTML = "";
-        $("#hit_patterns").append(data['ddiv']);
-        $("#hit_patterns").append(data['dscript']);
+ //       document.getElementById("hit_patterns").innerHTML = "";
+//        $("#hit_patterns").append(data['ddiv']);
+ //       $("#hit_patterns").append(data['dscript']);
         document.getElementById("run_name").innerHTML = data['run_name'];
         document.getElementById("event_number").innerHTML = data['event_number'];
         document.getElementById("event_date").innerHTML = data['event_date'];
-
+        document.getElementById("event_s1s").innerHTML = ns1.toString();
+        document.getElementById("event_s2s").innerHTML = ns2.toString();
+        
+        if(ns2>0)
+          DrawPeak();
+        else if(ns1>0){
+          disp_type = 's1';
+          DrawPeak();
+        }
     }
     function unzip_waveform(waveform){
         x = [];
@@ -150,7 +405,7 @@ function savejson(){
                 output = e.target.result;
                 console.log(output);
             currentdata = JSON.parse(output);
-            draw_waveform(JSON.parse(output));
+            draw_waveform_local(JSON.parse(output));
         };//end onload()
             reader.readAsText(path.files[0]);
     }

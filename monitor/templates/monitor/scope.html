@@ -9,7 +9,7 @@
 {% endblock %}
 {% block content %}
 <div class="container" style="width:100%;padding-left:20px;padding-right:10px;"> 
-  <p class="bg-info" style="width:100%;padding-left:20px">Hint: This thing is still experimental.</p> 
+  <p class="bg-info" style="width:100%;padding-left:20px">Hint: This app allows you to browse any data stored in a MongoDB buffer (i.e. the trigger input buffer) and can be used for DAQ diagnostics. If you don't choose a collection with DAQ data in it then no plot will be displayed. If you want to look at complete triggered events, use the waveform display. </p> 
   
   <div class="row">       
     <div class="col-md-9"> 
@@ -84,7 +84,7 @@
   <table class="display" id="doctable">
   <thead>
     <tr>
-      <th> Show </th>
+<!--      <th> Show </th> -->
       <th> Start time</th>
       <th> End time </th>
       <th> Module </th>
@@ -94,7 +94,7 @@
   </thead>
   <tbody>
     <tr>
-      <td style="width:10px" class="details-control"></td>
+      <!--<td style="width:10px" class="details-control"></td>-->
       <td style="color:black;"></td>
       <td style="color:black;"></td>
       <td style="color:black;"></td>
@@ -112,7 +112,10 @@
   
   function DrawElement(row, search){
     console.log("draw el");
+  console.log(table.page.info().recordsDisplay);
     if(table == null) return;
+    if(row < 0 || row > table.page.info().recordsDisplay)
+      return;
     console.log("TABLE");
     console.log(table);
     doc_id = table.row(row).data()['_id']["$oid"];
@@ -120,9 +123,14 @@
     chartDataUrl = "/monitor/scope/getWaveform/" + search;
     chartDataUrl += ";id=";
     chartDataUrl += doc_id;
+    
+    $(table.rows().nodes()).removeClass('selected');
 
     $.getJSON(chartDataUrl,function(data){
-      console.log(data);
+    console.log(row);
+      $(table.row(row).nodes()).addClass('selected');
+    console.log(table.row(row).nodes());
+      console.log(data);      
       if( chart == null ){
           chart = new Dygraph(scope_panel, data['adc_value'], {
   //legend: 'always',
@@ -194,19 +202,22 @@
          table = $("#doctable").DataTable({
           "data": data,
           "columns": [
-             {
+            /* {
                 "className":      'details-control',
                 "orderable":      false,
                 "data":           null,
                 "defaultContent": ''
-            },
+            },*/
             { "data": "time" },
             { "data": "endtime" },
             { "data": "module" },
             { "data": "channel" },
             { "data": "_id" }],
-            "order": [[ 1, "desc" ]],
+            "order": [[ 0, "desc" ]],
           "iDisplayLength": 50,
+      "paging":   false,
+      "bFilter": false,
+      
             });
         }
         else{

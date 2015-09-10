@@ -57,12 +57,11 @@ def get_event_as_json(request):
 def get_event_for_display(request):
 
     """
-    Returns everything needed for 3D display. This is specifically:
+    Returns Boken plots for waveform display
         : full waveform
-        : For each S1/S2
-            : sub-waveform limits (time)
+        : channel vs time plot
+        optionally
             : hit pattern
-        : Hits list per channel/time as bokeh plot
     """
 
     # Get the doc. If there is no doc return an empty dict
@@ -79,20 +78,25 @@ def get_event_for_display(request):
     hits_plot.x_range = waveform_plot.x_range
     # full_plot = vplot(waveform_plot, hits_plot)
     full_plot = gridplot([[waveform_plot], [hits_plot]],
-                         toolbar_location="above" )
-    d_plot = gridplot( [[hit_displays['s1'], hit_displays['s2']]])
+                         toolbar_location="left" )
+    #d_plot = gridplot( [[hit_displays['s1'], hit_displays['s2']]])
 
 
     script, div = components(full_plot)
-    dscript, ddiv = components(d_plot)
+    #dscript, ddiv = components(d_plot)
 
     trigger_time_ns = (doc['start_time'])
     timestring = time.strftime("%Y/%m/%d, %H:%M:%S", time.gmtime(trigger_time_ns / 10 ** 9))
     print(timestring)
     #ret = {"hits_script": hits_js, "hits_div": hits_div, "waveform_script": waveform_js,
     #      "waveform_div": waveform_div}
-    ret = {"script": script, "div": div, 'dscript': dscript, "ddiv": ddiv,
+    ret = {"script": script, "div": div, #'dscript': dscript, "ddiv": ddiv,
            'run_name': doc['dataset_name'], 'event_number': doc['event_number'], 'event_date': timestring }
+
+    ret['sum_waveforms'] = doc['sum_waveforms']
+    ret['peaks'] = doc['peaks']
+    
+
     return HttpResponse(dumps(ret), content_type="application/json")
 
 
@@ -122,17 +126,18 @@ def make_bokeh_hits_plot(hit_list):
             size = min_size
         sizes.append(size)
 
-    plot = figure(title="Hits per Channel", background_fill=(200, 200, 200, 0.2),
+    plot = figure(background_fill=(200, 200, 200, 0.2),
                   width=1100, plot_height=300, logo=None, tools="save,box_zoom,reset",
-                  x_axis_label = "Time", y_axis_label = "Channel", title_text_font_size='12pt')
+                  x_axis_label = "Time (10 ns sample)", y_axis_label = "Channel", title_text_font_size='12pt')
     plot.xaxis.axis_label_text_font_size = "12pt"
     plot.yaxis.axis_label_text_font_size = "12pt"
 
     plot.scatter(x, y, fill_color=colors, radius=sizes, fill_alpha=0.6, line_color="#AAAAAA", line_alpha=.2, line_width=.1)
     plot.x_range = Range1d(0, 40000)
-    plot.min_border_left = 100
-    plot.min_border_right = 20
-
+    plot.min_border_left = 60
+    plot.min_border_right = 50
+    plot.min_border_top = 0;
+    plot.min_border_bottom = 20;
     return plot
 
 
@@ -141,9 +146,10 @@ def make_bokeh_waveform_plot(waveform_dict):
     """
     """
 
-    plot = figure(title="Waveforms", background_fill=(200, 200, 200, 0.4),
+    plot = figure(background_fill=(200, 200, 200, 0.4),
                   width=1100, plot_height=300, logo=None, tools="save,box_zoom,reset",
-                  x_axis_label = "Time (samples)", y_axis_label = "Charge", title_text_font_size='12pt')
+                  #x_axis_label = "Time (samples)",
+                  y_axis_label = "Sum Waveform", title_text_font_size='12pt')
     plot.xaxis.axis_label_text_font_size = "12pt"
     plot.yaxis.axis_label_text_font_size = "12pt"
     #colors = ["#63535B", "#6D1A36", "#FCD0A1", "#53917E","#B1B695"]
@@ -186,14 +192,17 @@ def make_bokeh_waveform_plot(waveform_dict):
         if waveform['name'] == 'veto_raw':
             thecolor = "#FF0000"
         else:
-            thecolor = "#333333"
+            thecolor = '#5992c2'
+            #thecolor = "#333333"
         plot.line(x, y, color=thecolor, legend=waveform['name'], line_width=1)
-        plot.min_border_left = 100
+        plot.min_border_left = 60
 
-        plot.min_border_right = 20
+        plot.min_border_right = 50
         idx += 1
     plot.x_range = Range1d(0, 40000)
     # plot.y_range = Range1d(0, 1.1*max_y)
+    plot.min_border_top = 20;
+    plot.min_border_bottom = 0;
 
     return plot
 
@@ -495,6 +504,60 @@ def get_noise_spectra(request):
             ret["approved_date"] = control_doc["approved"]["date"]
 
     return render(request, "monitor/event_detail.html", ret)
+
+def get_uptime(request):
+    """
+    Gets total uptime calculated from runs DB
+    returns:    'uptime': number of hours
+                'downtime': number of hours
+                'data': [ [start_time, end_time], ...] of all runs in order
+    """
+    
+    onlyDM = True
+
+    if request.method != 'GET':
+        return
+    if 'dm' not in request.GET or request.GET['dm'] == False:
+        onlyDM = False
+
+    # Make DB query
+    runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    runsdb = runs_client[settings.RUNS_DB_NAME]
+    runs_coll = runsdb['runs']
+
+    query_set=[]
+    try:
+        query_set = runs_coll.find().sort("starttimestamp", 1)
+    except:
+        print("Exception trying to query runs DB")
+
+    current_time = 0
+    total_uptime = 0.
+    total_downtime = 0.
+    last_endtime = None
+    time_list = []
+    print("HERE")
+    #print(len(query_set))
+    for doc in query_set:
+        if 'starttimestamp' in doc and 'endtimestamp' in doc:
+            if last_endtime is not None:
+                tdiff = doc['starttimestamp'] - last_endtime
+                last_endtime = doc['endtimestamp']
+                
+                total_downtime += (24.*tdiff.days) + float((tdiff.seconds/60.)/60.)
+            last_endtime = doc['endtimestamp']
+            
+            tdiff = doc['endtimestamp'] - doc['starttimestamp']
+            total_uptime += (24.*tdiff.days) + float((tdiff.seconds/60.)/60.)
+
+
+            time_list.append([doc['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S"), 
+                              doc['endtimestamp'].strftime("%Y-%m-%dT%H:%M:%S")])
+
+    retdict = { "uptime": total_uptime, "downtime": total_downtime, 
+                "data": time_list }
+    print(retdict)
+    return HttpResponse(dumps(retdict), content_type="application/json")
 
 @login_required
 def get_calendar_events(request):

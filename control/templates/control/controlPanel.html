@@ -4,6 +4,8 @@
 {% endblock %}
 {% block content %}
 <script src="{% static "emo/js/daqcontrol.js" %}" type="text/javascript" xmlns:rows="http://www.w3.org/1999/xhtml"></script>
+
+
 <style>
 .table-condensed>thead>tr>th, .table-condensed>tbody>tr>th, .table-condensed>tfoot>tr>th, .table-condensed>thead>tr>td, .table-condensed>tbody>tr>td, .table-condensed>tfoot>tr>td{
     padding: 1px;
@@ -46,6 +48,8 @@
     </div>
 <br>
 <div class="col-xs-12" id="info_panel" style="height:40%;min-height:250px;margin-top:10px;">
+<!--  <div class="col-xs-12" id="info_panel_header">
+    </div>-->
 <div class="col-xs-12" id="info_panel_header" style="height:30%;background-color:white;border-color:#AAAAAA;
 border-style=solid;border-width:1px;">
   <h3>  Total DAQ info (detectors, running, modes, etc) will go here.</h3>
@@ -362,8 +366,9 @@ border-style=solid;border-width:1px;">
       //TextUpdate();
      //updateData( chart, pointUpdateUrl );
       update_graphic();
-      UpdateDetectorText(dataUrl, "info_panel_header");
-      UpdateNodes( "info_panel_nodes", pointUpdateUrl );
+			     //UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
+			     UpdateDetectorText(dataUrl, "info_panel_header");
+			     UpdateNodes( "info_panel_nodes", pointUpdateUrl );
       setTimeout( function() {
 	UpdatePage( thechart );			     
       }, updateFreq );

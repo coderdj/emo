@@ -6,16 +6,16 @@
    Brief:    Helper functions to make a 3D event display work
 
 */
-/* This is a bunch of stuff to make the 3D TPC event display work */
-//<script type="x-shader/x-vertex" id="vertexshader">
-//var vertexShader = "void main() { gl_Position = vec4(position,1.0); }";//vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 ); gl_Position = projectionMatrix * mvPosition; }";
-//</script>
-//gl_PointSize =16.0;
-//<script type="x-shader/x-fragment" id="fragmentshader">
-//var fragmentShader = "uniform sampler2D texture; uniform vec3 color; uniform float alpha; void main() { gl_FragColor = vec4( color, alpha ); gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord ); }";
-//</script>
+/* 
+   This is a bunch of stuff to make the 3D TPC event display work.
+   These functions are used for the 3D display as well as the embedded one in the
+   waveform viewer.
+   If you are good at javascript you may cringe reading this code. Feel free to 
+   improve it.
+*/
 
-//PMT MAP
+
+// XENON100 PMT Map
 var g_pmt_map = { 0 : {'x' : 0, 'y' : 0},
                   1 : {'x' : 166.84, 'y' : 0.00},     2 : {'x' : 163.19, 'y' : 34.69},
                   3 : {'x' : 152.42, 'y' : 67.86},    4 : {'x' : 134.98, 'y' : 98.07},
@@ -250,21 +250,35 @@ function get_peaks(data, peaktype){
         if(peaks.length == 0 )
             peaks.push(x);
         else{
-            for(index=0;index<peaks.length;index+=1){
+	    size = peaks.length;
+            for(index=0;index<peaks.length;index+=1){		
                 if(peaktype=='s1' &&
-                    data['peaks'][x]['n_contributing_channels'] > data['peaks'][peaks[index]]['n_contributing_channels']) {
+                    data['peaks'][x]['n_contributing_channels'] > 
+		   data['peaks'][peaks[index]]['n_contributing_channels']) {
                     peaks.splice(index, 0, x);
                     break;
                 }
                 else if(peaktype=='s2' &&
-                    data['peaks'][x]['area'] > data['peaks'][peaks[index]]['area']){
+			data['peaks'][x]['area'] > 
+			data['peaks'][peaks[index]]['area']){
                     peaks.splice(index, 0, x);
                     break;
                 }
             }
+	    if(size == peaks.length) peaks.push(x);
         }
     }
     return peaks;
+}
+function getNPeaks(data, type){
+    if(type!='s1' && type!='s2')
+	return 0;
+    var count = 0;
+    for( i=0; i<data['peaks'].length; i+=1 ){
+	if( data['peaks'][i]['type'] == type )
+	    count += 1;
+    }
+    return count;
 }
 function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
     
@@ -310,10 +324,11 @@ function draw_waveform( div, thedata, thetitle, height ){
 			     title: thetitle,
 			     showRoller: false,
 			     rollPeriod: 1,
+			     strokeWidth: 2,
 			     labels: ["bin (10ns)", "sum_waveform", "filtered_waveform"],
-			     ylabel: "p.e.",
+			     //ylabel: "",
 			   //  xlabel: "bin (10ns)",
-			     colors: ['#09E042', '#0995E0'],
+			     colors: ['#5992c2', '#ff0202'], //'#09E042'],
                  height: height,
                       });
 }
@@ -357,13 +372,15 @@ function draw_hit_location( scene, data, hit_locs )
     scene.add( hit_marker );    
 }
 
-function draw_hitpattern( scene, camera, renderer, hits, data )
+function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 // Draw the hit pattern
 {
+    logstr = "Drawing peak type " + type + " at index " + index.toString();
+    console.log(logstr);
     var iScaleMultiplier = 2.5;
-    var iPositionTopArray = 1200;
-    var iPositionBottomArray = 0;
-    var iPmtHeightCorrection = 500;
+    var iPositionTopArray = 1050;
+    var iPositionBottomArray = -150;
+    var iPmtHeightCorrection = 100;
     var iPmtSpeedFactor = 5;
 
     // Clear hits array first
@@ -375,28 +392,32 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
     // This will hold the heights, which
     cylinder_heights = [];
 
-    peaks = get_peaks(data, 's1');
-    if(peaks.length == 0)
+    peaks = get_peaks(data, type);
+    if(peaks.length == 0 || data['peaks'].length < peaks[index]){
+	console.log("Out of index peak");
         return;
+    }
+    console.log(peaks);
+    console.log(data);
     // Loop through hits and define 'pmt' size and color
-    for(x=0;x<data['peaks'][peaks[0]]['hits'].length;x++){
+    for(x=0;x<data['peaks'][peaks[index]]['hits'].length;x++){
 
 	// This makes a RELATIVE amplitude (height of pmt
 	// is only determined by other hits in S2)
-	amp = data['peaks'][peaks[0]]['hits'][x]['area']/data['peaks'][peaks[0]]['area'];
-	channel = parseInt(data['peaks'][peaks[0]]['hits'][x]['channel']);
+	amp = data['peaks'][peaks[index]]['hits'][x]['area']/data['peaks'][peaks[index]]['area'];
+	channel = parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
         amp*=20;
     //console.log(x.toLocaleString() + amp.toString());
-	if( amp == 0. ) amp = 0.01;
+	//if( amp == 0. ) amp = 0.01;
 	if( amp > 1. ) amp = 1.;
-	var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
+	var hit = new THREE.Mesh(new THREE.CylinderGeometry(35,35,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
     //console.log("amp");
     //    console.log(amp);
 	// The color will be determined such that the largest hit is 
 	// at the 'top' of the pallete and the smallest should be at the bottom
 	colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
-	
+	if(amp == 0.) amp = 0.01;
 	// Set color
 	hit.material.color.setRGB( colz[0],
                                    colz[1],
@@ -427,23 +448,24 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
 
     // If you want all PMTs represented
     for( x=0; x< 243; x++){
-        var haspmt = false;
-        for(y=0;y<data['peaks'][peaks[0]]['hits'].length;y++){
-            if(data['peaks'][peaks[0]]['hits'][y]['channel']== x.toString()) {
+       var haspmt = false;
+        for(y=0;y<data['peaks'][peaks[index]]['hits'].length;y++){
+            if(data['peaks'][peaks[index]]['hits'][y]['channel']== x.toString()) {
                 haspmt = true;
                 break;
             }
         }
         if(haspmt) continue;
         //console.log(x);
-        var hit = new THREE.Mesh(new THREE.CylinderGeometry(25,25,0),
+        var hit = new THREE.Mesh(new THREE.CylinderGeometry(35,35,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
-	    colz = GetColor(.0003 ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
+	    colz = GetColor( 0. ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
 
 	    // Set color
-	    hit.material.color.setRGB( colz[0], colz[1], colz[2] );
-	    // Make it glow
-        hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
+	console.log(colz);
+	hit.material.color.setRGB( colz[0], colz[1], colz[2] );
+	// Make it glow
+        //hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
 	    // Look up what this does
 	    hit.overdraw = true;
 	    hit.position.x = g_pmt_map[x.toString()]['x']*iScaleMultiplier;
@@ -479,7 +501,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
 		// The only way to update cylinder height is actually
 		// to remove the old cylinder and draw a new one
 		scene.remove( hits[x] );
-		hits[x].geometry = new THREE.CylinderGeometry( 25, 25, currentLen );
+		hits[x].geometry = new THREE.CylinderGeometry( 35, 35, currentLen );
 		scene.add( hits[x] );
 	    }
 	}
@@ -496,11 +518,57 @@ function draw_hitpattern( scene, camera, renderer, hits, data )
     requestAnimationFrame( hitsAnimation );
 }
 
-function draw_tpc(scene, camera, renderer, path, callback, callback_arg)
+function initialize_mini_display(scene, camera, renderer, path, div, callback){
+    
+    var VIEW_ANGLE = 90;
+    var NEAR = .1;
+    var FAR = 10000;
+    var WIDTH = document.getElementById(div).offsetWidth;
+    var HEIGHT = document.getElementById(div).offsetHeight;
+    console.log(WIDTH);
+    var ASPECT = WIDTH/HEIGHT;
+
+    //renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending, 
+//					alpha: true});
+    renderer.setClearColor(0xFFFFFF, 1);
+
+  //  camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+    //scene = new THREE.Scene();
+    scene.add(camera);
+    //top -6.959373219186038e-7 y: 374.98352966332897 z: -0.00012501453329469885
+    // bottom X: 2.934827825723431e-7 y: 529.7322777457862 z: -0.00002973082924860163
+    //X: -447, Y: 754, Z: -1208 FRONT
+    camera.position.z = 0;//-1124;
+    camera.position.y = 375;//1089;//989;//1400;//989;
+    camera.position.x = 0;
+
+    // set the size
+    renderer.setSize(WIDTH, HEIGHT);
+
+    // attach renderer's DOM element to container
+    var $div = $("#"+div);
+    $div.append(renderer.domElement);
+    
+    //draw_simple_cylinder(scene,camera,renderer,function(){});
+    //callback();
+    draw_tpc(scene, camera, renderer, path, callback, "", 0x444444);
+ 
+}
+function draw_simple_cylinder(scene, camera, renderer, callback){
+
+    var outline = new THREE.Mesh(new THREE.CylinderGeometry(550,550,1300),
+				 new THREE.MeshBasicMaterial( { wireframe: true, opacity: 0.5 } ));
+    scene.add(outline);
+    outline.position.y = 485;
+    callback();
+
+}
+function draw_tpc(scene, camera, renderer, path, callback, callback_arg, color)
 //This is the main animation function
 //It is responsible for drawing the main animation loop
 // Do not confuse this with MakeAnimation below, which draws the electron cartoon
 {
+    if(color == 'undefined') color = '0x2194ce';
     loader = new THREE.JSONLoader();
     loader.load( path, 
 		 function (geometry, materials){
@@ -521,10 +589,10 @@ function draw_tpc(scene, camera, renderer, path, callback, callback_arg)
 		     var TPC_Material = new THREE.MeshBasicMaterial( {
 			 wireframe: true,
 			 wireframeLinewidth: 1,//.8,
-                         color: 0x2194ce,
+                         color: color,
 			 //        color: 0x144c69,
 			 transparent: true,
-			 opacity: 0.1,
+			 opacity: 0.05,
 			 vertexColors: THREE.NoColors,
 			 //shading: THREE.smoothShading,
 		     });
@@ -533,7 +601,7 @@ function draw_tpc(scene, camera, renderer, path, callback, callback_arg)
 		    mesh.geometry.computeFaceNormals();
 		    mesh.geometry.computeVertexNormals();
 		    scene.add(mesh);
-		    mesh.position.y = 900;
+		    mesh.position.y = 750;
              callback(callback_arg);
 		}); // end load function
 }
@@ -552,6 +620,7 @@ function GetV(seed){
 function GetColor( amp )
 {
     var colz = [ 0, 0, 0];
+    if(amp == 0.) return [200,200,200];
     //amp *= 30;
     // CONSTANTS
 
@@ -584,7 +653,19 @@ function GetColor( amp )
     colz[0] = col_r / 255.;
     colz[1] = col_g / 255.;
     colz[2] = col_b / 255.;
+    
     return colz;
+}
+
+function DrawMouseover( mousex, mousey, threeScene, threeCamera, currentHighlight ){
+/*
+
+  Does the color change animation and popup on mouseover for PMT arrays. 
+
+*/
+
+    var vector = new THREE.Vector3(mousex, mousey, 1);
+    // not finished see:
 }
 
 function MakeAnimation(xv, yv, zv, s1, s2, threeScene, threeCamera, threeRenderer, options, callback, el){

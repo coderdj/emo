@@ -10,11 +10,15 @@
     <meta name="description" content="XENON1T Data Monitor">    
     <meta name="author" content="Daniel Coderre" >
     
-    <!-- Declare pace and get it going -->
-    <script src="{% static "js/pace.min.js"%}"></script>
-    <link href="{% static "css/pace.css"%}" rel="stylesheet" />
-    <script type="text/javascript">Pace.start();</script>
-
+    <!-- Declare pace and get it going. Note removed
+         for not because it doesn't need to track every
+         POST request to the backend. Put on individual
+         pages where it makes sense
+    -->
+    <!-- <script src="{% static "js/pace.min.js"%}"></script>
+    <link href="{% static "css/pace.css"%}" rel="stylesheet" /> -->
+    <!--<script type="text/javascript">Pace.start();</script>-->
+    
     <!-- Declare here any global styles all classes need -->
     <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
 	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
