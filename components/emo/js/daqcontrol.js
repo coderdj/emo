@@ -65,8 +65,9 @@ function updateData( chart, updateUrl )
 // Once the chart is loaded you can call this to update the data
 {
     $.getJSON(updateUrl,function(data){
-	var detlist = ['xedaq01', 'xedaq02', 'xedaq03', 'xedaq04', 'muon_veto'];
+	var detlist = ['daqrdr01', 'daqrdr02', 'daqrdr03', 'daqrdr04', 'muon_veto'];
         var idlist = ['tpc_0','tpc_1','tpc_2','tpc_3','muon_veto_0'];        
+	console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;
             // do progress bar                                                 
