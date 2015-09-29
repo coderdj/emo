@@ -193,48 +193,121 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
     $.getJSON( dataUrl, function(detector_data){
-	
-	// Loop through status dict
-	for ( var status_id = 0; status_id < detector_data['status'].length; status_id += 1){
+	$.getJSON( nodesUrl, function(node_data) {
 
-	    // If we have a nicer name to display set it
-	    var display_name = detector_data['status'][status_id]['detector'];
-	    var det_name = display_name;
-	    if( display_name in aliases)
-		display_name = aliases[display_name];
 
-	    if ($('#'+div_id).find('#'+det_name+"_header").length) {
-		console.log("Found header");
-		document.getElementById(det_name+"_status").innerHTML = GetStateHtml(detector_data,status_id);
+	    var currentTime = new Date();
+	    var nodeInfo = {"tpc": [], "muon_veto": []};
+
+	    // For now hardcode TPC/MV	    
+
+	    // Put node data in this dictionary
+	    for( var node_id = 0; node_id < node_data.length; node_id += 1){
+	    
+		var docdate = new Date(node_data[node_id]['createdAt']['$date']);
+                var update_seconds = Math.round( (currentTime - docdate)/1000 );
+                var color = "black";
+                if (update_seconds > 30 )
+                    color = "#AAAAAA";
+
+                var html_string = "<div class='row emo-node-line' style='font-size:12pt;color:" + color + "'>" +
+                    "<div class='col-xs-2'>" + node_data[node_id]['node'] + "</div>"+
+                    "<div class='col-xs-2'>" + node_data[node_id]['runmode'] + "</div>"+
+                    "<div class='col-xs-2'>" + node_data[node_id]['nboards'] + "</div>"+
+                    "<div class='col-xs-2'>" + node_data[node_id]['bltrate'] + "</div>"+
+                    "<div class='col-xs-2'>" + node_data[node_id]['datarate'] + "</div>"+
+                    "<div class='col-xs-2'>" + update_seconds.toString() + "</div>" +
+                    "</div>";
+		console.log(node_data);
+		console.log(node_data[node_id]['node']);
+		if(node_data[node_id]['node'][0]=='d') // as in 'daqrdr0x'
+		    nodeInfo['tpc'].push(html_string);
+		else
+		    nodeInfo['muon_veto'].push(html_string);
+		
 	    }
-	    else{ // append a new header
-		console.log(detector_data);
-		var timestring="";
-		if(detector_data['status'][status_id].startTime!=""){
-		    startdate = new Date( detector_data['status'][status_id].startTime );
-		    timestring = GetTimeString( startdate );
+	    
+	    
+	    // Loop through status dict
+	    for ( var status_id = 0; status_id < detector_data['status'].length; status_id += 1){
+
+		// If we have a nicer name to display set it
+		var display_name = detector_data['status'][status_id]['detector'];
+		var det_name = display_name;
+		if( display_name in aliases)
+		    display_name = aliases[display_name];
+		
+		if ($('#'+div_id).find('#'+det_name+"_header").length) {
+		    console.log("Found header");
+		    var startdate = detector_data['status'][status_id]['startTime'];
+		    console.log(detector_data['status'][status_id]);
+		    document.getElementById(det_name+"_status").innerHTML = GetStateHtml(detector_data,status_id);
+		    document.getElementById(det_name+"_runname").innerHTML = detector_data['status'][status_id]['currentRun'];
+		    document.getElementById(det_name+"_startedby").innerHTML = detector_data['status'][status_id]['startedBy'];
+		    document.getElementById(det_name+"_runmode").innerHTML = detector_data['status'][status_id]['mode'];
+                    document.getElementById(det_name+"_startdate").innerHTML = startdate;
+
+		    var appstring = "";
+		    for(var index=0;index<nodeInfo[det_name].length;index+=1)
+			appstring+=nodeInfo[det_name][index];
+		    document.getElementById(det_name+"_node_div").innerHTML = appstring;
 		}
-		html_str = "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
-		    + " DAQ is <a id='" + det_name + "_status'>" + 
-		    GetStateHtml(detector_data, status_id) + "</a><a style='font-size:10pt;color:black;'>&nbsp;" 
-		    + timestring + "</a>" + "</h2></div>";
-		//add a second line for the run information
-		html_str += ( "<div class='row col-xs-12'>" +
-			      "<div class='col-xs-3' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + det_name + "_runname'></span></div>" + 
-			      "<div class='col-xs-3' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + det_name + "_startedby'></span></div>" +  
-                              "<div class='col-xs-3' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + det_name + "_runmode'></span></div>" +  
-                              "<div class='col-xs-3' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + det_name + "_startdate'></span></div>" +  
-			      "</div><hr>");
-		$('#'+div_id).append(html_str);
-		if( detector_data['status'][status_id]['state'] == "Running")
-		    FillOutRunInfo(det_name, detector_data, status_id);
-	
+		else{ // append a new header
+		    console.log(detector_data);
+		    var timestring="";
+		    if(detector_data['status'][status_id].startTime!=""){
+			thedatestring = detector_data['status'][status_id].startTime;
+			thedatestring = thedatestring.substr(0, 
+							     thedatestring.length - 
+							     8);
+			startdate = new Date( thedatestring );
+			console.log("TIME");
+			console.log(thedatestring);
+			timestring = GetTimeString( startdate );
+		    }
+		    html_str = "<div class='col-xs-12 emobox' id='" + det_name + "_parent'>";
+		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
+			+ " DAQ is <a id='" + det_name + "_status'>" + 
+			GetStateHtml(detector_data, status_id) + "</a><a style='font-size:10pt;color:black;'>&nbsp;" 
+			+ timestring + "</a>" + "</h2></div>";
+		    //add a second line for the run information
+		    html_str += ( "<div class='row col-xs-12'>" +
+				  "<div class='col-xs-3' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + 
+				  det_name + "_runname'></span></div>" + 
+				  "<div class='col-xs-3' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + 
+				  det_name + "_startedby'></span></div>" +  
+				  "<div class='col-xs-3' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + 
+				  det_name + "_runmode'></span></div>" +  
+				  "<div class='col-xs-3' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + 
+				  det_name + "_startdate'></span></div>" +  
+				  "</div><hr>");
+		    html_str += "</div>";
+		    $('#'+div_id).append(html_str);
+		    if( detector_data['status'][status_id]['state'] == "Running")
+                        FillOutRunInfo(det_name, detector_data, status_id);
+		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
+                        "<div class='col-xs-2'>Slave node</div>"+
+                        "<div class='col-xs-2'>Run mode</div>"+
+                        "<div class='col-xs-2'>Num. digitizers</div>"+
+                        "<div class='col-xs-2'>BLT Rate</div>"+
+                        "<div class='col-xs-2'>Data Rate</div>"+
+                        "<div class='col-xs-2'>Seconds since update</div>" +
+                        "</div></strong>";
+		    $('#'+det_name + "_parent").append(header_html);
+		    var appstring = "<div id='"+det_name+"_node_div'>";
+		    for(var index=0;index<nodeInfo[det_name].length; index+=1)
+			appstring+= nodeInfo[det_name][index];
+		    appstring+= "</div></div>";
+		    console.log(appstring);
+		    $('#'+det_name + "_parent").append(appstring);
+		    
 	    }
 
 	}
 
 	//$.getJSON( nodesUrl, function(nodes_data){
     //});
+	});
     });
 }
 

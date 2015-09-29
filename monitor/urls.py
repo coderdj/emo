@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^get_aggregate_list', login_required(views.get_aggregate_list), name="get_aggregate_list"),
     url(r'^get_aggregate_plot', login_required(views.get_aggregate_plot), name="get_aggregate_plot"),
     url(r'^get_event_for_display', login_required(views.get_event_for_display), name="get_event_for_display"),
+    url(r'^get_waveform_run_list', login_required(views.get_waveform_run_list), name="get_waveform_run_list"),
     url(r'^get_latest_display', login_required(views.get_latest_display), name="get_latest_display"),
     url(r'^noise_report', login_required(views.get_noise_spectra), name="get_noise_spectra"),
     url(r'^noise', login_required(views.noise_directory), name="noise_directory"),

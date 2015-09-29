@@ -8,7 +8,7 @@ import pytz
 import numpy as np
 from django.conf import settings
 
-client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
 logclient = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
 
 @login_required
@@ -21,7 +21,7 @@ def GetStatusUpdate(request):
     :return: JSON dump of the mongo doc
     """
     # Connect to pymongo
-    db = client[ settings.MONITOR_DB_NAME ]
+    db = client[ settings.ONLINE_DB_NAME ]
     collection = db[ "daq_status" ]
 
     detectors = collection.distinct("detector")
@@ -53,8 +53,8 @@ def GetNodeUpdates(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
+    client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+    db = client[ settings.ONLINE_DB_NAME ]
     collection = db[ "daq_rates" ]
 
     nodes = collection.distinct('node')
@@ -77,8 +77,8 @@ def GetNodeHistory(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
+    client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+    db = client[ settings.ONLINE_DB_NAME ]
     collection = db[ "daq_rates" ]
 
     # Right now set nseconds to last 2 days. Will be a configurable query soon.
@@ -171,8 +171,8 @@ def stop_run(request):
     insert_doc['comment'] = rs_form.cleaned_data['comment']
 
     # Connect to pymongo                                                         
-    client = MongoClient(settings.MONITOR_DB_ADDR,
-                         settings.MONITOR_DB_PORT)
+    client = MongoClient(settings.ONLINE_DB_ADDR,
+                         settings.ONLINE_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
     collection = db[ "daq_control" ]
     collection.insert_one(insert_doc)

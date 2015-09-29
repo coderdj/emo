@@ -32,10 +32,32 @@ db = client[online_db_name]
 bufferclient = MongoClient( settings.BUFFER_DB_ADDR, settings.BUFFER_DB_PORT)
 
 @login_required
+def get_waveform_run_list(request):
+    """
+    Return all run names for which there is a collection containing waveforms
+    """
+
+    retlist = []
+    for collection in db.collection_names():
+        if collection[-7:] == "_events" and db[collection].count() != 0:
+            retlist.append(collection[:-7])
+    return HttpResponse(dumps({"runs": retlist}), content_type="application/json")
+
+
+@login_required
 def get_event_as_json(request):
 
+    run = ""
+    if request.method == "GET" and "run" in request.GET:
+        run = request.GET['run'] + "_events"
+    else:
+        for collection in db.collection_names():
+            if collection[-7:] == "_events" and db[collection].count() != 0:
+                run = collection
+                break
+    
     # Get the doc. If there is no doc return an empty dict
-    collection = db['monitor_events']
+    collection = db[run]
     try:
         docs = collection.find().sort("_id", -1)[:1]
         doc=docs[0]
@@ -65,7 +87,17 @@ def get_event_for_display(request):
     """
 
     # Get the doc. If there is no doc return an empty dict
-    collection = db['monitor_events']
+    run = ""
+    if request.method == "GET" and 'run' in request.GET:
+        run = request.GET['run'] + "_events"
+    else:
+        for collection in db.collection_names():
+            if collection[-7:] == "_events" and db[collection].count() != 0:
+                run = collection
+                break
+    
+
+    collection = db[run]
     try:
         docs = collection.find().sort("_id", -1)[:1]
         doc=docs[0]
@@ -73,7 +105,7 @@ def get_event_for_display(request):
         return HttpResponse({}, content_type="application/json")
 
     hits_plot = make_bokeh_hits_plot(doc['all_hits'])
-    waveform_plot = make_bokeh_waveform_plot(doc['sum_waveforms'])
+    waveform_plot = make_bokeh_waveform_plot(doc['sum_waveforms'], doc['peaks'])
     hit_displays = make_bokeh_hit_displays(doc['peaks'])
     hits_plot.x_range = waveform_plot.x_range
     # full_plot = vplot(waveform_plot, hits_plot)
@@ -141,7 +173,7 @@ def make_bokeh_hits_plot(hit_list):
     return plot
 
 
-def make_bokeh_waveform_plot(waveform_dict):
+def make_bokeh_waveform_plot(waveform_dict, peaks_list):
 
     """
     """
@@ -203,6 +235,36 @@ def make_bokeh_waveform_plot(waveform_dict):
     # plot.y_range = Range1d(0, 1.1*max_y)
     plot.min_border_top = 20;
     plot.min_border_bottom = 0;
+
+    # Annotate peaks
+    
+    s1_count = 0
+    s2_count = 0
+    unknown_count = 0
+    for peak in peaks_list:
+        name = ""    
+        color = "#5992c2";
+        if peak['type'] == "s1":
+            name = "s1_" + str(s1_count)
+            s1_count +=1        
+        elif peak['type'] == "s2":
+            name = "s2_" + str(s2_count)
+            s2_count += 1
+            color = "#ff0202"
+        else:
+            name = "unknown_" + str(unknown_count)
+            unknown_count += 1
+            color = "#a7a7a7"
+        if "height" in peak: 
+            print("HEIGHT")
+            print(peak['height'])
+        if "left" in peak:
+            print("LEFT")
+            print(peak['left'])
+        
+        
+        plot.text( peak['left'], peak['height'], text=[name], text_color=color,  text_font_size="10pt")
+    
 
     return plot
 
@@ -276,9 +338,88 @@ def get_aggregate_list(request):
     """
 
     collection = db["monitor_histograms"]
-    fields = collection.distinct("name")
+    retdict = {}
+    for entry in collection.find():
+        if entry['category'] not in retdict:
+            retdict[entry['category']] = {}
+        if entry['type'] not in retdict[entry['category']]:
+            retdict[entry['category']][entry['type']] = []
+        if entry['name'] not in retdict[entry['category']][entry['type']]:
+            retdict[entry['category']][entry['type']].append(entry['name'])
 
-    return HttpResponse(dumps(fields), content_type='application/json')
+    return HttpResponse(dumps(retdict), content_type='application/json')
+
+def get_runs_list(get_request):
+
+    # Mongo Objects                                                                 
+    client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    db = client[ settings.RUNS_DB_NAME ]
+    collection = db['runs']
+
+    run_list = []
+    query = {}
+    if "run_mode" in get_request:
+        query['runmode'] = get_request['run_mode']
+
+    if "all_runs" in get_request and get_request['all_runs']==1:
+        cursor = collection.find(query)
+    elif "current_run" in get_request and get_request['current_run'] == 1:
+        cursor = collection.find(query).limit(1).sort({"_id": -1})
+    else:
+        if "start_date" in get_request:
+            query['starttimestamp'] = { "$gt"
+                                        : datetime.datetime.combine
+                                        (get_request['startdate'],
+                                         datetime.datetime.min.time() )}
+        if "end_date" in get_request:
+            if 'starttimestamp' in get_request:
+                query['starttimestamp']['$lt'] = (
+                    datetime.datetime.combine(get_request['enddate'],
+                                              datetime.datetime.max.time() )
+                    )
+            else:
+                query[ 'starttimestamp' ]= { "$lt" : datetime.datetime.combine(
+                        get_request['enddate'],datetime.datetime.max.time() )}
+        cursor = collection.find(query)
+
+    if cursor is None:
+        return []
+
+    for run in cursor:
+        run_list.append(run.name)
+
+    return run_list
+
+@login_required
+def get_available_plots(request):
+
+    """
+    Gets a list of plots available for a certain data range
+    """
+
+    if request.method != "GET":
+        return
+
+    # Mongo Objects
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+
+    # Build the run list based on info in request
+    run_list = get_runs_list(request.GET)    
+    if run_list is None or run_list.length == 0:
+        return 
+    
+    # Loop through collections in run list to build available plots
+    plot_names = []
+    for run in run_list:
+        collection = db[run]
+        for doc in collection:
+            if doc.name not in plot_names:
+                plot_names.append(doc.name)
+
+    return plot_names
+    
+
 
 """
 def make_2d_datasource():

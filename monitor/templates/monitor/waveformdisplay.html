@@ -18,13 +18,13 @@
   .Loading {
       display:    none;
       position:   fixed;
-      z-index:    1000;
+      z-index:    1;
       top:        0;
       left:       0;
       height:     100%;
       width:      100%;
       background: rgba( 255, 255, 255, .8 )
-      url('{{STATIC_URL}}images/ajax-loader.gif')
+      url('{% static "img/ajax-loader.gif" %}')
       50% 50%
       no-repeat;
   }
@@ -32,9 +32,9 @@
 </style>
     {%  endblock %}
 {% block content %}
-    <div class="Loading">Loading Next Event</div>
+    <div id="Loading" class="Loading">Loading Next Event</div>
     <div class="row" style="margin:10px;min-height:300px;">
-      <div class="col-xs-9 col-sm-9 emobox" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
+      <div class="col-xs-9 col-sm-9 emobox_flat" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
 	<div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">	  
 	  <div class="panel panel-default" style="height:100%;margin:0;">
 	    <div class="panel-heading">
@@ -75,6 +75,13 @@
 	  <div class="panel-heading">
 	    <h4 style="margin:0">Info/Control</h4>
 	  </div>
+	  <div class="row" style="margin-top:3px;">
+            <div class="col-xs-3"><strong>Run:</strong></div>
+            <div class="col-xs-9">
+              <select id="run_picker" name="run_picker" width="150" 
+		      style="width:150px"></select>
+            </div>
+          </div>
 	  <div style="margin:3px;margin-top:5px;">
 	    <div>
 	      <div class="btn-group btn-group-xs" role="group" 
@@ -137,7 +144,7 @@
       </div>
     </div>
     <div class="col-xs-12 container" style="margin-top:10px;width:100%;">
-    <div class="col-xs-12 emobox" id="full_waveform" style="padding-left:5px;padding-right:5px;"></div>
+    <div class="col-xs-12 emobox_flat" id="full_waveform" style="padding-left:5px;padding-right:5px;"></div>
 
 
 <script type="text/javascript">
@@ -265,7 +272,7 @@
     var currentdata = null;
     var file = null;
     var data_url = "/monitor/get_event_for_display";  
-
+    var run_list_url = "get_waveform_run_list";
     function animate(){
       requestAnimationFrame(animate);
 
@@ -276,6 +283,20 @@
     }
 
     $(document).ready(function() {
+
+
+     // fill run picker
+     $.getJSON(run_list_url, function(data){
+	     console.log(data);
+             if(data!=null){
+                  for(x=0;x<data['runs'].length;x++){
+                        $("#run_picker").append("<option name='"
+                                     + data['runs'][x] + "'>"+
+                                       data['runs'][x]+"</option>");
+                    }
+                }
+          });
+
      //   update_data();
      $("#loading").show();
 	console.log(document.getElementById("peak_hitpattern").offsetWidth);
@@ -306,14 +327,17 @@
     });
 
     function update_data(){
-        console.log("HERE");
-         $.getJSON(data_url, function(data){
-             console.log(data);
-             draw_waveform_local(data);
+         var the_url = data_url + "/?run=" + $("#run_picker").val();
+         document.getElementById("Loading").style.display = 'block';
+
+         $.getJSON(the_url, function(data){
+             draw_waveform_local(data, function(){
+                document.getElementById("Loading").style.display = 'none';
+			      });
              currentdata=data;
           });
     }
-    function draw_waveform_local(data){
+    function draw_waveform_local(data, callback){
        s1_index = -1;
        s2_index = -1;
        ns1 = 0;
@@ -346,6 +370,7 @@
           disp_type = 's1';
           DrawPeak();
         }
+	callback();
     }
     function unzip_waveform(waveform){
         x = [];

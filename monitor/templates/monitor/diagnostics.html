@@ -26,26 +26,191 @@
 {% endblock %}
 {% block content %}
 
-    <div class="col-xs-12">
-        <h5>Add chart dialog here</h5>
+    <div class="col-xs-3" style="padding-top:5px;">
+      <div class="panel-group" id="accordion_toplevel" role="tablist"
+           aria-multiselectable="false">
+	<div class="panel panel-default">	 
+	  <div class="panel-heading" style="background-color:#5992c2;color:#FFFFFF">
+            <h4 style="margin:0">
+	      <a role="button" data-toggle="collapse" 
+		 data-parent="#accordion_toplevel"
+                 href="#collapseDataChooser" aria-expanded="true"
+                 aria-controls="collapseDataChooser" style="color:white">
+		Step 1: Choose your data
+	      </a>
+	    </h4>
+	  </div>
+	  <div id="collapseDataChooser" class="panel-collapse collapse in"
+               role="tabpanel" aria-labelledby="headingDataChooser">
+	    <form method="POST" action="" id="filter_form">
+              {% csrf_token %}
+	      
+	      <span class="list-group-item" style="border:0">
+		<strong>Data range </strong>
+		<span><br>
+		  <input type="radio" name="runs_sel"  value="all" 
+			 checked="checked" /> 
+		  All runs </span>	    
+		<span><br>	    
+		  <input type="radio" name="runs_sel"  
+			 value="current" /> Current run </span>
+		<br>
+		<span>
+		<input type="radio" name="runs_sel"  value="range" /> Date range
+		</span>	  
+		<br>
+		<div class="row">
+		  <div class="col-xs-2 col-xs-offset-1">From </div>
+		  <div class="col-xs-8">
+		    <input type="date" name="start_date">
+		  </div>
+		</div>
+		<div class="row">
+		  <div class="col-xs-2 col-xs-offset-1">To </div>
+		  <div class="col-xs-8">
+		    <input type="date" name="end_date">
+		</div>
+		</div>
+		
+              </span>
+	      <span class="list-group-item" style="border:0">
+		<div class="row">
+		  <div class="col-xs-3"><strong>Mode:</strong></div>
+		  <div class="col-xs-9">
+		    <select id="run_mode_tpc" name="run_mode_tpc"></select>
+		</div>
+		</div>
+		
+	      </span>
+	      <div class="col-xs-12">
+		<button type="submit" 
+			class="btn btn-success pull-right">Process</button>
+	      </div>
+	    </form>
+	  </div>
+	  
+	  <div class="panel panel-default">				  
+	    <div class="panel-heading" 
+		 style="background-color:#5992c2;color:#FFFFFF">	      
+              <h4 style="margin:0">
+		<a role="button" data-toggle="collapse" 
+		   data-parent="#accordion_toplevel"
+		   href="#collapseSpectrumChooser" aria-expanded="true"
+		   aria-controls="collapseSpectrumChooser" style="color:white"
+		   id="second_header">
+		  Step 2: Choose your spectrum
+		</a>
+	      </h4>	     
+            </div>	  
+	  </div>
+	  <div id="collapseSpectrumChooser" class="panel-collapse collapse"
+               role="tabpanel" aria-labelledby="headingSpectrumChooser">
+	    <div class="panel-group" id="accordion" role="tablist" 
+		 aria-multiselectable="true">
+	      <div class="panel panel-default">
+		<div class="panel-heading" 
+		     style="background-color:#4fa783;color:#FFFFFF;"
+		     role="tab" id="headingOne">
+		  <h4 class="panel-title">
+		    <a role="button" data-toggle="collapse" 
+		       data-parent="#accordion" 
+		       href="#collapseOne" aria-expanded="true" 
+		       aria-controls="collapseOne">
+		      Energy Spectra
+		    </a>
+		  </h4>
+		</div>
+		<div id="collapseOne" class="panel-collapse collapse in" 
+		     role="tabpanel" aria-labelledby="headingOne">
+		  <div class="panel-body">
+		    List spectra here
+		  </div>
+		</div>
+	      </div>
+	      <div class="panel panel-default">
+		<div class="panel-heading" 
+		     style="background-color:#4fa783;color:#FFFFFF;"
+		     role="tab" id="headingTwo">
+		  <h4 class="panel-title">
+		    <a class="collapsed" role="button" data-toggle="collapse" 
+		       data-parent="#accordion" href="#collapseTwo" 
+		       aria-expanded="false" aria-controls="collapseTwo">
+		      DAQ Diagnostics
+		    </a>
+		  </h4>
+		</div>
+		<div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" 
+		     aria-labelledby="headingTwo">
+		  <div class="panel-body">
+		    Trigger toss keep. DAQ timing. Etc
+		  </div>
+		</div>
+	      </div>
+	      <div class="panel panel-default">
+		<div class="panel-heading" 
+		     style="background-color:#4fa783;color:#FFFFFF;"
+		     role="tab" id="headingThree">
+		  <h4 class="panel-title">
+		    <a class="collapsed" role="button" data-toggle="collapse" 
+		       data-parent="#accordion" href="#collapseThree" 
+		       aria-expanded="false" aria-controls="collapseThree">
+		      Data Quality
+		    </a>
+		  </h4>
+		</div>
+		<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" 
+		     aria-labelledby="headingThree">
+		  <div class="panel-body">
+		    Long term spectra. Distributions. Etc.
+		  </div>
+		</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+      </div>
     </div>
-   <div class="col-xs-12" id="grid">
-</div>
+      <div class="col-xs-9" id="grid">
+      </div>
+      
 
 
+<script type="text/javascript">
+  var run_mode_list_url = "/config/fetch_mode_list";
+  var aggregate_list_url = "/monitor/get_aggregate_list";
+  var aggregate_data_url = "/monitor/get_aggregate_plot/";
 
-    <script type="text/javascript">
-
-    var aggregate_list_url = "/monitor/get_aggregate_list";
-    var aggregate_data_url = "/monitor/get_aggregate_plot/";
-
-    function MakeGridTemplate(datadiv){
+  function MakeGridTemplate(datadiv){
         ret = "<div class='col-md-4 col-s-6 col-xs-12'>" + datadiv + "</div>";
         return ret;
     }
+  
+  $('#filter_form').submit(function(e){
+     e.preventDefault();  
+     document.getElementById("second_header").click();
+     console.log(e);
+
+     // Create a GET request with the data embedded
+     
+  
+  });
 
       $(function(){
 
+         // Fill run mode list
+         $.getJSON(run_mode_list_url, function(data){
+             if(data!=null){
+                if("tpc" in data){
+                  $("#run_mode_tpc").append("<option name='all';'>All</option>");
+                    for(x=0;x<data['tpc'].length;x++){
+                        $("#run_mode_tpc").append("<option name='"
+				+ data['tpc'][x] + "'>"+
+                                data['tpc'][x]+"</option>");
+		    }
+                }
+          }});
+
+	
       $.getJSON(aggregate_list_url, function(plotdata){
 
          for(x=0; x<plotdata.length; x+=1){

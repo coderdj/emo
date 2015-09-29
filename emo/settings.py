@@ -16,7 +16,10 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # MongoDB connectivity
-MONITOR_DB_NAME = "online"
+ONLINE_DB_NAME = "online"
+ONLINE_DB_ADDR = "130.92.139.92"
+ONLINE_DB_PORT = 27017
+MONITOR_DB_NAME = "monitor"
 MONITOR_DB_ADDR = "130.92.139.92"
 MONITOR_DB_PORT = 27017
 RUNS_DB_NAME = "online"
@@ -38,6 +41,7 @@ SECRET_KEY = '@fn1i3_7ip#66vanzz(91qn9ehmupb+rwo44+f3#sw(lku^+90'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = [ "*" ]
 
 
 # Application definition
