@@ -212,7 +212,7 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                 if (update_seconds > 30 )
                     color = "#AAAAAA";
 
-                var html_string = "<div class='row emo-node-line' style='font-size:12pt;color:" + color + "'>" +
+                var html_string = "<div class='row emo-node-line' style='font-size:10pt;color:" + color + "'>" +
                     "<div class='col-xs-2'>" + node_data[node_id]['node'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['runmode'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['nboards'] + "</div>"+
