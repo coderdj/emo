@@ -18,7 +18,7 @@
   .Loading {
       display:    none;
       position:   fixed;
-      z-index:    1;
+      z-index:    1000;
       top:        0;
       left:       0;
       height:     100%;
@@ -353,8 +353,12 @@
         document.getElementById("full_waveform").innerHTML = "";
         $("#full_waveform").append(data['div']);
         $("#full_waveform").append(data['script']);
-        Bokeh.Collections('Plot').at(0).set("plot_width", $("#full_waveform").width());
-        Bokeh.Collections('Plot').at(1).set("plot_width", $("#full_waveform").width());
+console.log(Bokeh.Collections('Plot'));
+	for(var idex=0; idex<Bokeh.Collections('Plot').length;idex+=1){
+
+        Bokeh.Collections('Plot').at(idex).set("plot_width", $("#full_waveform").width());
+        Bokeh.Collections('Plot').at(idex).set("plot_width", $("#full_waveform").width());
+}
  //       document.getElementById("hit_patterns").innerHTML = "";
 //        $("#hit_patterns").append(data['ddiv']);
  //       $("#hit_patterns").append(data['dscript']);

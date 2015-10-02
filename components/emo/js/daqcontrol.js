@@ -195,8 +195,10 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
     $.getJSON( dataUrl, function(detector_data){
 	$.getJSON( nodesUrl, function(node_data) {
 
-
-	    var currentTime = new Date();
+	    
+	    var currentTime = new Date()
+	    if(node_data.length>0)
+		currentTime = new Date(node_data[0]['date']['$date']);
 	    var nodeInfo = {"tpc": [], "muon_veto": []};
 
 	    // For now hardcode TPC/MV	    
@@ -272,13 +274,13 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			+ timestring + "</a>" + "</h2></div>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
-				  "<div class='col-xs-3' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + 
+				  "<div class='col-xs-4' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + 
 				  det_name + "_runname'></span></div>" + 
-				  "<div class='col-xs-3' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + 
+				  "<div class='col-xs-2' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + 
 				  det_name + "_startedby'></span></div>" +  
-				  "<div class='col-xs-3' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + 
+				  "<div class='col-xs-2' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + 
 				  det_name + "_runmode'></span></div>" +  
-				  "<div class='col-xs-3' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + 
+				  "<div class='col-xs-4' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + 
 				  det_name + "_startdate'></span></div>" +  
 				  "</div><hr>");
 		    html_str += "</div>";
