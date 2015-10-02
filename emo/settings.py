@@ -12,23 +12,25 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import ldap
+from django_auth_ldap.config import LDAPSearch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # MongoDB connectivity
 ONLINE_DB_NAME = "online"
-ONLINE_DB_ADDR = "130.92.139.92"
+ONLINE_DB_ADDR = "localhost"
 ONLINE_DB_PORT = 27017
 MONITOR_DB_NAME = "monitor"
-MONITOR_DB_ADDR = "130.92.139.92"
+MONITOR_DB_ADDR = "localhost"
 MONITOR_DB_PORT = 27017
 RUNS_DB_NAME = "online"
-RUNS_DB_ADDR = "130.92.139.92"
+RUNS_DB_ADDR = "localhost"
 RUNS_DB_PORT = 27017
 LOG_DB_NAME = "log"
-LOG_DB_ADDR = "130.92.139.92"
+LOG_DB_ADDR = "localhost"
 LOG_DB_PORT = 27017
-BUFFER_DB_ADDR = "130.92.139.69"
+BUFFER_DB_ADDR = "localhost"
 BUFFER_DB_PORT = 27017
 
 # Quick-start development settings - unsuitable for production
@@ -72,6 +74,26 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 )
+
+# For LDAP Authentication at LNGS
+AUTHENTICATION_BACKENDS = (
+    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+AUTH_LDAP_SERVER_URI = "ldaps://lngsldap.lngs.infn.it"
+AUTH_LDAP_BIND_DN = ""
+AUTH_LDAP_BIND_PASSWORD = ""
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=xenon,ou=accounts,dc=lngs,dc=infn,dc=it", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+AUTH_LDAP_GLOBAL_OPTIONS = {
+    ldap.OPT_X_TLS_REQUIRE_CERT: True
+}
+
+import logging
+
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
 
 ROOT_URLCONF = 'emo.urls'
 
