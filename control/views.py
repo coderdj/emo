@@ -62,6 +62,7 @@ def GetNodeUpdates(request):
     ret = []
     for node in nodes:
         ret_doc = collection.find_one({"node":node}, sort=[("_id",-1)])
+        ret_doc['date'] = datetime.datetime.now()
         ret.append(ret_doc)
     client.close()
     if len(ret) != 0:
@@ -147,6 +148,7 @@ def GetNodeHistory(request):
             ret_list.append([1000*(round(last_time)), 0.])
         ret.append( { "node": node, "data": ret_list } )
     client.close()
+
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
 

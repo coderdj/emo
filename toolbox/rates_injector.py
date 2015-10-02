@@ -17,10 +17,10 @@ def inject_rc_doc():
     status_collection.create_index( [("createdAt", pymongo.DESCENDING)], expireAfterSeconds= 172800)
     rates_collection.create_index( [("createdAt", pymongo.DESCENDING)], expireAfterSeconds= 172800)
 
-    starttime = datetime.datetime.now( datetime.timezone.utc )
+    starttime = datetime.datetime.now( )
     run_name = "injector_" + starttime.strftime( "%Y%m%d_%H%M%S")
     mv_name = "mv_" + starttime.strftime( "%Y%m%d_%H%M%S")
-    rdr_list = [ 'daqrd0', 'daqrd1', 'daqrd2', 'daqrd3', 'daqrd4', 'mvrd1']
+    rdr_list = [ 'daqrdr0', 'daqrdr1', 'daqrdr2', 'daqrdr3', 'daqrdr4', 'muon_veto']
 
     while(1):
 
@@ -34,7 +34,7 @@ def inject_rc_doc():
             "network": True,
             "currentRun": run_name,
             "startedBy": "coderre",
-            "startTime": starttime,
+            "startTime": str(starttime),
             "numSlaves": 5,
         }
 
@@ -46,7 +46,7 @@ def inject_rc_doc():
             "network": True,
             "currentRun": mv_name,
             "startedBy": "coderre",
-            "startTime": starttime,
+            "startTime": str(starttime),
             "numSlaves": 1,
         }
 
