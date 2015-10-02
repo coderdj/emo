@@ -173,7 +173,7 @@ def stop_run(request):
     # Connect to pymongo                                                         
     client = MongoClient(settings.ONLINE_DB_ADDR,
                          settings.ONLINE_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
+    db = client[ settings.ONLINE_DB_NAME ]
     collection = db[ "daq_control" ]
     collection.insert_one(insert_doc)
     return HttpResponse({})
@@ -182,9 +182,9 @@ def stop_run(request):
 def GetDispatcherReply(request):
 
     # Connect to pymongo                                                            
-    client = MongoClient(settings.MONITOR_DB_ADDR,
-                         settings.MONITOR_DB_PORT)
-    db = client[ settings.MONITOR_DB_NAME ]
+    client = MongoClient(settings.ONLINE_DB_ADDR,
+                         settings.ONLINE_DB_PORT)
+    db = client[ settings.ONLINE_DB_NAME ]
     collection = db[ "dispatcherreply" ]    
     cursor = collection.find({}).sort("_id", 1)
     
@@ -236,9 +236,9 @@ def start_run(request):
             insert_doc[key] = rs_form.cleaned_data[key]
             
         # Connect to pymongo                                                        
-        client = MongoClient(settings.MONITOR_DB_ADDR,
-                             settings.MONITOR_DB_PORT)
-        db = client[ settings.MONITOR_DB_NAME ]
+        client = MongoClient(settings.ONLINE_DB_ADDR,
+                             settings.ONLINE_DB_PORT)
+        db = client[ settings.ONLINE_DB_NAME ]
         run_collection = db['run_modes']
 
         print(insert_doc)
