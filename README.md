@@ -17,3 +17,26 @@ Features:
 
 This project is developed by Daniel Coderre at the University of Bern
 The code is probably specific to our application but if you are interested in contributing or adapting parts of the code for your purposes please contact the dev(s).
+
+Install Ubuntu 14.04
+
+  - Get anaconda with: ``` wget https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda3-2.3.0-Linux-x86_64.sh```
+  - ```bash Anaconda3-2.3.0-Linux-x86_64.sh```
+  - Follow on-screen instructions, agree to annoying license.
+  - Either log out and back in or use executable in conda/bin directory to: ```conda create -n web python=3.4```
+  - Activate the environment: ```source activate web```
+  - Checkout the code: ```git clone https://{user}@github.com/coderdj/emo emo```
+  - Install hdf5 ```sudo apt-get install libhdf5-dev snappy libldap2-dev libsasl2-dev```
+  - Numba's installation is annoying (it's the whole reason we needed anaconda). Install it using ```conda install numba```. Cross your fingers. 
+  - Do the same for scipy: ```conda install scipy```
+  - Install remaining requirements: ```cd emo && pip install -r requirements.txt```
+  - Create a certificate file /usr/local/share/ca-certificates/lngs.crt and paste the certificate there.
+  - Run ```sudo update-ca-certificates```
+  
+You should now be able to run:
+  ```
+  python manage.py migrate
+  python runserver
+  ```
+  
+ Instructions for deployment coming soon.
