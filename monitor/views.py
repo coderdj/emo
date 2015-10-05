@@ -8,15 +8,18 @@ import pickle
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.embed import components
+from bokeh.models import ColumnDataSource
 import mpld3
 import numpy as np
 from bokeh.models import Range1d
 from bokeh.io import hplot, vplot, gridplot
+from bokeh._legacy_charts import HeatMap
 import time
 import datetime
 from django.shortcuts import render
 from django.conf import settings
 from monitor.models import ScopeRequest
+from pandas import DataFrame
 import dateutil
 
 # These options will be set somewhere else later?
@@ -386,7 +389,7 @@ def get_runs_list(get_request):
         return []
 
     for run in cursor:
-        run_list.append(run.name)
+        run_list.append(run['name'])
 
     return run_list
 
@@ -406,19 +409,24 @@ def get_available_plots(request):
 
     # Build the run list based on info in request
     run_list = get_runs_list(request.GET)    
-    if run_list is None or run_list.length == 0:
+    if run_list is None or len(run_list) == 0:
         return 
     
     # Loop through collections in run list to build available plots
-    plot_names = []
+    plots = {}
     for run in run_list:
-        collection = db[run]
-        for doc in collection:
-            if doc.name not in plot_names:
-                plot_names.append(doc.name)
+        run_name = run + "_plots"
+        if run_name not in db.collection_names():
+            continue
+        collection = db[run_name]        
+        for doc in collection.find():
+            if doc['type'] not in plots:
+                plots[doc['type']] = []
+            if doc['name'] not in plots[doc['type']]:
+                plots[doc['type']].append(doc['name'])
 
-    return plot_names
-    
+                
+    return HttpResponse(dumps(plots), content_type="application/json")
 
 
 """
@@ -448,30 +456,72 @@ def make_2d_datasource():
 )
 """
 
+def combine_aggregates(master_doc, doc):
+    ''' 
+    combine an aggregate document by adding bins
+    '''
+    
+    if master_doc['type'] != doc['type']:
+        return master_doc
+
+    if master_doc['type'] == 'h1':
+        master_doc['data'] = np.add(master_doc['data'], doc['data'])
+    elif master_doc['type'] == 'h2':
+        for i in range(0, len(master_doc['data'])):
+            master_doc['data'][i] = np.add(master_doc['data'][i], doc['data'][i])
+    elif master_doc['type'] == 'scatter':
+        master_doc['data']['x'] = np.concatenate([master_doc['data']['x'], doc['data']['x']])
+        master_doc['data']['y'] = np.concatenate([master_doc['data']['y'], doc['data']['y']])
+
+    return master_doc
 
 @login_required
-def get_aggregate_plot(request):
+def get_plot(request):
 
     """
     Get an aggregate plot by name
     :param request: must be a GET request with 'name' set. Return nothing otherwise
     """
 
-    collection = db['monitor_histograms']
-
     if request.method != "GET" or 'name' not in request.GET.keys():
         return HttpResponse({}, content_type="application/json")
+        
+    plot_name = request.GET['name']
 
-    plot_doc = collection.find_one({"name": str(request.GET['name'])})
+    # Mongo Objects                                                                 
+    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    db = client[ settings.MONITOR_DB_NAME ]
+
+    # Build the run list based on info in request               
+    run_list = get_runs_list(request.GET)
+    if run_list is None or len(run_list) == 0:
+        return
+
+    # Loop through collections in run list to build available plots        
+    master_doc = None
+    for run in run_list:
+        run_name = run + "_plots"
+        if run_name not in db.collection_names():
+            continue
+        collection = db[run_name]
+        for doc in collection.find():            
+            if doc['name'] == plot_name:
+                if master_doc == None:
+                    plot_doc = doc
+                else:
+                    plot_doc = combine_aggregates(master_doc, doc)
+
+                    
     if plot_doc is None:
         return HttpResponse({}, content_type="application/json")
 
     # Now just a matter of reformatting
-    if plot_doc['type'] != 'h1': # and plot_doc['type'] != 'scatter':
+    if plot_doc['type'] != 'h1' and plot_doc['type'] != 'scatter' and plot_doc['type'] != 'h2':
         return HttpResponse({}, content_type="application/json")
 
     plot = figure(title=plot_doc['name'], background_fill="#FFFFFF",
-                  width=400, plot_height=400, logo=None, tools="save,box_zoom,reset")
+                  width=400, plot_height=400, logo=None, 
+                  tools="save,box_zoom,reset", webgl=True)
     plot.border_fill = "#EBEBEB"
 
     if plot_doc['type'] == 'h1':
@@ -489,12 +539,46 @@ def get_aggregate_plot(request):
         plot.yaxis.axis_label = 'counts'
     elif plot_doc['type'] == 'scatter':
         if not isinstance(plot_doc['data'], dict) and ['x', 'y'] not in plot_doc['data']['keys']:
-            return HttpResponse({}, content_type="application/json")
+            return HttpResponse({}, content_type="application/json")        
         plot.scatter(plot_doc['data']['x'], plot_doc['data']['y'], fill_alpha=0.6, line_color=None)
+    elif plot_doc['type'] == 'h2':
+        x_vals = []
+        y_vals = []
+        color = []
+        z_vals = []
+        max_list = []
+        for a in plot_doc['data']:
+            max_list.append(max(a))
+        max_value = int(max(max_list))
+        x_size = plot_doc['xaxis']['max'] - plot_doc['xaxis']['min'] / plot_doc['xaxis']['bins']
+        y_size = plot_doc['yaxis']['max'] - plot_doc['yaxis']['min'] / plot_doc['yaxis']['bins']
+        for row in range(0, len(plot_doc['data'])):
+            for item in range(0, len(plot_doc['data'][row])):
+                x_vals.append(row * x_size)
+                y_vals.append(item * y_size)
+                value = plot_doc['data'][row][item]
+                color.append("#%02x%02x%02x" % (255, 255 - int(value / max_value * 255.0), 255 - int(value / max_value * 255.0)))
+                z_vals.append(value)
+                              
+        source = ColumnDataSource(
+            data=dict(xvals=x_vals, 
+                      yvals=y_vals, 
+                      color=color, 
+                      z_value=z_vals))
+        plot.rect('xvals', 'yvals',1, 1, 
+                  source=source, color="color")
+        plot.x_range=Range1d(0, plot_doc['xaxis']['max'])
+        plot.y_range=Range1d(0, plot_doc['yaxis']['max'])
+        #x_range=weeks, y_range=list(reversed(days)),
+        #x_axis_location="above",
+        #     color="color", line_color=None,
+        #tools="resize,hover,previewsave", title="\"Party\" Disturbance Calls in LA",
+        #plot_width=900, plot_height=400, toolbar_location="left")
 
     script, div = components(plot, CDN)
-
+    
     ret = {"script": script, "div": div}
+    print(ret)
     return HttpResponse(dumps(ret), content_type="application/json")
 
 

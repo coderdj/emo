@@ -5,17 +5,14 @@ from django.contrib.auth.decorators import login_required
 from config.models import ModeSubmissionForm
 from django.shortcuts import render
 import datetime
+from django.conf import settings
 
-# These options will be set somewhere else later?
-online_db_name = "online"
-runs_db_collection = "run_modes"
-mongodb_address = "localhost"
-mongodb_port = 27017
+mode_db_collection = "run_modes"
 
 # Connect to pymongo
-client = MongoClient(mongodb_address, mongodb_port)
-db = client[online_db_name]
-collection = db[runs_db_collection]
+client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+db = client[settings.ONLINE_DB_NAME]
+collection = db[mode_db_collection]
 
 @login_required
 def delete_run_mode(request):
@@ -58,6 +55,7 @@ def fetch_mode_list(request):
 
     detectors = collection.distinct("detector")
     ret = {}
+    
     for det in detectors:
         modes = collection.find({"detector": det})
         ret[det] = modes.distinct("name")
@@ -76,9 +74,9 @@ def run_mode_config(request):
     :return: error in case object is not valid json (and form back!)
     """
     # Connect to pymongo
-    client = MongoClient(mongodb_address, mongodb_port)
-    db = client[online_db_name]
-    collection = db[runs_db_collection]
+    #client = MongoClient(mongodb_address, mongodb_port)
+    #db = client[online_db_name]
+    #collection = db[runs_db_collection]
 
     if request.method == "POST":
         print("HI")

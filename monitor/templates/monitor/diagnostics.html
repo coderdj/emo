@@ -3,20 +3,9 @@
 {% block head %}
 <style type="text/css">
 
-      .gridster li header {
-        background: #999;
-        display: block;
-        font-size: 20px;
-        line-height: normal;
-        padding: 4px 0 6px ;
-        margin-bottom: 20px;
-          overflow-y: auto;
-        cursor: move;
-      }
-        .gridster li {
-            background: #FFFFFF;
-        }
-
+.plot_link{
+ cursor: pointer;
+}
 </style>
 
     <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
@@ -116,13 +105,13 @@
 		       data-parent="#accordion" 
 		       href="#collapseOne" aria-expanded="true" 
 		       aria-controls="collapseOne">
-		      Energy Spectra
+		      1-D Histograms
 		    </a>
 		  </h4>
 		</div>
 		<div id="collapseOne" class="panel-collapse collapse in" 
 		     role="tabpanel" aria-labelledby="headingOne">
-		  <div class="panel-body">
+		  <div class="panel-body" id="h1">
 		    List spectra here
 		  </div>
 		</div>
@@ -135,14 +124,14 @@
 		    <a class="collapsed" role="button" data-toggle="collapse" 
 		       data-parent="#accordion" href="#collapseTwo" 
 		       aria-expanded="false" aria-controls="collapseTwo">
-		      DAQ Diagnostics
+		      2-D Histograms
 		    </a>
 		  </h4>
 		</div>
 		<div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" 
 		     aria-labelledby="headingTwo">
-		  <div class="panel-body">
-		    Trigger toss keep. DAQ timing. Etc
+		  <div class="panel-body" id="h2">
+		    
 		  </div>
 		</div>
 	      </div>
@@ -154,14 +143,14 @@
 		    <a class="collapsed" role="button" data-toggle="collapse" 
 		       data-parent="#accordion" href="#collapseThree" 
 		       aria-expanded="false" aria-controls="collapseThree">
-		      Data Quality
+		      Scatter Plots
 		    </a>
 		  </h4>
 		</div>
 		<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" 
 		     aria-labelledby="headingThree">
-		  <div class="panel-body">
-		    Long term spectra. Distributions. Etc.
+		  <div class="panel-body" id="scatter">
+		    
 		  </div>
 		</div>
 	      </div>
@@ -170,29 +159,95 @@
 	</div>
       </div>
     </div>
-      <div class="col-xs-9" id="grid">
+      <div class="col-xs-9" id="plot_div">
       </div>
       
 
 
 <script type="text/javascript">
   var run_mode_list_url = "/config/fetch_mode_list";
-  var aggregate_list_url = "/monitor/get_aggregate_list";
-  var aggregate_data_url = "/monitor/get_aggregate_plot/";
+  //var aggregate_list_url = "/monitor/get_aggregate_list";
+  //var aggregate_data_url = "/monitor/get_aggregate_plot/";
+  var aggregate_data_url = "/monitor/get_available_plots";
+  var plot_data_url="/monitor/get_plot";
+  var url_end = "";
 
-  function MakeGridTemplate(datadiv){
-        ret = "<div class='col-md-4 col-s-6 col-xs-12'>" + datadiv + "</div>";
-        return ret;
-    }
+  function DrawPlot(name){
+
+  //we needthe same filterthat there was,so keepurl_end
+  var url = plot_data_url + url_end;
+
+  //we needto add the actual name of the plot
+  url += "name=";
+  url += name;
+  url += ";";
+
+  //Now get the data from the server
+  $.getJSON(url, function(data){
+
+     console.log(data);
+     document.getElementById("plot_div").innerHTML = "";
+  $("#plot_div").append(data['div']);
+  $("#plot_div").append(data['script']);
+  for(var idex=0; idex<Bokeh.Collections('Plot').length;idex+=1){
+			 Bokeh.Collections('Plot').at(idex).set("plot_width", $("#plot_div").width());
+			 Bokeh.Collections('Plot').at(idex).set("plot_width", $("#plot_div").width());
+}
+
+  });
+
+  }
   
   $('#filter_form').submit(function(e){
      e.preventDefault();  
      document.getElementById("second_header").click();
      console.log(e);
 
+     // Get value of runs_sel radio
+     runs_sel = $('input[name="runs_sel"]:checked').val();
+     run_mode = $("#run_mode_tpc").val();
+
+     var start_date = null;
+     var end_date = null;
+
+     if(runs_sel == "range"){
+       start_date = $("#start_date").val();
+       end_date = $("#end_date").val();
+     }     
+     console.log(start_date);
+
      // Create a GET request with the data embedded
-     
-  
+     url_end = "";
+     if(runs_sel == "all")
+        url_end += "?selection=all;";
+     else if(runs_sel =="current")
+        url_end += "?selection=current;";
+     else {
+        url_end += "?selection=range;";
+        if(start_date != null)
+           url_end += "start_date=" + start_date;
+        if(end_date != null)
+           url_end += "end_date=" + end_date;
+     }
+     if(run_mode != "All")
+        url_end += "run_mode=" + run_mode;
+    
+     var total_url = aggregate_data_url + url_end;
+     $.getJSON(total_url,function(data){
+         console.log(data);
+         for (var key in data) {                        
+             if (data.hasOwnProperty(key)) {
+                var html_line = "<ul>";
+                for(var idex=0; idex<data[key].length; idex+=1){
+                    html_line += "<li><a class='plot_link' onclick='DrawPlot(" + '"' + 
+				data[key][idex] + '");' + "'>"+ data[key][idex] + 
+                                "</a></li>";
+                }
+                html_line += "</ul";
+                document.getElementById(key).innerHTML = html_line;
+             }
+         }
+     });
   });
 
       $(function(){
@@ -211,7 +266,7 @@
           }});
 
 	
-      $.getJSON(aggregate_list_url, function(plotdata){
+    /*$.getJSON(aggregate_list_url, function(plotdata){
 
          for(x=0; x<plotdata.length; x+=1){
 
@@ -229,6 +284,7 @@
 
               } // End for
           }); // End first getJSON
+*/
     });
 
     </script>

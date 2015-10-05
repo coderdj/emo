@@ -19,12 +19,14 @@
   <div class="col-sm-3 col-xs-12">
     <h3><strong>DAQ Control Panel</strong></h3>
   </div>
+  {% if request.user.is_superuser or request.user.profile.canstartruns %}
   <div class="col-sm-9 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
       <button data-toggle="modal" class="btn btn-success" href="#startRunModal">Start Run</button>
       <button class="btn btn-danger" data-toggle="modal" href="#runStopModal">Stop Run</button>
     </ul>
   </div>
+  {% endif %}
 </div><!-- end row -->
 <div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;max-height:30%;">
 </div>

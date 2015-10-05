@@ -87,17 +87,29 @@
 	      <div class="btn-group btn-group-xs" role="group" 
 		   aria-label="Event Control">
 		<button class="btn btn-info btn-sm"
-			onclick="update_data()">Newest</button>
+			onclick="update_data()" style="margin-right:3px">
+		  Newest</button>
+		<button class="btn btn-info btn-sm"
+			onclick="update_data()" 
+			style="margin-right:3px;margin-left:3px">Previous</button>
+		<button class="btn btn-info btn-sm"
+			onclick="update_data()" style="margin-left:3px;">
+		  Next</button>
+
 	      </div>
-	       <div class="btn-group btn-group-xs" role="group"
-                   aria-label="Event Control">
-              <button class="btn btn-info btn-sm"
-                      onclick="loadjson()">Load file</button>
-              <button class="btn btn-info btn-sm"
-                      onclick="savejson()">Save file</button>
 	    </div>
-	       </div>
-	  </div>
+	    <div>
+	      <div class="btn-group btn-group-xs" role="group"
+                   aria-label="Event Control">
+		<button class="btn btn-default btn-sm"
+			onclick="loadjson()" style="margin-right:3px;color:black;">
+		  Load from file</button>		
+		<button class="btn btn-default btn-sm"
+			onclick="savejson()" style="margin-left:3px;color:black;">
+		  Save to file</button>
+	      </div>
+	    </div>
+	  </div>	
 	  <div style="margin:3px;margin-top:5px;">
 	    <div>
 	      <div class="btn-group btn-group-xs" role="group" 
