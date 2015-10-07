@@ -33,8 +33,9 @@ background-color: #5992C2;
 }
 .emo-det-header {
 //background-color: #ADEDD4;
-background-color: #7876DC;
-border-color: #7876DC;
+#border-color: #7876DC;
+background-color: #5a54bd;
+border-color: #5a54bd;
 color: #EEEEEE;
 }
 .emo-det-row{

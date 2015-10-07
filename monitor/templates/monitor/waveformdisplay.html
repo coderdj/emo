@@ -33,10 +33,13 @@
     {%  endblock %}
 {% block content %}
     <div id="Loading" class="Loading">Loading Next Event</div>
-    <div class="row" style="margin:10px;min-height:300px;">
+    <p class="bg-info" style="width:100%;padding-left:20px">Note: this is XENON100 data. The hit display is scaled by a factor of ~2.4 to fit into the XENON1T TPC geometry.</p>
+    <p class="bg-info" style="width:100%;padding-left:20px">Hint: To begin choose a dataset and hit "Newest". We should have enough space to store 20-30 waveforms per dataset permanently.</p>
+
+    <div class="row" style="margin:10px;margin-bottom:0px;min-height:325px;">
       <div class="col-xs-9 col-sm-9 emobox_flat" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
 	<div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">	  
-	  <div class="panel panel-default" style="height:100%;margin:0;">
+	  <div class="panel panel-default" style="height:100%;margin:0;min-height:325px;">
 	    <div class="panel-heading">
               <h4 style="margin:0">Peak: <span id="peak_id"></span></h4>
             </div>
@@ -67,38 +70,41 @@
 	    </div>
 	  </div>
 	</div>	
-	<div class="col-xs-5" id="peak_hitpattern" style="margin:0;padding:0;height:100%;min-height:300px;"></div>
-	<div class="col-xs-5" id="peak_zoom" style="min-height:300px;height:100%;padding:0px;"></div>
+	<div class="col-xs-5" id="peak_hitpattern" style="margin:0;padding:0;height:100%;min-height:325px;"></div>
+	<div class="col-xs-5" id="peak_zoom" style="min-height:325px;height:100%;padding:0px;"></div>
       </div>
       <div class="col-xs-3 col-sm-3">
 	<div class="panel panel-default">
 	  <div class="panel-heading">
 	    <h4 style="margin:0">Info/Control</h4>
 	  </div>
-	  <div class="row" style="margin-top:3px;">
+	  <div class="row" style="margin-top:3px;padding-left:10px;">
             <div class="col-xs-3"><strong>Run:</strong></div>
             <div class="col-xs-9">
               <select id="run_picker" name="run_picker" width="150" 
 		      style="width:150px"></select>
             </div>
           </div>
-	  <div style="margin:3px;margin-top:5px;">
-	    <div>
+	  <div class="row" style="margin-top:3px;padding-left:10px;">
+	    <div class="col-xs-3"><strong>Event:</strong></div>
+	    <div class="col-xs-9">
 	      <div class="btn-group btn-group-xs" role="group" 
 		   aria-label="Event Control">
 		<button class="btn btn-info btn-sm"
-			onclick="update_data()" style="margin-right:3px">
+			onclick="update_data_newest()" style="margin-right:3px">
 		  Newest</button>
 		<button class="btn btn-info btn-sm"
-			onclick="update_data()" 
+			onclick="update_data_prev()" 
 			style="margin-right:3px;margin-left:3px">Previous</button>
 		<button class="btn btn-info btn-sm"
-			onclick="update_data()" style="margin-left:3px;">
+			onclick="update_data_next()" style="margin-left:3px;">
 		  Next</button>
 
 	      </div>
 	    </div>
-	    <div>
+	  </div>
+	  <div class="row" style="margin-top:3px;padding-left:10px;">
+	    <div class="col-xs-12">
 	      <div class="btn-group btn-group-xs" role="group"
                    aria-label="Event Control">
 		<button class="btn btn-default btn-sm"
@@ -109,7 +115,8 @@
 		  Save to file</button>
 	      </div>
 	    </div>
-	  </div>	
+	  </div>
+		
 	  <div style="margin:3px;margin-top:5px;">
 	    <div>
 	      <div class="btn-group btn-group-xs" role="group" 
@@ -155,7 +162,7 @@
 	</div>
       </div>
     </div>
-    <div class="col-xs-12 container" style="margin-top:10px;width:100%;">
+    <div class="col-xs-12 container" style="width:100%;">
     <div class="col-xs-12 emobox_flat" id="full_waveform" style="padding-left:5px;padding-right:5px;"></div>
 
 
@@ -166,9 +173,10 @@
   var ns2 = 0;
   var disp_type='s2';
   var peaks = null;
+  var event_number = -1;
   //var event_data = null;
   var scene= null;
-;
+  var suspend_animations = false;
   var camera =null;
   var renderer = null;
   var hits = [];
@@ -286,10 +294,12 @@
     var data_url = "/monitor/get_event_for_display";  
     var run_list_url = "get_waveform_run_list";
     function animate(){
+      if(!suspend_animations){
       requestAnimationFrame(animate);
 
       renderer.render(scene,camera);
       controls.update();
+      }
 //	var pos = "X: " + camera.position.x + " y: " + camera.position.y + " z: " + camera.position.z;
 //				      console.log(pos);
     }
@@ -311,6 +321,7 @@
 
      //   update_data();
      $("#loading").show();
+     suspend_animations = true;
 	console.log(document.getElementById("peak_hitpattern").offsetWidth);
         var div = "peak_hitpattern";
 	var VIEW_ANGLE = 80;
@@ -332,6 +343,7 @@
                                                             renderer.domElement);
                                controls.target = (new THREE.Vector3(0, 500, 0));
                                $("#loading").hide();
+                               suspend_animations = false;
                                animate();
                                console.log("done");
                                
@@ -340,6 +352,8 @@
 
     function update_data(){
          var the_url = data_url + "/?run=" + $("#run_picker").val();
+         the_url += ";event=";
+         the_url += event_number.toString();
          document.getElementById("Loading").style.display = 'block';
 
          $.getJSON(the_url, function(data){
@@ -347,7 +361,21 @@
                 document.getElementById("Loading").style.display = 'none';
 			      });
              currentdata=data;
+             console.log(currentdata);
+             event_number = data['event_number'];
           });
+    }
+    function update_data_newest(){
+         event_number = 0;
+         update_data();
+    }
+    function update_data_next(){
+         event_number += 1;
+         update_data();
+    }
+    function update_data_prev(){
+         event_number -= 1;
+         update_data();
     }
     function draw_waveform_local(data, callback){
        s1_index = -1;

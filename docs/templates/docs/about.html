@@ -5,35 +5,37 @@
 <br>
 <p>
 This site was built as a hobby in order to learn web development. It is not required to run the DAQ (you can use some
-    command line stuff running in a detached screen) but it is certainly the nicest way. It would be impossible to code
-    such a portal in odd hours on nights and weekends if it weren't for the great amount of well-documented, open-source,
-    industry-grade software packages simply available for free. Here are a few.
-    <ul>
-    <li>The <a href="https://www.djangoproject.com/">Django Project.</a> Django is an immensely popular open-source web
-        framework and it runs the backend of this site. Django interfaces with several popular relational databases and
-        provides an insanely easy way to power your pages with python functions and pass the data to the frontend. In
-        this case we're using Django with the SQL-lite backend. This database stores all the Django-internal models (forms,
+command line stuff running in a detached screen) but it is certainly the nicest way. It would be impossible to code
+such a portal in odd hours on nights, weekends, and airports if it weren't for the great amount of well-documented, open-source,
+industry-grade software packages simply available for free. Here are a few.
+<ul>
+    <li>The <a href="https://www.djangoproject.com/">Django Project.</a> Django is a popular open-source web
+        framework and it runs the backend of this site. Django interfaces by default with several relational databases and
+        provides an easy way to power your pages with python functions and pass the data to the frontend. Support for non-relational
+        databases is provided using various extension. In
+        this site we're using Django with the SQL-lite backend. This database stores all the Django-internal models (forms,
         extended user models, etc.) while the actual data crunching is left to pymongo.
     </li>
     <li><a href="http://www.mongodb.org">MongoDB</a>, specifically pymongo. MongoDB is used everywhere throughout the DAQ
-        system for its extremely fast speeds and for its multi-lingual (and almost insultingly simple) API. All communication with the DAQ is
-        done through reads and writes to a MongoDB database. The fact that the DAQ data is stored in a MongoDB buffer means
+        system for its extremely fast speeds and for its multi-lingual (and super simple) API. All communication with the DAQ is
+        done through reads and writes to MongoDB collections. The fact that the DAQ data is stored in a MongoDB buffer means
         you can look at live data online. Want to look at pulses in a single channel as they are created? No problem. Want
         to browse waveforms that were created by interactions in the detector one second ago? Piece of cake. Want to analyze
-        a subset of your data and plot some diagnostics to make sure the quality is good? Super easy.
+        a subset of your data and plot some diagnostics to make sure the quality is good? Super easy. 
     </li>
-    <li>Various styling packages were used to do things for us so we could focus on functionality. There are not many things
-        worse than fighting with css stylings until you have things just right, but luckily a lot of people have already
-        done that fighting and shared the fruits of their labors. The main style of the site is powered by Twitter's
+    <li>Various web packages were used to do things for us so we could focus on functionality. The main style of the site is powered by Twitter's
         <a href="http://getbootstrap.com/">Bootstrap</a>.
         Backend to frontend communication, as well as other high-level Javascript functionality is made easy with
         <a href="https://jquery.com/">Jquery</a>. Other smaller packages helped a lot including <a href="http://devoops.me/">devoops</a>,
-        <a href="http://summernote.org/#/">summernote</a>, <a href="http://www.highcharts.com/">Highcharts</a>,
-        <a href="http://dygraphs.com/">Dygraphs</a>, and <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>.
-        The cool, 3D, OpelGL stuff is made crazy easy with <a href="http://threejs.org/">Three.js</a>.
+        <a href="http://summernote.org/">summernote</a>, <a href="http://www.highcharts.com/">Highcharts</a>,
+        <a href="http://dygraphs.com/">Dygraphs</a>, <a href="http://bokeh.pydata.org">bokeh</a>, <a href="http://plot.ly">plotly</a>, 
+        and <a href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a>. We also use <a href="https://www.datatables.net/">datatables</a> 
+	for our neat runs and log tables. There is also various Google software included, such as prettify for code markup, and several other 
+	small packages.
+        The cool OpelGL stuff is pretty easy with <a href="http://threejs.org/">Three.js</a>.
 
-        And of course a few development tools like <a href="https://www.jetbrains.com/pycharm/">PyCharm</a> (we would have
-        never kept to PEP8 without it) and <a href="https://www.github.com">GitHub</a> make life just so much easier.
+        And of course a few development tools like <a href="https://www.jetbrains.com/pycharm/">PyCharm</a> and 
+	<a href="https://www.github.com">GitHub</a> make life just so much easier.
     </li>
 </ul>
 </p>
@@ -41,9 +43,40 @@ This site was built as a hobby in order to learn web development. It is not requ
 <h3>Contributing</h3>
 <br>
 <p>
-Do you have a great idea for something to add to this site? Want to check out how modern web development looks?
-    Maybe you want to press a button and watch the final WIMP spectrum live-update (it's not impossible ;).
-    Pull the code, write your view, and make a pull request. We'd be happy to help you get started.
+Do you have a great idea for something to add to this site? Want to use it for your own project? Feel free to get in touch via <a href="http://www.github.com/coderdj/emo">GitHub</a>!
+</p>
+<br>
+<h3>License/Usage</h3>
+<br>
+<p>
+This project is a combination of many free, open-source packages. Therefore this codebase is also open source and is covered by the GPLv3 License except where precluded by the licenses and right of authors of included packages. 
+<br>
+<textarea style="height:300px;width:600px;margin-top:30px;">
+
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+    emo Experimental Monitor. A web monitor and DAQ control for physics experiments, 
+    custom tailored to the XENON1T dark matter search. Can be applied to other setups
+    with some modifications.
+
+    Copyright (C) 2015 Daniel Coderre
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Project github: http://www.github.com/coderdj/emo
+</textarea>
 </p>
 
 {% endblock %}

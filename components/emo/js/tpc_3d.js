@@ -381,7 +381,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     var iPositionTopArray = 1050;
     var iPositionBottomArray = -150;
     var iPmtHeightCorrection = 100;
-    var iPmtSpeedFactor = 5;
+    var iPmtSpeedFactor = 15;
 
     // Clear hits array first
     for ( x=0; x<hits.length; x++ ){	
@@ -400,12 +400,14 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     console.log(peaks);
     console.log(data);
     // Loop through hits and define 'pmt' size and color
-    for(x=0;x<data['peaks'][peaks[index]]['hits'].length;x++){
-
+//    for(x=0;x<data['peaks'][peaks[index]]['hits'].length;x++){
+    for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1){
 	// This makes a RELATIVE amplitude (height of pmt
 	// is only determined by other hits in S2)
-	amp = data['peaks'][peaks[index]]['hits'][x]['area']/data['peaks'][peaks[index]]['area'];
-	channel = parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
+//	amp = data['peaks'][peaks[index]]['hits'][x]['area']/data['peaks'][peaks[index]]['area'];
+	amp = data['peaks'][peaks[index]]['area_per_channel'][x] / 
+	    data['peaks'][peaks[index]]['area'];
+	channel = x;//parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
         amp*=20;
     //console.log(x.toLocaleString() + amp.toString());
 	//if( amp == 0. ) amp = 0.01;
@@ -413,7 +415,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 	var hit = new THREE.Mesh(new THREE.CylinderGeometry(35,35,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
     //console.log("amp");
-    //    console.log(amp);
+	//console.log(amp);
 	// The color will be determined such that the largest hit is 
 	// at the 'top' of the pallete and the smallest should be at the bottom
 	colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
@@ -447,15 +449,10 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     } //end loop through hits
 
     // If you want all PMTs represented
-    for( x=0; x< 243; x++){
-       var haspmt = false;
-        for(y=0;y<data['peaks'][peaks[index]]['hits'].length;y++){
-            if(data['peaks'][peaks[index]]['hits'][y]['channel']== x.toString()) {
-                haspmt = true;
-                break;
-            }
-        }
-        if(haspmt) continue;
+    /*for( x=0; x< data['peaks'][peaks[index]]['area_per_channel'].length; x++){
+	if(x>242) continue;
+	if(data['peaks'][peaks[index]]['area_per_channel'][x]!=0.)
+	    continue;
         //console.log(x);
         var hit = new THREE.Mesh(new THREE.CylinderGeometry(35,35,0),
 				 new THREE.MeshLambertMaterial({color:0xffff00}));
@@ -478,11 +475,11 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 	        hit.position.y = iPositionBottomArray;
 
 	    hits.push( hit );
-	    cylinder_heights.push( iPmtHeightCorrection *.0003 );
+	    cylinder_heights.push( iPmtHeightCorrection *.0001 );
 
 	    scene.add( hit );
     }
-
+    */
     // Now to actually animate the thing
     var currentLen = 0;
 

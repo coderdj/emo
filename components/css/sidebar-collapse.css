@@ -106,35 +106,47 @@
 /* Link Colors */
 
 .sidebar-links div.link-blue > a {
-	border-color: #487db2;
+//	border-color: #487db2;
+        border-color: #155088;
 }
 
 .sidebar-links div.link-blue > a i.fa {
-	color: #487db2;
+//	color: #487db2;
+color: #155088;
 }
 
 .sidebar-links div.link-red > a {
-	border-color: #da4545;
+//	border-color: #da4545;
+	border-color: #4fa783;
+		
 }
 
 .sidebar-links div.link-red > a i.fa {
-	color: #da4545;
+//	color: #da4545;
+color: #4fa783;
+
 }
 
 .sidebar-links div.link-yellow > a {
-	border-color: #d0d237;
+//	border-color: #d0d237;
+        border-color: #5a54bd;
+
 }
 
 .sidebar-links div.link-yellow > a i.fa {
-	color: #d0d237;
+//	color: #d0d237;
+color: #5a54bd;
 }
 
 .sidebar-links div.link-green > a {
-	border-color: #86be2e;
+//	border-color: #86be2e;
+border-color: #a642b4;
+
 }
 
 .sidebar-links div.link-green > a i.fa {
-	color: #86be2e;
+//	color: #86be2e;
+color: #a642b4;
 }
 
 /* Making the sidebar responsive */

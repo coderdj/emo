@@ -8,160 +8,190 @@
 }
 </style>
 
-    <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
-<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/>
+<!--    <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/> -->
+<script src="{% static "plotly/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "plotly_20150819a_basic/plotly.min.js" %}"></script>
 
 
 {% endblock %}
 {% block content %}
+<p class="bg-info" style="width:100%;padding-left:20px">Hint: Filtering has been disabled since there's only 1 run in the DB as an example. Also only a few plots are available as tests. Histograms and scatter plots should be implemented in the pax online_monitor branch and, if configured correctly, they should be automatically displayed here. </p>
 
-    <div class="col-xs-3" style="padding-top:5px;">
-      <div class="panel-group" id="accordion_toplevel" role="tablist"
-           aria-multiselectable="false">
-	<div class="panel panel-default">	 
-	  <div class="panel-heading" style="background-color:#5992c2;color:#FFFFFF">
-            <h4 style="margin:0">
-	      <a role="button" data-toggle="collapse" 
-		 data-parent="#accordion_toplevel"
-                 href="#collapseDataChooser" aria-expanded="true"
-                 aria-controls="collapseDataChooser" style="color:white">
-		Step 1: Choose your data
-	      </a>
-	    </h4>
-	  </div>
-	  <div id="collapseDataChooser" class="panel-collapse collapse in"
-               role="tabpanel" aria-labelledby="headingDataChooser">
-	    <form method="POST" action="" id="filter_form">
-              {% csrf_token %}
-	      
-	      <span class="list-group-item" style="border:0">
-		<strong>Data range </strong>
-		<span><br>
-		  <input type="radio" name="runs_sel"  value="all" 
-			 checked="checked" /> 
-		  All runs </span>	    
-		<span><br>	    
-		  <input type="radio" name="runs_sel"  
-			 value="current" /> Current run </span>
-		<br>
-		<span>
-		<input type="radio" name="runs_sel"  value="range" /> Date range
-		</span>	  
-		<br>
-		<div class="row">
-		  <div class="col-xs-2 col-xs-offset-1">From </div>
-		  <div class="col-xs-8">
-		    <input type="date" name="start_date">
-		  </div>
-		</div>
-		<div class="row">
-		  <div class="col-xs-2 col-xs-offset-1">To </div>
-		  <div class="col-xs-8">
-		    <input type="date" name="end_date">
-		</div>
-		</div>
-		
-              </span>
-	      <span class="list-group-item" style="border:0">
-		<div class="row">
-		  <div class="col-xs-3"><strong>Mode:</strong></div>
-		  <div class="col-xs-9">
-		    <select id="run_mode_tpc" name="run_mode_tpc"></select>
-		</div>
-		</div>
-		
-	      </span>
-	      <div class="col-xs-12">
-		<button type="submit" 
-			class="btn btn-success pull-right">Process</button>
-	      </div>
-	    </form>
-	  </div>
+<div class="col-xs-3" style="padding-top:5px;">
+  <div class="panel-group" id="accordion_toplevel" role="tablist"
+       aria-multiselectable="false">
+    <div class="panel panel-default">	 
+      <div class="panel-heading" style="background-color:#5992c2;color:#FFFFFF">
+        <h4 style="margin:0">
+	  <a role="button" data-toggle="collapse" 
+	     data-parent="#accordion_toplevel"
+             href="#collapseDataChooser" aria-expanded="true"
+             aria-controls="collapseDataChooser" style="color:white">
+	    Step 1: Choose your data
+	  </a>
+	</h4>
+      </div>
+      <div id="collapseDataChooser" class="panel-collapse collapse in"
+           role="tabpanel" aria-labelledby="headingDataChooser">
+	<form method="POST" action="" id="filter_form">
+          {% csrf_token %}
 	  
-	  <div class="panel panel-default">				  
-	    <div class="panel-heading" 
-		 style="background-color:#5992c2;color:#FFFFFF">	      
-              <h4 style="margin:0">
-		<a role="button" data-toggle="collapse" 
-		   data-parent="#accordion_toplevel"
-		   href="#collapseSpectrumChooser" aria-expanded="true"
-		   aria-controls="collapseSpectrumChooser" style="color:white"
-		   id="second_header">
-		  Step 2: Choose your spectrum
-		</a>
-	      </h4>	     
-            </div>	  
+	  <span class="list-group-item" style="border:0">
+	    <strong>Data range </strong>
+	    <span><br>
+	      <input type="radio" name="runs_sel"  value="all" 
+		     checked="checked" /> 
+	      All runs </span>	    
+	    <span><br>	    
+	      <input type="radio" name="runs_sel"  
+		     value="current" /> Current run </span>
+	    <br>
+	    <span>
+	      <input type="radio" name="runs_sel"  value="range" /> Date range
+	    </span>	  
+	    <br>
+	    <div class="row">
+	      <div class="col-xs-2 col-xs-offset-1">From </div>
+	      <div class="col-xs-8">
+		<input type="date" name="start_date">
+	      </div>
+	    </div>
+	    <div class="row">
+	      <div class="col-xs-2 col-xs-offset-1">To </div>
+	      <div class="col-xs-8">
+		<input type="date" name="end_date">
+	      </div>
+	    </div>
+	    
+          </span>
+	  <span class="list-group-item" style="border:0">
+	    <div class="row">
+	      <div class="col-xs-3"><strong>Mode:</strong></div>
+	      <div class="col-xs-9">
+		<select id="run_mode_tpc" name="run_mode_tpc"></select>
+	      </div>
+	    </div>
+	    
+	  </span>
+	  <div class="col-xs-12">
+	    <button type="submit" 
+		    class="btn btn-success pull-right">Process</button>
 	  </div>
-	  <div id="collapseSpectrumChooser" class="panel-collapse collapse"
-               role="tabpanel" aria-labelledby="headingSpectrumChooser">
-	    <div class="panel-group" id="accordion" role="tablist" 
-		 aria-multiselectable="true">
-	      <div class="panel panel-default">
-		<div class="panel-heading" 
-		     style="background-color:#4fa783;color:#FFFFFF;"
-		     role="tab" id="headingOne">
-		  <h4 class="panel-title">
-		    <a role="button" data-toggle="collapse" 
-		       data-parent="#accordion" 
-		       href="#collapseOne" aria-expanded="true" 
-		       aria-controls="collapseOne">
-		      1-D Histograms
-		    </a>
-		  </h4>
-		</div>
-		<div id="collapseOne" class="panel-collapse collapse in" 
-		     role="tabpanel" aria-labelledby="headingOne">
-		  <div class="panel-body" id="h1">
-		    List spectra here
-		  </div>
-		</div>
+	</form>
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-heading" 
+	     style="background-color:#5992c2;color:#FFFFFF">	      
+          <h4 style="margin:0">
+	    <a role="button" data-toggle="collapse" 
+	       data-parent="#accordion_toplevel"
+	       href="#collapseSpectrumChooser" aria-expanded="true"
+	       aria-controls="collapseSpectrumChooser" style="color:white"
+	       id="second_header">
+	      Step 2: Choose your spectrum
+	    </a>
+	  </h4>	     
+        </div>	  
+      </div>
+      <div id="collapseSpectrumChooser" class="panel-collapse collapse"
+           role="tabpanel" aria-labelledby="headingSpectrumChooser">
+	<div class="panel-group" id="accordion" role="tablist" 
+	     aria-multiselectable="true" style="margin-bottom:0">
+	  <div class="panel panel-default" style="margin:0">
+	    <div class="panel-heading" 
+		 style="background-color:#4fa783;color:#FFFFFF;"
+		 role="tab" id="headingOne">
+	      <h4 class="panel-title">
+		<a role="button" data-toggle="collapse" 		   
+		   href="#collapseOne" aria-expanded="true" 
+		   aria-controls="collapseOne">
+		  1-D Histograms
+		</a>
+	      </h4>
+	    </div>
+	    <div id="collapseOne" class="panel-collapse collapse in" 
+		 role="tabpanel" aria-labelledby="headingOne">
+	      <div class="panel-body" id="h1">
+		List spectra here
 	      </div>
-	      <div class="panel panel-default">
-		<div class="panel-heading" 
-		     style="background-color:#4fa783;color:#FFFFFF;"
-		     role="tab" id="headingTwo">
-		  <h4 class="panel-title">
-		    <a class="collapsed" role="button" data-toggle="collapse" 
-		       data-parent="#accordion" href="#collapseTwo" 
-		       aria-expanded="false" aria-controls="collapseTwo">
-		      2-D Histograms
-		    </a>
-		  </h4>
-		</div>
-		<div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" 
-		     aria-labelledby="headingTwo">
-		  <div class="panel-body" id="h2">
-		    
-		  </div>
-		</div>
+	    </div>
+	  </div>
+	  <div class="panel panel-default" style="margin:0">
+	    <div class="panel-heading" 
+		 style="background-color:#4fa783;color:#FFFFFF;"
+		 role="tab" id="headingTwo">
+	      <h4 class="panel-title">
+		<a role="button" data-toggle="collapse" 
+		    href="#collapseTwo" 
+		   aria-expanded="true" aria-controls="collapseTwo">
+		  2-D Histograms
+		</a>
+	      </h4>
+	    </div>
+	    <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" 
+		 aria-labelledby="headingTwo">
+	      <div class="panel-body" id="h2">
+		
 	      </div>
-	      <div class="panel panel-default">
-		<div class="panel-heading" 
-		     style="background-color:#4fa783;color:#FFFFFF;"
-		     role="tab" id="headingThree">
-		  <h4 class="panel-title">
-		    <a class="collapsed" role="button" data-toggle="collapse" 
-		       data-parent="#accordion" href="#collapseThree" 
-		       aria-expanded="false" aria-controls="collapseThree">
-		      Scatter Plots
-		    </a>
-		  </h4>
-		</div>
-		<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" 
-		     aria-labelledby="headingThree">
-		  <div class="panel-body" id="scatter">
-		    
-		  </div>
-		</div>
+	    </div>
+	  </div>
+	  <div class="panel panel-default" style="margin:0">
+	    <div class="panel-heading" 
+		 style="background-color:#4fa783;color:#FFFFFF;"
+		 role="tab" id="headingThree">
+	      <h4 class="panel-title">
+		<a role="button" data-toggle="collapse" 
+		   href="#collapseThree" 
+		   aria-expanded="true" aria-controls="collapseThree">
+		  Scatter Plots
+		</a>
+	      </h4>
+	    </div>
+	    <div id="collapseThree" class="panel-collapse collapse in" role="tabpanel" 
+		 aria-labelledby="headingThree">
+	      <div class="panel-body" id="scatter">
+		
 	      </div>
 	    </div>
 	  </div>
 	</div>
       </div>
     </div>
-      <div class="col-xs-9" id="plot_div">
+  </div>
+  <div class="panel panel-default">
+      <div class="panel-heading" style="color:#666666"><!-- style="background-color:#5992c2;font-color:#888888">-->
+        <h4 style="margin:0">
+          <a role="button" data-toggle="collapse"
+             data-parent="#accordion_toplevel"
+             href="#runs-div" aria-expanded="true"
+             aria-controls="runs-div" style="color:#444444">
+            Included Runs
+          </a>
+        </h4>
       </div>
-      
+      <div class="panel-body" id="runs_div">                
+      </div>
+  </div>
+</div>
+<div class="col-xs-9">
+  <div id="plot_div"></div>
+  <br>
+  <div class="panel panel-default">
+      <div class="panel-heading" style="color:#666666"><!-- style="background-color:#5992c2;font-color:#888888">-->
+        <h4 style="margin:0">
+          <a role="button" data-toggle="collapse"             
+             href="#description-div" aria-expanded="true"
+             aria-controls="description-div" style="color:#444444">
+            About this plot
+          </a>
+        </h4>
+      </div>
+      <div class="panel-body" id="description_div">
+      </div>
+  </div>
+</div>
+
 
 
 <script type="text/javascript">
@@ -171,6 +201,113 @@
   var aggregate_data_url = "/monitor/get_available_plots";
   var plot_data_url="/monitor/get_plot";
   var url_end = "";
+
+
+function Make1DHistogram(doc, div){
+  // Put data in plotly form
+  
+  var x_bin = (doc['xaxis']['max']-doc['xaxis']['min']) / doc['xaxis']['bins'];
+  var x_values = [];
+  for(i=doc['xaxis']['min']; i<=doc['xaxis']['max']; i+=x_bin)
+        x_values.push(i);
+  var data = [
+  {
+    y: doc['data'],
+    x: x_values,
+    type: 'bar',
+    xbins:{
+       start: doc['xaxis']['min'],
+       end: doc['xaxis']['max'],
+       size: x_bin
+    },
+    marker: {
+      color: 'rgba(55,128,191,0.7)',
+      line: {
+        color: 'rgba(55,128,191,1.0)',
+        width: 2
+      }
+    }
+  }
+  ];
+  var layout = {
+  title: doc['name'],
+  xaxis: {
+    title: doc['xaxis']['label']
+  }, 
+  yaxis: {
+    title: "Counts",
+  },
+  bargap :0.0,
+  }
+  console.log(data);
+  console.log(layout);
+Plotly.newPlot(div, data, layout, {'showLink':false, 'displaylogo':false});
+}
+function Make2DHistogram(doc, div){
+
+     // Reformat data for plotly
+     var x_values = [];
+     var y_values = [];
+     var x_bin = (doc['xaxis']['max']-doc['xaxis']['min']) / doc['xaxis']['bins'];
+     var y_bin = (doc['yaxis']['max']-doc['yaxis']['min'])/doc['yaxis']['bins'];
+     for(i=doc['xaxis']['min']; i<=doc['xaxis']['max']; i+=x_bin)
+        x_values.push(i);
+     for(i=doc['yaxis']['min']; i<=doc['yaxis']['max'];i+=y_bin)	  
+	y_values.push(i);
+
+     var data = [
+         { 'z': doc['data'],
+           'x': x_values,
+           'y': y_values,
+           'type':'heatmap',
+	   'colorscale': [["0", "rgb(255,255,255"], ["0.0000000001", "rgb(12,51,131)"], ["0.25", "rgb(10,136,186)"], ["0.5", "rgb(242,211,56)"], ["0.75", "rgb(242,143,56)"], ["1", "rgb(217,30,30)"]], 
+}];
+  var layout = {
+  title: doc['name'],
+  annotations: [],
+  xaxis: {
+    ticks: '',
+    title: doc['xaxis']['label']
+  },
+  yaxis: {
+    ticks: '',
+    ticksuffix: ' ',
+    title: doc['yaxis']['label']
+  }
+};
+console.log(data);
+Plotly.newPlot(div, data, layout, {'showLink':false, 'displaylogo':false});
+}
+function MakeScatterPlot(doc, div){
+	var data=[{
+		x: doc['data']['x'],
+	        y: doc['data']['y'],
+                type: 'scatter',
+                mode: 'markers'
+        }];
+        var layout = {
+                title: doc['name'],
+                xaxis: {
+                  title: doc['xaxis']['label'],
+                },
+                yaxis: {
+                  title: doc['yaxis']['label'],
+                }
+         };
+Plotly.newPlot(div, data, layout, {'showLink':false, 'displaylogo':false});
+}
+function FillRunsList(run_data, div){
+
+   document.getElementById(div).innerHTML = "";
+   html_string = "<ul>";
+   for(x=0;x<run_data.length;x+=1){
+	 html_string += "<li style='font-size:10pt'>";
+         html_string += run_data[x];
+         html_string += "</li>";
+   } 
+   html_string += "</ul>";                                                
+   document.getElementById(div).innerHTML =html_string;
+}
 
   function DrawPlot(name){
 
@@ -186,13 +323,23 @@
   $.getJSON(url, function(data){
 
      console.log(data);
-     document.getElementById("plot_div").innerHTML = "";
+     if(data['plot']['type'] == 'h1'){
+	Make1DHistogram(data['plot'], 'plot_div');
+     }
+     else if(data['plot']['type'] == 'h2'){
+	Make2DHistogram(data['plot'], 'plot_div');
+     }
+     else if(data['plot']['type'] == 'scatter'){
+	MakeScatterPlot(data['plot'], 'plot_div');
+     }
+     FillRunsList(data['runs'], 'runs_div');
+  /*document.getElementById("plot_div").innerHTML = "";
   $("#plot_div").append(data['div']);
   $("#plot_div").append(data['script']);
   for(var idex=0; idex<Bokeh.Collections('Plot').length;idex+=1){
 			 Bokeh.Collections('Plot').at(idex).set("plot_width", $("#plot_div").width());
 			 Bokeh.Collections('Plot').at(idex).set("plot_width", $("#plot_div").width());
-}
+			 }*/
 
   });
 
@@ -234,12 +381,13 @@
     
      var total_url = aggregate_data_url + url_end;
      $.getJSON(total_url,function(data){
+	console.log(data);
          console.log(data);
          for (var key in data) {                        
              if (data.hasOwnProperty(key)) {
                 var html_line = "<ul>";
                 for(var idex=0; idex<data[key].length; idex+=1){
-                    html_line += "<li><a class='plot_link' onclick='DrawPlot(" + '"' + 
+                    html_line += "<li style='font-size:10pt'><a class='plot_link' onclick='DrawPlot(" + '"' + 
 				data[key][idex] + '");' + "'>"+ data[key][idex] + 
                                 "</a></li>";
                 }
@@ -247,6 +395,7 @@
                 document.getElementById(key).innerHTML = html_line;
              }
          }
+
      });
   });
 

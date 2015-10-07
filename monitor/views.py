@@ -20,6 +20,7 @@ from django.shortcuts import render
 from django.conf import settings
 from monitor.models import ScopeRequest
 from pandas import DataFrame
+from bokeh.properties import value
 import dateutil
 
 # These options will be set somewhere else later?
@@ -58,12 +59,21 @@ def get_event_as_json(request):
             if collection[-7:] == "_events" and db[collection].count() != 0:
                 run = collection
                 break
-    
-    # Get the doc. If there is no doc return an empty dict
+
     collection = db[run]
+
+    event_number = 0
+    if request.method == "GET" and "event" in request.GET:
+        event_number = request.GET['event']
+    if event_number < 0:
+        event_number = collection.count() -1
+    if event_number >= collection.count():
+        event_number = 0
+
+    # Get the doc. If there is no doc return an empty dict
     try:
-        docs = collection.find().sort("_id", -1)[:1]
-        doc=docs[0]
+        docs = collection.find().sort("_id", -1)
+        doc=docs[event_number]
     except:
         print("Error finding event")
         return HttpResponse({}, content_type="application/json")
@@ -75,7 +85,7 @@ def get_event_as_json(request):
     ret_doc['event_number'] = doc['event_number']
     ret_doc['dataset_name'] = doc['dataset_name']
     ret_doc['start_time'] = doc['start_time']
-
+    ret_doc['event_number'] = event_number
     return HttpResponse(json_util.dumps(ret_doc), content_type="application/json")
 
 @login_required
@@ -98,12 +108,20 @@ def get_event_for_display(request):
             if collection[-7:] == "_events" and db[collection].count() != 0:
                 run = collection
                 break
-    
 
     collection = db[run]
+
+    event_number = 0
+    if request.method == "GET" and "event" in request.GET:
+        event_number = int(request.GET['event'])
+    if event_number < 0:
+        event_number = collection.count() -1
+    if event_number >= collection.count():
+        event_number = 0
+
     try:
-        docs = collection.find().sort("_id", -1)[:1]
-        doc=docs[0]
+        docs = collection.find().sort("_id", -1)
+        doc=docs[event_number]
     except:
         return HttpResponse({}, content_type="application/json")
 
@@ -130,7 +148,8 @@ def get_event_for_display(request):
 
     ret['sum_waveforms'] = doc['sum_waveforms']
     ret['peaks'] = doc['peaks']
-    
+    ret['event_number'] = event_number
+
 
     return HttpResponse(dumps(ret), content_type="application/json")
 
@@ -163,9 +182,9 @@ def make_bokeh_hits_plot(hit_list):
 
     plot = figure(background_fill=(200, 200, 200, 0.2),
                   width=1100, plot_height=300, logo=None, tools="save,box_zoom,reset",
-                  x_axis_label = "Time (10 ns sample)", y_axis_label = "Channel", title_text_font_size='12pt')
-    plot.xaxis.axis_label_text_font_size = "12pt"
-    plot.yaxis.axis_label_text_font_size = "12pt"
+                  x_axis_label = "Time (10 ns sample)", y_axis_label = "Channel", title_text_font_size=value('12pt'))
+    plot.xaxis.axis_label_text_font_size = value("12pt")
+    plot.yaxis.axis_label_text_font_size = value("12pt")
 
     plot.scatter(x, y, fill_color=colors, radius=sizes, fill_alpha=0.6, line_color="#AAAAAA", line_alpha=.2, line_width=.1)
     plot.x_range = Range1d(0, 40000)
@@ -184,9 +203,9 @@ def make_bokeh_waveform_plot(waveform_dict, peaks_list):
     plot = figure(background_fill=(200, 200, 200, 0.4),
                   width=1100, plot_height=300, logo=None, tools="save,box_zoom,reset",
                   #x_axis_label = "Time (samples)",
-                  y_axis_label = "Sum Waveform", title_text_font_size='12pt')
-    plot.xaxis.axis_label_text_font_size = "12pt"
-    plot.yaxis.axis_label_text_font_size = "12pt"
+                  y_axis_label = "Sum Waveform", title_text_font_size=value('12pt'))
+    plot.xaxis.axis_label_text_font_size = value("12pt")
+    plot.yaxis.axis_label_text_font_size = value("12pt")
     #colors = ["#63535B", "#6D1A36", "#FCD0A1", "#53917E","#B1B695"]
     colors = ["#FF0000", "#333333"]
     idx = 0
@@ -241,32 +260,71 @@ def make_bokeh_waveform_plot(waveform_dict, peaks_list):
 
     # Annotate peaks
     
+    # First have to sort. S2 by area. S1 by coincidence. Uknown also by area.
+    s2_indices = []
+    s1_indices = []
+    unknown_indices = []    
+    for peak_index in range(0, len(peaks_list)):
+        peak = peaks_list[peak_index]
+        appended = False
+        if peak['type'] == 's1':
+            for index in range(0, len(s1_indices)):
+                if peak['n_contributing_channels'] > peaks_list[s1_indices[index]]['n_contributing_channels']:
+                    s1_indices.insert(index, peak_index)
+                    appended = True
+                    break
+            if not appended:
+                s1_indices.append(peak_index)
+        elif peak['type'] == 's2':
+            for index in range(0, len(s2_indices)):
+                if peak['area'] > peaks_list[s2_indices[index]]['area']:
+                    s2_indices.insert(index, peak_index)
+                    appended = True
+                    break
+            if not appended:
+                s2_indices.append(peak_index)
+        elif peak['type'] == 'unknown':
+            for index in range(0, len(unknown_indices)):
+                if peak['area'] > peaks_list[unknown_indices[index]]['area']:
+                    unknown_indices.insert(index, peak_index)
+                    appended = True
+                    break
+            if not appended:
+                unknown_indices.append(peak_index)
     s1_count = 0
     s2_count = 0
     unknown_count = 0
-    for peak in peaks_list:
+    for index in range(0, len(peaks_list)):
+        peak = peaks_list[index]
+        peak_order = 0
+        # peak_order myst be position in s1_indices
+        if index in s1_indices:
+            ptype = 's1'            
+            peak_order = s1_indices.index(index)
+        elif index in s2_indices:
+            ptype = 's2'
+            peak_order = s2_indices.index(index)
+        elif index in unknown_indices:
+            ptype = 'unknown'
+            peak_order = unknown_indices.index(index)
+        else:
+            continue
         name = ""    
         color = "#5992c2";
-        if peak['type'] == "s1":
-            name = "s1_" + str(s1_count)
-            s1_count +=1        
-        elif peak['type'] == "s2":
-            name = "s2_" + str(s2_count)
-            s2_count += 1
+        if ptype == "s1":
+            name = "s1_" + str(peak_order)
+            #s1_count += 1
+        elif ptype == "s2":
+            name = "s2_" + str(peak_order)
+            #s2_count += 1
             color = "#ff0202"
         else:
-            name = "unknown_" + str(unknown_count)
-            unknown_count += 1
+            name = "unknown_" + str(peak_order)
+            #unknown_count += 1
             color = "#a7a7a7"
-        if "height" in peak: 
-            print("HEIGHT")
-            print(peak['height'])
-        if "left" in peak:
-            print("LEFT")
-            print(peak['left'])
         
         
-        plot.text( peak['left'], peak['height'], text=[name], text_color=color,  text_font_size="10pt")
+        plot.text( peak['left'], peak['height'], text=[name], text_color=color,  text_font_size=value('10pt'))
     
 
     return plot
@@ -325,11 +383,11 @@ def make_hit_display(peak, type):
 
     plot = figure(title="Largest" + type, background_fill=(200, 200, 200, 0.3),
                   width=400, plot_height=300, logo=None, tools="save,box_zoom,reset",
-                  x_axis_label = "mm", y_axis_label = "mm", title_text_font_size='12pt')
+                  x_axis_label = "mm", y_axis_label = "mm", title_text_font_size=value('12pt'))
 
     plot.scatter(x, y, radius=radii, fill_color=colors, fill_alpha=0.6, line_color="#666666")
-    plot.xaxis.axis_label_text_font_size = "12pt"
-    plot.yaxis.axis_label_text_font_size = "12pt"
+    plot.xaxis.axis_label_text_font_size = value('12pt')
+    plot.yaxis.axis_label_text_font_size = value('12pt')
     return plot
 
 
@@ -499,10 +557,12 @@ def get_plot(request):
 
     # Loop through collections in run list to build available plots        
     master_doc = None
+    used_runs = []
     for run in run_list:
         run_name = run + "_plots"
         if run_name not in db.collection_names():
             continue
+        used_runs.append(run)
         collection = db[run_name]
         for doc in collection.find():            
             if doc['name'] == plot_name:
@@ -511,10 +571,11 @@ def get_plot(request):
                 else:
                     plot_doc = combine_aggregates(master_doc, doc)
 
-                    
+    ret_dict = {"plot": plot_doc, "runs": used_runs}
     if plot_doc is None:
         return HttpResponse({}, content_type="application/json")
-
+    else:
+        return HttpResponse(json_util.dumps(ret_dict), content_type="application/json")
     # Now just a matter of reformatting
     if plot_doc['type'] != 'h1' and plot_doc['type'] != 'scatter' and plot_doc['type'] != 'h2':
         return HttpResponse({}, content_type="application/json")
@@ -522,6 +583,10 @@ def get_plot(request):
     plot = figure(title=plot_doc['name'], background_fill="#FFFFFF",
                   width=400, plot_height=400, logo=None, 
                   tools="save,box_zoom,reset", webgl=True)
+    if 'xaxis' in plot_doc and 'label' in plot_doc['xaxis']:
+        plot.xaxis.axis_label = plot_doc['xaxis']['label']
+    if 'yaxis' in plot_doc and 'label' in plot_doc['yaxis']:
+        plot.yaxis.axis_label = plot_doc['yaxis']['label']
     plot.border_fill = "#EBEBEB"
 
     if plot_doc['type'] == 'h1':
@@ -695,8 +760,7 @@ def get_noise_spectra(request):
     plots=[]
     for doc in docs:
         plot = figure(title=doc['name'], background_fill=(200, 200, 200, 0.3),
-                  width=350, plot_height=300, logo=None, tools="save,box_zoom,reset",
-                  x_axis_label = "Energy [p.e.]", y_axis_label = "counts", title_text_font_size='12pt')
+                      width=350, plot_height=300, logo=None, tools="save,box_zoom,reset", x_axis_label = "Energy [p.e.]", y_axis_label = "counts", title_text_font_size=value('12pt'))
 
         hist, edges = np.histogram(doc['data'], density=True, bins=100)
 
