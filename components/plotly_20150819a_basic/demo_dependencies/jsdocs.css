@@ -1,0 +1,130 @@
+/* css for plotlyjs docs page */
+
+.jsdocs-plot-container{
+    width: 430px;
+    height: 360px;
+    float: left;
+    margin-right: 20px;
+}
+#twodhistogram{
+    width: 550px;
+}
+.navlist li{
+    display: inline;
+    list-style-type: none;
+    padding-right: 20px;
+    font-size: 22px;
+    font-weight: 200;
+    color: #888;
+}
+
+.navlist li>a{
+    color: #888;
+    text-decoration: none;
+}
+
+.navlist li>a:hover{
+    color: black;
+}
+
+.navlist li.lead>a{
+    color: rgb(89,126,170) !important;
+    font-size: 32px;
+}
+
+.navcontainer{
+    text-align: center;
+}
+
+.navcontainer>div.chartgroup{
+    width: 650px;
+    margin-bottom: 50px;
+    display: inline-block;
+    text-align: left;
+    border-left: 10px solid #444;
+}
+
+.navcontainer>div.chartgroup>ul:first-child{
+    padding-top: 12px;
+}
+
+.navcontainer>div.chartgroup-label{
+    display: inline-block;
+    vertical-align: top;
+    margin-top: 20px;
+    margin-left: 60px;
+    font-weight: 200;
+    width: 650px;
+    text-align: left;
+    color: #444;
+    font-size: 32px;
+}
+
+.navcontainer>div.chartgroup-label>span.pricing{
+    margin-left: 300px;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+.navcontainer>div.chartgroup-label>span.pricing>a{
+    color: magenta;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.back-to-top {
+    float: right;
+    color: #888;
+    padding-right: 20px;
+}
+
+.back_to_top>a:hover{
+    color: #888;
+}
+
+.js_code_container{
+    display:inline-block;
+    margin-top:70px;
+    margin-bottom:140px;
+}
+
+#jsdocs_loading{
+    text-align:center;
+}
+
+#jsdocs_loading>h1{
+    font-weight: 200;
+    color: #888;
+}
+
+dl.functions{
+    margin: 20px 20px 40px 80px;
+    max-width: 900px;
+}
+dl.functions>dt{
+    font-size: 26px;
+    line-height: 30px;
+}
+dl.functions>dt>span{
+    color: #666;
+}
+dl.functions>dd{
+    margin-bottom: 20px;
+}
+dl.args{
+    background-color: #f0f0f0;
+    border: 1px solid #666;
+    border-radius: 4px;
+    padding: 10px;
+}
+dl.args>dd{
+    margin-bottom: 10px;
+}
+dl.args>dd>p[data-type]{
+    cursor:pointer;
+    padding: 2px;
+    border-radius: 4px;
+}
+dl.args>dd>.selected{
+    background-color: #f8f8f8;
+}
