@@ -21,11 +21,11 @@
     <!--<script type="text/javascript">Pace.start();</script>-->
     
     <!-- Declare here any global styles all classes need -->
-    <link href="{% static "bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "bootstrap-3.3.5-dist/css/bootstrap.min.css" %}" rel="stylesheet">
 	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
 	 <link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
 	 <link href="{% static "emo/css/emo_runslist.css" %}" rel="stylesheet">
-	 <link href="{%  static "font-awesome-4.1.0/css/font-awesome.min.css" %}" rel="stylesheet">
+	 <link href="{%  static "font-awesome-4.4.0/css/font-awesome.min.css" %}" rel="stylesheet">
 
     <!-- Declare here any global javascript -->
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
@@ -33,8 +33,8 @@
     <script src="{% static "Highcharts-4.0.1/js/highcharts.js" %}"></script>
 
     
-    <script src="{% static "bootstrap/js/bootstrap.min.js" %}"></script>
-     <script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
+    <script src="{% static "bootstrap-3.3.5-dist/js/bootstrap.min.js" %}"></script>
+     <script src="{% static "bootstrap-3.3.5-dist/js/bootstrap-dialog.min.js" %}"></script>
     <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
 
@@ -44,8 +44,59 @@
 	    <!--<link href="{%  static "css/sideBAR.css" %}" rel="stylesheet">-->
 	    <link href="{%  static "emo/css/emo_base.css" %}" rel="stylesheet">
 	    <link href="{% static "css/sidebar-collapse.css" %}" rel="stylesheet">
-	    <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
 	    
+    <link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
+    <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
+
+<style>
+.hero-unit {
+    background-image:url("/components/img/pano2.jpg");
+    background-size:cover;
+    background-color: #EEEEEE;
+    height:300px;
+    margin-left: -30px;
+    margin-right: -30px;
+ //   margin-top: 0px;
+  }
+.hero-unit h1 {
+   margin-left:10%;
+  // margin-top: 0px;
+    color: #FFFFFF;
+    font-size: 60px;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 0;
+    
+}
+.hero-unit h2 {
+   margin-left:10%;
+    font-size: 25px;
+    color: #FFFFFF;
+   
+}
+.hero-unit p{
+   margin-left:10%;
+}
+.hero-unit p a {
+background-color: #6F6E88;
+}
+
+.fill{width:110%;height:200px;background-position:center;background-size:cover;
+margin-left:-30px;margin-right:-30px;
+}
+
+    /* Large desktop */
+    @media (min-width: 1200px) { ... }
+     
+    /* Portrait tablet to landscape and desktop */
+    @media (min-width: 768px) and (max-width: 979px) { ... }
+     
+    /* Landscape phone to portrait tablet */
+    @media (max-width: 767px) { ... }
+     
+    /* Landscape phones and down */
+    @media (max-width: 480px) { ... }
+</style>	    
 {% block head %}
 {% endblock %}
 
@@ -76,43 +127,43 @@
           		{% include "login_toggle.html" %}
           		{% endblock %}
 			   		{% if user.is_authenticated %}
-	<ul class="navbar-right">
-				<ul class="nav navbar-nav">
-  				<li class="dropdown">
-    				<a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
-       					href="#">Connected <span id="contact"></span></a>
-    				<ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
+			<ul class="navbar-right">
+			  <ul class="nav navbar-nav">
+  			    <li class="dropdown">
+    			      <a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
+       				 href="#">Connected <span id="contact"></span></a>
+    			      <ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
+				More info here
+			      </ul>
+  			    </li>
+			  </ul>
+			  <ul class="nav navbar-nav">
+  			    <li class="dropdown">
+    			      <a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
+       				 href="#"> DAQ Status <span id="status"></span></a>
+    			      <ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
 						More info here
-					</ul>
-  				</li>
-			</ul>
-			<ul class="nav navbar-nav">
-  				<li class="dropdown">
-    				<a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
-       					href="#"> DAQ Status <span id="status"></span></a>
-    				<ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
-						More info here
-					</ul>
-  				</li>
-			</ul>
-			<ul class="nav navbar-nav">
-  				<li class="dropdown">
-    				<a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
-       					href="#"> Open Alerts <span id="alerts"></span></a>
-    				<ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
-						More info here
-					</ul>
-  				</li>
+			      </ul>
+  			    </li>
+			  </ul>
+			  <ul class="nav navbar-nav">
+  			    <li class="dropdown">
+    			      <a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
+       				 href="#"> Open Alerts <span id="alerts"></span></a>
+    			      <ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
+				More info here
+			      </ul>
+  			    </li>
 			</ul></ul>
 			{% endif %}
-		</div>
-	</header>
+			</div>
+		</header>
    		
    		<!-- If user is not logged in just show them a pretty picture -->
    		{% if user.is_authenticated %}
-			<!-- Sidebar -->
-	<div id="main" class="container-fluid" style="margin-top:40px;padding:0;">
-		<!-- begin comment sideBAR <div class="row">
+		<!-- Sidebar -->
+		<div id="main" class="container-fluid" style="margin-top:40px;padding:0;">
+		  <!-- begin comment sideBAR <div class="row">
      		  <div id="sidebar-left" class="col-xs-2 col-sm-2" style="overflow:hidden">
         		<ul class="nav main-menu">
 
@@ -231,8 +282,8 @@
 		  
 		</nav>-->
 <div class="sidebar-left-collapse sidebar left" style="padding-top:5px">
-
-  <a href="#" class="company-logo toggle-sidebar"></a>
+  
+  <a href="/" class="company-logo"></a>
   <hr style="margin-left:25px;margin-right:40px;">
   <div class="sidebar-links">
     
@@ -288,8 +339,8 @@
 	<li><a href="/docs">Docs</a></li>
 	<li><a href="/docs/contact">Contact</a></li>
 	<li><a href="/docs/about">About</a></li>	
-	<li><a href="https://mms.mongodb/com">MMS (external)</a></li>
-	<li><a href="https://www.github.com/coderdj/emo">Github (external)</a></li>
+	<li><a href="https://cloud.mongodb.com">Mongo Cloud (ext)</a></li>
+	<li><a href="https://www.github.com/coderdj/emo">Github (ext)</a></li>
       </ul>
 
     </div>
@@ -299,21 +350,79 @@
 </div>
 <div id="content" class="container-fluid emo-sidebar-show"><!-- col-sm-offset-2">-->
   {% block content %}
-  <h4 style="margin:2%">Welcome to the DAQ web portal!</h4>
-  <h4 style="margin:2%"> <strong>Please note: </strong> This is a <strong>beta</strong> version! Lots of things don't work perfectly yet. Other things don't work at all. Some is by design (the DAQ is not installed so there is no way to control it), other parts are still being implemented. Please report issues on github!</h4>
-  
+<div class="hero-unit fill">
+  <br>
+  <h1>Welcome to the DAQ</h1>
+  <h2>Online data flow control</h2>
+  <br>
+  <p>
+    <a href="/control" class="btn btn-primary btn-large">
+      Take me to the control panel...
+    </a>
+  </p>
+</div>
+<p class="bg-info" style="width:100%;padding-left:20px">
+  <strong>Beta Version!</strong> This is a <strong>beta</strong> deployment! Lots of things don't work perfectly yet. Other things don't work at all. Some is by design (the DAQ is not installed so there is no way to control it), other parts are still being implemented. Please report issues on github! If you want to help you're more than welcome.
+  </p>
+<br><br><br>
+<div class="col-xs-5 col-xs-offset-4 navbar-fixed-bottom social-buttons" style="margin-bottom:50px;">
+  <div class="row">
+    <div class="col-xs-4">
+      <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
+         href="http://www.github.com/coderdj/emo">
+        <i class="fa fa-github" style="font-size:14pt"></i> Visit our GitHub
+      </a>
+    </div>
+    <div class="col-xs-4">
+      <a class="btn btn-block btn-default btn-social btn-lg btn-github"
+         style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
+         href="http://www.xenon1t.org">
+        Visit xenon1t.org
+      </a>
+    </div>
+    <div class="col-xs-4">
+      <a class="btn btn-block btn-default btn-social btn-lg btn-github"
+         style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
+         href="http://xecluster.lngs.infn.it/dokuwiki/doku.php">
+        Visit our wiki
+      </a>
+    </div>
+  </div>
+</div>
+<!--  <img src="{% static "img/alps2.png" %}" alt="Bern" style="width:120%;margin-left:-40px;margin-right:-40px;">-->
+
   {% endblock %}
 </div>
 	</div>
    	{% else %}
-   	<div id="content" class="col-xs-12 col-sm-12">
-   		<br><br><br>
-   		<h5>Welcome to the XENON1T data monitor. Please log in to view content.</h5>
-   		<br>
-   		<h6>If you are here by mistake, maybe you'd rather check out our <a href="http://www.xenon1t.org"> public page</a>
-   			</h6>
-   		</div>
-			{% endif %}
+<div class="hero-unit fill" style="margin-top:30px">
+  <br>
+  <h1>DAQ Web Portal</h1>
+  <h2>Data flow monitoring</h2>
+  <br>
+  <p style="color:white">
+    Please log in to view content.
+  </p>
+</div>
+<br><br><br>
+<div class="col-xs-3 col-xs-offset-5 navbar-fixed-bottom social-buttons" style="margin-bottom:50px;">
+  <div class="row">
+    <div class="col-xs-6">
+      <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;" 
+	 href="http://www.github.com/coderdj/emo">
+	<i class="fa fa-github" style="font-size:14pt"></i> Visit our GitHub
+      </a>
+    </div>
+    <div class="col-xs-6">
+      <a class="btn btn-block btn-default btn-social btn-lg btn-github" 
+	 style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
+	 href="http://www.xenon1t.org">
+	Visit xenon1t.org
+      </a>
+    </div>    
+  </div>
+</div>
+	{% endif %}
 			
 
 <!--		</div>	-->

@@ -1,0 +1,105 @@
+ul.chart-list{
+    list-style-type: none;
+    font-size: 24px;
+    color: #888;
+}
+ul.chart-list>li{
+    border-left: 8px solid white;
+    cursor: default;
+    line-height: 32px;
+    padding-left: 5px;
+    width: 160px;
+}
+ul.chart-list>li:hover{
+    color: #444;
+}
+ul.chart-list>li.active{
+    border-left: 8px solid rgb(20,141,255) !important;
+    color: #444;
+}
+span.rhs-pricing{
+    float:right;
+    font-size:40px;
+    text-align:right;
+}
+span.rhs-pricing>div.rhs-license{
+    float:right;
+    font-size:24px;
+}
+span.rhs-pricing>div.rhs-license>div.rhs-support{
+    font-size:80%;
+    color:#999!important;
+    letter-spacing:1px;
+}
+.lhs-package{
+    font-size:60px;
+}
+.section-break{
+    width: 100%;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    color: darkblue;
+    letter-spacing: 1px;
+    font-size: 42px;
+    font-weight: 200;
+}
+.dashboards{
+    font-family: 'Inconsolata',monospace,verdana,sans-serif;
+    letter-spacing: 1px;
+}
+.tiny-brand{
+    font-family: Futura, 'Open Sans', verdana, arial, sans-serif;
+}
+a.mixpanel__badge{
+    display: none !important;
+}
+.plotly-js-banner{
+    text-align: center;
+    margin-bottom: 50px;
+}
+.plotly-js-banner div, .plotly-js-banner h1{
+    display: inline-block;
+}
+
+.plotly-js-banner h1{
+    vertical-align: 50%;
+    margin-left: 30px;
+}
+.bottom-space{
+    margin-bottom: 45px;
+}
+.terms-of-use{
+    font-size: 16px;
+}
+.plotlyjs-terms-of-use{
+    width: 450px;
+    display: inline-block;
+    text-align: left;
+    font-size: 22px;
+    font-weight: 200;
+}
+.plotlyjs-terms-of-use li{
+    line-height: 30px;
+    padding-bottom: 20px;
+}
+/*code{
+    display: block;
+    height: 30px;
+    margin: 20px 0px;
+    width: 600px;
+}*/
+.fix-on-left{
+    text-align: left !important;
+}
+
+.sales-link{
+    color:rgb(20,141,255) !important;
+    letter-spacing: 1px;
+}
+
+.sales-link-tiny{
+    font-size: 18px;
+}
