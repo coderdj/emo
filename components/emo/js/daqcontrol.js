@@ -290,10 +290,10 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
-                        "<div class='col-xs-2'>Num. digitizers</div>"+
-                        "<div class='col-xs-2'>BLT Rate</div>"+
-                        "<div class='col-xs-2'>Data Rate</div>"+
-                        "<div class='col-xs-2'>Seconds since update</div>" +
+                        "<div class='col-xs-2'>Digitizers</div>"+
+                        "<div class='col-xs-2'>BLT Rate (Hz)</div>"+
+                        "<div class='col-xs-2'>Data Rate (MB/s)</div>"+
+                        "<div class='col-xs-2'>Updated (s)</div>" +
                         "</div></strong>";
 		    $('#'+det_name + "_parent").append(header_html);
 		    var appstring = "<div id='"+det_name+"_node_div'>";

@@ -47,6 +47,10 @@
 	      <input type="radio" name="runs_sel"  
 		     value="current" /> Current run </span>
 	    <br>
+	    <span><br>
+              <input type="radio" name="runs_sel"
+                     value="last_n_runs" /> Last&nbsp; <input type="number" id="lastn" name="lastn" style="width:60px" value="5"/>&nbsp; runs </span>
+            <br>
 	    <span>
 	      <input type="radio" name="runs_sel"  value="range" /> Date range
 	    </span>	  
@@ -236,6 +240,7 @@ function Make1DHistogram(doc, div){
   var layout = {
   title: doc['name'],
   xaxis: {
+    tickformat: 'f',
     title: doc['xaxis']['label']
   }, 
   yaxis: {
@@ -270,11 +275,11 @@ function Make2DHistogram(doc, div){
   title: doc['name'],
   annotations: [],
   xaxis: {
-    ticks: '',
+    tickformat: 'f',
     title: doc['xaxis']['label']
   },
   yaxis: {
-    ticks: '',
+    tickformat: 'f',
     ticksuffix: ' ',
     title: doc['yaxis']['label']
   }
@@ -292,9 +297,11 @@ function MakeScatterPlot(doc, div){
         var layout = {
                 title: doc['name'],
                 xaxis: {
+		  tickformat: 'f',
                   title: doc['xaxis']['label'],
                 },
                 yaxis: {
+                  tickformat: 'f',
                   title: doc['yaxis']['label'],
                 }
          };
@@ -373,6 +380,11 @@ function FillRunsList(run_data, div){
         url_end += "?selection=all;";
      else if(runs_sel =="current")
         url_end += "?selection=current;";
+     else if(runs_sel == "last_n_runs"){
+	url_end += "?selection=lastn;nruns=";
+        url_end += $("#lastn").val();
+        url_end += ";"        
+     }
      else {
         url_end += "?selection=range;";
         if(start_date != null)
@@ -382,7 +394,7 @@ function FillRunsList(run_data, div){
      }
      if(run_mode != "All")
         url_end += "run_mode=" + run_mode;
-    
+     console.log(url_end);
      var total_url = aggregate_data_url + url_end;
      $.getJSON(total_url,function(data){
 	console.log(data);
