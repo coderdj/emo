@@ -13,8 +13,30 @@
 .borderless tbody tr td, .borderless tbody tr th, .borderless thead tr th {
     border: none;
 }
+ .Loading {
+      display:    none;
+      position:   absolute;
+      z-index:    100;
+      top:        0;
+      left:       0;
+      height:     100%;
+      width:      100%;
+      background: #ebebeb;
+      url("/img/ajax-loader.gif");
+      50% 50%
+      no-repeat;
+  }
 
 </style>
+<div id="Loading" class="Loading">
+  <div class="col-xs-3 col-xs-offset-5" style="margin-top:150px;">
+    <img style="width:60px;height:60px;margin-left:40px;" src="{% static "img/ajax-loader.gif" %}">
+    <br>
+    <br>
+    Pulling the newest data
+  </div>
+</div>
+
 {% if request.user.is_superuser != True and request.user.profile.canstartruns != True %}
 <p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission. </p>
 {% endif %}
@@ -376,6 +398,7 @@ border-style=solid;border-width:1px;">-->
 			     //UpdateDetectorText(dataUrl, "info_panel_header");
 			     //UpdateNodes( "info_panel_nodes", pointUpdateUrl );
       setTimeout( function() {
+             $("#Loading").hide();
 	UpdatePage( thechart );			     
       }, updateFreq );
   };
@@ -420,6 +443,8 @@ border-style=solid;border-width:1px;">-->
     }
   // Load page function
   $( function() {
+
+  $("#Loading").show();
 
   //DrawLogWindow( "message_panel", logUrl );
     var chart = null;

@@ -71,7 +71,7 @@ a.show-sidebar:hover {
   position:relative;
 # position: absolute;
 #top:0;
-  z-index: inherit;
+  z-index: 101;
   padding-bottom: 10000px !important;
   margin-bottom: -10000px !important;
   background: #6AA6D6; /*url(../img/devoops_pattern_b10.png) 0 0 repeat;*/
