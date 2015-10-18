@@ -263,7 +263,7 @@ function Make2DHistogram(doc, div){
         x_values.push(i);
      for(i=doc['yaxis']['min']; i<=doc['yaxis']['max'];i+=y_bin)	  
 	y_values.push(i);
-
+	console.log(y_values);
      var data = [
          { 'z': doc['data'],
            'x': x_values,
@@ -344,6 +344,8 @@ function FillRunsList(run_data, div){
 	MakeScatterPlot(data['plot'], 'plot_div');
      }
      FillRunsList(data['runs'], 'runs_div');
+    document.getElementById("description_div").innerHTML = data['plot']['description'];
+
   /*document.getElementById("plot_div").innerHTML = "";
   $("#plot_div").append(data['div']);
   $("#plot_div").append(data['script']);

@@ -45,6 +45,7 @@
 <div class="row" style="height:20px;margin:0px;margin-top:15px;">
   <div class="col-sm-3 col-xs-12">
     <h3><strong>DAQ Control Panel</strong></h3>
+    <br>
   </div>
   {% if request.user.is_superuser or request.user.profile.canstartruns %}
   <div class="col-sm-9 col-xs-12 pull-right">
@@ -70,22 +71,25 @@
                 <button type="button" value=600 class="btn btn-default active bin">10 min</button>
                 <button type="button" value=120 class="btn btn-default bin">2 min</button>
                 <button type="button" value=30 class="btn btn-default bin">30 sec</button>
-                <button type="button" value=10 class="btn btn-default bin">10 sec</button>
+<!--
+                <button type="button" value=10 class="btn btn-default bin">10 sec</button>-->
             </div>
             </div>
         </div>
     </div>
-<br>
-<div class="col-xs-12" id="info_panel"><!-- style="height:40%;min-height:250px;margin-top:10px;">
+<!--<br>-->
+<div class="row">
+  <div class="col-xs-12" id="info_panel"><!-- style="height:40%;min-height:250px;margin-top:10px;">
 <!--  <div class="col-xs-12" id="info_panel_header">
     </div>-->
 <div class="col-xs-12" id="info_panel_header"><!-- style="height:30%;background-color:white;border-color:#AAAAAA;
 border-style=solid;border-width:1px;">-->
 </div>
 <div class="col-xs-12" id="info_panel_nodes" style="margin-top:10px;">
-
+  
 </div>
 
+  </div>
 </div>
 <!--<div class="col-xs-12" id="message_panel" style="height:20%;min-height:150px;margin-top:5px;max-height:200px;overflow-y:scroll;"></div>
 -->

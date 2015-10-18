@@ -150,8 +150,8 @@ def get_event_for_display(request):
     ret['peaks'] = doc['peaks']
     ret['event_number'] = event_number
 
-
-    return HttpResponse(dumps(ret), content_type="application/json")
+    ret = json_util.loads(json_util.dumps(ret))
+    return HttpResponse(json_util.dumps(ret), content_type="application/json")
 
 
 def make_bokeh_hits_plot(hit_list):
@@ -160,7 +160,7 @@ def make_bokeh_hits_plot(hit_list):
     This makes a bokeh plot and returns the div/js elements
     """
     max_size = 100
-    min_size = 5
+    min_size = 10
     max_area = max(hit_list, key=lambda x:x['area'])['area']
 
     x = []
@@ -172,7 +172,7 @@ def make_bokeh_hits_plot(hit_list):
         x.append(hit['index_of_maximum'])
         y.append(hit['channel'])
         if hit['is_rejected']:
-            colors.append("#EEEEEE")
+            colors.append("#4fa783")
         else:
             colors.append("red")
         size = max_size*(hit['area']/max_area)
@@ -186,7 +186,7 @@ def make_bokeh_hits_plot(hit_list):
     plot.xaxis.axis_label_text_font_size = value("12pt")
     plot.yaxis.axis_label_text_font_size = value("12pt")
 
-    plot.scatter(x, y, fill_color=colors, radius=sizes, fill_alpha=0.6, line_color="#AAAAAA", line_alpha=.2, line_width=.1)
+    plot.scatter(x, y, fill_color=colors, radius=sizes, fill_alpha=0.5, line_color="#AAAAAA", line_alpha=.8, line_width=1)
     plot.x_range = Range1d(0, 40000)
     plot.min_border_left = 60
     plot.min_border_right = 50
@@ -518,18 +518,32 @@ def combine_aggregates(master_doc, doc):
     ''' 
     combine an aggregate document by adding bins
     '''
-    
+    max_points = 5000
+
     if master_doc['type'] != doc['type']:
         return master_doc
 
     if master_doc['type'] == 'h1':
-        master_doc['data'] = np.add(master_doc['data'], doc['data'])
+        master_doc['data'] = np.add(master_doc['data'], doc['data']).tolist()
     elif master_doc['type'] == 'h2':
         for i in range(0, len(master_doc['data'])):
-            master_doc['data'][i] = np.add(master_doc['data'][i], doc['data'][i])
-    elif master_doc['type'] == 'scatter':
-        master_doc['data']['x'] = np.concatenate([master_doc['data']['x'], doc['data']['x']])
-        master_doc['data']['y'] = np.concatenate([master_doc['data']['y'], doc['data']['y']])
+            master_doc['data'][i] = np.add(master_doc['data'][i], 
+                                           doc['data'][i]).tolist()
+    elif master_doc['type'] == 'scatter' and len(master_doc['data']['x']) < max_points:
+        if (len(master_doc['data']['x']) + len(doc['data']['x'])) > max_points:
+            limiter = max_points - (len(master_doc['data']['x'])+len(doc['data']['x']))
+        addlist_x = []
+        addlist_y = []
+        if limiter > 0 and limiter < len(doc['data']['x']):
+            addlist_x = doc['data']['x'][:limiter]
+            addlist_y = doc['data']['y'][:limiter]
+        elif limiter>0:
+            addlist_x = doc['data']['x']
+            addlist_y = doc['data']['y']
+        else:
+            return master_doc
+        master_doc['data']['x'] = np.concatenate([master_doc['data']['x'], addlist_x]).tolist()
+        master_doc['data']['y'] = np.concatenate([master_doc['data']['y'], addlist_y]).tolist()
 
     return master_doc
 
@@ -567,12 +581,13 @@ def get_plot(request):
         for doc in collection.find():            
             if doc['name'] == plot_name:
                 if master_doc == None:
-                    plot_doc = doc
+                    master_doc = doc
                 else:
-                    plot_doc = combine_aggregates(master_doc, doc)
+                    master_doc = combine_aggregates(master_doc, doc)
 
-    ret_dict = {"plot": plot_doc, "runs": used_runs}
-    if plot_doc is None:
+    ret_dict = {"plot": master_doc, "runs": used_runs}
+
+    if master_doc is None:
         return HttpResponse({}, content_type="application/json")
     else:
         return HttpResponse(json_util.dumps(ret_dict), content_type="application/json")

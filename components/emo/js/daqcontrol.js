@@ -22,6 +22,7 @@ function drawChart( chart, chartdiv, callback )
            spacingRight: 10,
             spacingBottom: 10,
         borderWidth:1,
+	    borderColor: "#D5D5D5",
         },
 	legend: {align: 'left', verticalAlign: 'middle',layout: 'vertical',enabled: true, itemMarginBottom: 5},
         credits: {enabled: false},

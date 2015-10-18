@@ -355,15 +355,21 @@
          the_url += ";event=";
          the_url += event_number.toString();
          document.getElementById("Loading").style.display = 'block';
-
+console.log("HERE0");
+console.log(the_url);
          $.getJSON(the_url, function(data){
+console.log("HERE");
              draw_waveform_local(data, function(){
                 document.getElementById("Loading").style.display = 'none';
 			      });
              currentdata=data;
              console.log(currentdata);
              event_number = data['event_number'];
-          });
+          })
+//	.success(function() { alert("second success"); })
+.error(function() { alert("Error fetching waveform"); document.getElementById("Loading").style.display = 'none'; console.log(arguments); });
+//.complete(function() { alert("complete"); });
+
     }
     function update_data_newest(){
          event_number = 0;

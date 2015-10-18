@@ -128,7 +128,7 @@
     }
     ret += '</td></tr>';
     ret += '<tr><td><strong>Data Period</strong></td><td>period 0</td></tr>';
-    ret += '<tr><td><strong>Run Mode</strong></td><td>'+d.name+'</td></tr>';
+    ret += '<tr><td><strong>Run Mode</strong></td><td>'+d.runmode+'</td></tr>';
     ret += '<tr><td><strong>Starting User</strong></td><td>'+d.user+'</td></tr>';
     ret += '<tr><td><strong>Start Date</strong></td><td>';
 console.log(d.starttimestamp);
@@ -154,11 +154,11 @@ console.log(d.starttimestamp);
     ret+= '<div class="col-xs-12 col-sm-6"><table style="width:100%;margin-bottom:10px;"><tbody>';
     ret += '<tr><td>Valid triggers</td><td>NA</td></tr>';
     ret += '<tr><td>Good run?</td><td>Sure</td></tr>';
-    ret += '<tr><td>Raw data location</td><td>NA</td></tr>';
-    ret += '<tr><td>Processed data locations</td><td>NA</td></tr>';
-    ret += '<tr><td>More</td><td>...</td></tr>';
-    ret += '<tr><td>More</td><td>...</td></tr>';
-    ret += '<tr><td>More</td><td>...</td></tr>';
+    ret += '<tr><td>Raw data location</td><td>xecluster:/path/to/raw</td></tr>';
+    ret += '<tr><td></td><td>xestorage:/another/path</td></tr>';
+    ret += '<tr><td>Processed data locations</td><td>xecluster:/path/to/processed</td></tr>';
+    
+    ret += '<tr><td></td><td>xe_analysis_facility:/another/path</td></tr>';
     ret+='</tbody></table></div></div>';
 
 

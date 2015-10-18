@@ -4,13 +4,13 @@ background-color: #ebebeb;
 .emobox{
     background-color: white;
     border-width: 1px;
-    border-color: #5992c2w;
+    border-color: #D5D5D5; /*#5992c2w;*/
     border-style: solid;
     width:100%;
     min-height:40px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    box-shadow: 10px 10px 5px #888888;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    /*box-shadow: 10px 10px 5px #888888;*/
     padding-top:10px;
     
     }
