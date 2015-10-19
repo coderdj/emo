@@ -66,8 +66,8 @@ function updateData( chart, updateUrl )
 // Once the chart is loaded you can call this to update the data
 {
     $.getJSON(updateUrl,function(data){
-	var detlist = ['daqrdr01', 'daqrdr02', 'daqrdr03', 'daqrdr04', 'muon_veto'];
-        var idlist = ['tpc_0','tpc_1','tpc_2','tpc_3','muon_veto_0'];        
+	var detlist = ['reader00', 'reader01', 'reader02', 'reader03', 'reader04', 'muon_veto'];
+        var idlist = ['reader00','reader01','reader02','reader03', 'reader04', 'muon_veto_0'];        
 	console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;
@@ -223,7 +223,7 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                     "</div>";
 		console.log(node_data);
 		console.log(node_data[node_id]['node']);
-		if(node_data[node_id]['node'][0]=='d') // as in 'daqrdr0x'
+		if(node_data[node_id]['node'][0]=='r') // as in 'reader0x'
 		    nodeInfo['tpc'].push(html_string);
 		else
 		    nodeInfo['muon_veto'].push(html_string);
