@@ -266,7 +266,10 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			startdate = new Date( thedatestring );
 			console.log("TIME");
 			console.log(thedatestring);
-			timestring = GetTimeString( startdate );
+			if(detector_data['status'][status_id]['state'] == "RUNNING")
+			    timestring = GetTimeString( startdate );
+			else
+			    timestring = "";
 		    }
 		    html_str = "<div class='col-xs-12 emobox' id='" + det_name + "_parent'>";
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
