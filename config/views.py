@@ -12,6 +12,9 @@ mode_db_collection = "run_modes"
 # Connect to pymongo
 client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
 db = client[settings.ONLINE_DB_NAME]
+if settings.MONGO_USER != "":
+    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+
 collection = db[mode_db_collection]
 
 @login_required
@@ -22,6 +25,7 @@ def delete_run_mode(request):
     :param request:
     :return:
     """
+
     if 'mode' not in request.GET.keys():
         return
     if request.GET['mode'] is not None:
@@ -36,6 +40,7 @@ def fetch_run_mode(request):
     :param request:
     :return: HTTp response containing the mode as a JSON dict
     """
+
     if request.GET['name'] is not None:
         mode = collection.find_one({"name": request.GET['name']})
         if mode is not None:
@@ -59,6 +64,7 @@ def fetch_mode_list(request):
     for det in detectors:
         modes = collection.find({"detector": det})
         ret[det] = modes.distinct("name")
+    print("MADE HERE")
     print(detectors)
     print(ret)
     if len(ret) > 0:
@@ -73,10 +79,6 @@ def run_mode_config(request):
     :param request: a form object containing the run mode as text, sent via POST
     :return: error in case object is not valid json (and form back!)
     """
-    # Connect to pymongo
-    #client = MongoClient(mongodb_address, mongodb_port)
-    #db = client[online_db_name]
-    #collection = db[runs_db_collection]
 
     if request.method == "POST":
         print("HI")

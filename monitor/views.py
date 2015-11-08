@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import snappy
+#import snappy
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util, objectid
@@ -9,7 +9,7 @@ from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.embed import components
 from bokeh.models import ColumnDataSource
-import mpld3
+#import mpld3
 import numpy as np
 from bokeh.models import Range1d
 from bokeh.io import hplot, vplot, gridplot
@@ -31,6 +31,8 @@ mongodb_port = settings.MONITOR_DB_PORT
 # Connect to pymongo
 client = MongoClient(mongodb_address, mongodb_port)
 db = client[online_db_name]
+if settings.MONGO_USER != "":
+    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
 # Connect to buffer DB
 bufferclient = MongoClient( settings.BUFFER_DB_ADDR, settings.BUFFER_DB_PORT)
@@ -415,8 +417,10 @@ def get_runs_list(get_request):
     # Mongo Objects                                                                 
     client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
     db = client[ settings.RUNS_DB_NAME ]
+    if settings.MONGO_USER != "":
+        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
     collection = db['runs']
-
+    
     run_list = []
     query = {}
     if "run_mode" in get_request:
@@ -464,6 +468,8 @@ def get_available_plots(request):
     # Mongo Objects
     client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
+    if settings.MONGO_USER != "":
+        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     # Build the run list based on info in request
     run_list = get_runs_list(request.GET)    
@@ -563,6 +569,8 @@ def get_plot(request):
     # Mongo Objects                                                                 
     client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
     db = client[ settings.MONITOR_DB_NAME ]
+    if settings.MONGO_USER != "":
+        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     # Build the run list based on info in request               
     run_list = get_runs_list(request.GET)
@@ -827,6 +835,8 @@ def get_uptime(request):
     # Make DB query
     runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
     runsdb = runs_client[settings.RUNS_DB_NAME]
+    if settings.MONGO_USER != "":
+        runsdb.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
     runs_coll = runsdb['runs']
 
     query_set=[]
@@ -880,6 +890,8 @@ def get_calendar_events(request):
 
     runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
     rundb = runs_client[settings.RUNS_DB_NAME]
+    if settings.MONGO_USER != "":
+        rundb.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
     run_coll = rundb["runs"]
 
     start_time = dateutil.parser.parse(request.GET['start'])

@@ -16,33 +16,43 @@ import ldap
 from django_auth_ldap.config import LDAPSearch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = '/home/dan/emo/'
 
 # MongoDB connectivity
-ONLINE_DB_NAME = "online"
-ONLINE_DB_ADDR = "localhost"
-ONLINE_DB_PORT = 27017
-MONITOR_DB_NAME = "monitor"
-MONITOR_DB_ADDR = "localhost"
-MONITOR_DB_PORT = 27017
-RUNS_DB_NAME = "online"
-RUNS_DB_ADDR = "localhost"
-RUNS_DB_PORT = 27017
-LOG_DB_NAME = "log"
-LOG_DB_ADDR = "localhost"
-LOG_DB_PORT = 27017
-BUFFER_DB_ADDR = "localhost"
-BUFFER_DB_PORT = 27017
+ONLINE_DB_NAME = "run"
+ONLINE_DB_ADDR = "master"
+ONLINE_DB_PORT = 27018
+ONLINE_DB_REPL = "run"
+MONITOR_DB_NAME = "run"
+MONITOR_DB_ADDR = "master"
+MONITOR_DB_PORT = 27018
+MONITOR_DB_REPL = "run"
+RUNS_DB_NAME = "run"
+RUNS_DB_ADDR = "master"
+RUNS_DB_PORT = 27018
+RUNS_DB_REPL = "run"
+LOG_DB_NAME = "run"
+LOG_DB_ADDR = "master"
+LOG_DB_PORT = 27018
+LOG_DB_REPL = "run"
+BUFFER_DB_ADDR = "eb0"
+BUFFER_DB_PORT = 27000
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '@fn1i3_7ip#66vanzz(91qn9ehmupb+rwo44+f3#sw(lku^+90'
-
+with open('/etc/secret_key.txt') as f:
+    SECRET_KEY = f.read().strip()
+MONGO_PW=""
+with open('/etc/dbpass.txt') as ftwo:
+    MONGO_PW = ftwo.read().strip()
+MONGO_USER="web"
+#MONGO_USER="pax"
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['xenon1t-daq.lngs.infn.it', 'wipkip.lngs.infn.it', 'cunn1.lngs.infn.it']
 #ALLOWED_HOSTS = [ "*" ]
 
 
@@ -94,13 +104,46 @@ logger = logging.getLogger('django_auth_ldap')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/home/dan/log/emo.log',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers':['file'],
+            'propagate': True,
+            'level':'DEBUG',
+        },
+        'MYAPP': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+        },
+    }
+}
+
 
 ROOT_URLCONF = 'emo.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -1,6 +1,7 @@
 from django import forms
 from bson.json_util import loads
 from pymongo import MongoClient
+from django.conf import settings
 
 # Create your models here.
 class ModeSubmissionForm(forms.Form):
@@ -12,28 +13,24 @@ class ModeSubmissionForm(forms.Form):
 
     def clean_bulk(self):
 
-       try:
+        try:
             thebson = loads(self.cleaned_data['bulk'])
-       except:
+        except:
             raise forms.ValidationError(self.fields['bulk'].error_messages['badjson'])
-
-       if 'name' not in thebson.keys():
+            
+        if 'name' not in thebson.keys():
             raise forms.ValidationError(self.fields['bulk'].error_messages['no_name'])
-       if 'detector' not in thebson.keys():
+        if 'detector' not in thebson.keys():
             raise forms.ValidationError(self.fields['bulk'].error_messages['no_det'])
 
-       # These options will be set somewhere else later?
-       online_db_name = "online"
-       runs_db_collection = "run_modes"
-       mongodb_address = "localhost"
-       mongodb_port = 27017
+        mode_db_collection = "run_modes"
+        client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+        db = client[settings.ONLINE_DB_NAME]
+        if settings.MONGO_USER != "":
+            db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+        collection = db[mode_db_collection]
 
-       # Connect to pymongo
-       client = MongoClient(mongodb_address, mongodb_port)
-       db = client[online_db_name]
-       collection = db[runs_db_collection]
+        if thebson['name'] in collection.distinct('name'):
+            raise forms.ValidationError(self.fields['bulk'].error_messages['dupe_name'])
 
-       if thebson['name'] in collection.distinct('name'):
-           raise forms.ValidationError(self.fields['bulk'].error_messages['dupe_name'])
-
-       return self.cleaned_data['bulk']
+        return self.cleaned_data['bulk']
