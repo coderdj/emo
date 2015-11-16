@@ -6,23 +6,38 @@
 <br>
 <h2> Welcome to the documentation for the experimental monitor web suite </h2>
 <hr>
-<h3>Getting Started</h3>
+<h3>Getting Started: I just want to look around</h3>
 <br>
 <p>
-As a user you can do several things: start and stop data-taking, monitor the data coming in, 
-monitor the acquisition computer cluster, browse runs, and view the logs.
+If you are a new user who just wants to look around, then go ahead and do so. There's nothing you can do to distrurb operations just by clicking and checking things out. The framework should be pretty self-explanatory but if something isn't clear please send an email, file an issue, or ask in the embedded chat window (github account required). 
  </p>
- <p>Most of these actions are possible as a normal user. However to take control of the DAQ 
- you have to elevate your permissions in your profile. You can navigate to your profile on 
- the top right of the page. Please follow the instructions there.
- </p>
- <br>
-<h3>Development</h3>
+<br>
+<h3>Getting Started: I want to control the DAQ</h3>
+<p>
+No problem! We want to make it easy for you to start and stop runs. As a 'normal' user it is impossible to take control of the electronics. In order to elevate yourself to 'shifter' status, go to your profile in the menu on the top right of the screen. Here there is a list of your permissions and a button you can click to give yourself control of the DAQ. After clicking this button you should see the 'start run' and 'stop run' buttons appeak in the control panel.
+</p>
+<p> 
+Some things to keep in mind:
+<ul>
+  <li>Only a maximum of one user (in the whole collaboration!) can be a shifter at once. Clicking the link in your profile effectively 'steals' the shifter status from whoever had it before.</li>
+  <li>You may also relinquish your shifter status in your profile. This removes your ability to start and stop runs.</li>
+  <li>If your shifter status is not relinquished or stolen, it will anyway expire automatically after one week.</li>
+  <li>All changes to the DAQ state are logged</li>  
+</ul>
+</p>
+<br>
+<h3>I need help with something!</h3>
+<p>
+Please check the 'contact' link on the left menu bar for all options to get in touch.
+</p>
+<br>
+<hr style="background-color:black;color:black;height:1px;width:80%">
+<br>
+<h2>Development</h2>
 <br>
 <p>If you're interested in developing new functionality please contact the DAQ group. The site
 is implemented in Django with a SQL-lite backend. However all acquisition monitoring information 
-is provided by a MongoDB database. If you have a cool idea for a new view you are welcome to 
-implement it!
+is provided by a MongoDB database. If you have a cool idea for a new app you are welcome to implement it!
 </p>
 <br>
 <h3>MongoDB Document format</h3>

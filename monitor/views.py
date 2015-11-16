@@ -1,5 +1,4 @@
 from pymongo import MongoClient
-#import snappy
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util, objectid
@@ -22,6 +21,12 @@ from monitor.models import ScopeRequest
 from pandas import DataFrame
 from bokeh.properties import value
 import dateutil
+import snappy
+
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 # These options will be set somewhere else later?
 online_db_name = settings.MONITOR_DB_NAME
@@ -698,10 +703,10 @@ def noise_directory(request):
     Show directory of noise files from noise DB
     """
 
-    noise_db_name = "noise"
+    #noise_db_name = "noise"
     noise_directory_collection = "directory"
-    ndb = client[noise_db_name]
-    collection = ndb[noise_directory_collection]
+    #ndb = client[noise_db_name]
+    collection = db[noise_directory_collection]
 
     max_entries = 100000
     run_list = collection.find().sort("_id", -1)[:max_entries]
@@ -926,7 +931,6 @@ def get_calendar_events(request):
 
 @login_required
 def getWaveform(request):
-
     
     if ( request.method == 'GET' and 'server' in request.GET and 
          'database' in request.GET and 'collection' in request.GET and 'id' in request.GET ):  
@@ -936,13 +940,38 @@ def getWaveform(request):
         doc_id = objectid.ObjectId(request.GET['id'])
 
         searchdict = {"_id": doc_id}  
-        #if "module" in request.GET:  
-        #    searchdict["module"] = int(request.GET['module'])  
-        #if "channel" in request.GET:  
-        #    searchdict["channel"] = int(request.GET['channel'])  
+        if "module" in request.GET:  
+            searchdict["module"] = int(request.GET['module'])  
+        if "channel" in request.GET:  
+            searchdict["channel"] = int(request.GET['channel'])  
   
+
+        if server == "eb0":
+            try:
+                client = MongoClient(server, 27000)
+                db = client[settings.BUFFER_DB_REPL]
+                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
+                retdoc = db[collection].find_one(searchdict)
+                retjson = {}
+
+                if retdoc is not None:
+                    data = snappy.decompress(retdoc['data'])
+                    intformat = np.frombuffer(data,np.int16)
+                    bins = []
+                    print(bins)
+                    for i in range(0, len(intformat)):
+                        bins.append([i, int(intformat[i])])
+                        #bins.append([i, 0x3fff-int(intformat[i])])                                       
+                    retjson = { "adc_value": bins, "time": retdoc['time']}
+
+                    client.close()
+                    return HttpResponse(dumps(retjson),
+                                    content_type='application/json')
+            except:
+                print("Can't connect to server")
+                return HttpResponse([], content_type="application/json")
         try:  
-            client = MongoClient(server)  
+            client = MongoClient(server)
         except:  
             print("Can't connect to server")  
             return HttpResponse([], content_type="application/json")  
@@ -965,34 +994,55 @@ def getWaveform(request):
                                 content_type='application/json')
 
         client.close()  
-    
+
     return HttpResponse([], content_type="application/json")  
 
 
 @login_required
 def getDatabase(request):    
 
+    
     if request.method == 'GET' and 'server' in request.GET:
         server = request.GET['server']
+        
+        if server == "eb0":
+            retlist = [settings.BUFFER_DB_REPL]
+            return HttpResponse(dumps(retlist),
+                            content_type='application/json')
+
         try:
             client = MongoClient(server)
         except:
             print("Can't connect to server")
             return HttpResponse([], content_type="application/json")
+        
         retlist = client.database_names()
         client.close()
         return HttpResponse(dumps(retlist),
                             content_type='application/json')
 
-
+    
     return HttpResponse([], content_type="application/json")
 
 @login_required
 def getCollection(request):
 
+    
     if request.method == 'GET' and 'server' in request.GET and 'database' in request.GET:
         server = request.GET['server']
         database = request.GET['database']
+
+        if server == "eb0":
+            try:
+                client = MongoClient(server, 27000)                
+                db = client[settings.BUFFER_DB_REPL]
+                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
+                retlist = db.collection_names()
+                return HttpResponse(dumps(retlist),
+                                content_type='application/json')
+            except:
+                print("Can't connect to server")
+                return HttpResponse(["error"], content_type="application/json")
         try:
             client = MongoClient(server)
         except:
@@ -1004,16 +1054,28 @@ def getCollection(request):
             return HttpResponse(dumps(retlist),
                                 content_type='application/json')
         client.close()
-
+    
     return HttpResponse([], content_type="application/json")
 
 @login_required
 def getModules(request):
-
+    
     if request.method == 'GET' and 'server' in request.GET and 'database' in request.GET and 'collection' in request.GET:
         server = request.GET['server']
         database = request.GET['database']
         collection = request.GET['collection']
+    
+        if server == "eb0":
+            try:
+                client = MongoClient(server, 27000)
+                db = client[settings.BUFFER_DB_REPL]
+                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
+                retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
+                return HttpResponse(dumps(retlist),
+                            content_type='application/json')
+            except:
+                print("Can't connect to server")
+                return HttpResponse([], content_type="application/json")
         try:
             client = MongoClient(server)
         except:
@@ -1025,44 +1087,76 @@ def getModules(request):
             return HttpResponse(dumps(retlist),
                                 content_type='application/json')
         client.close()
-
+    
     return HttpResponse([], content_type="application/json")
 
 @login_required
 def getChannels(request):
 
+    
     if request.method == 'GET' and 'server' in request.GET and 'database' in request.GET and 'collection' in request.GET and 'module' in request.GET:
         server = request.GET['server']
         database = request.GET['database']
         collection = request.GET['collection']
         module = int(request.GET['module'])
+        
+        if server == "eb0":
+            try:
+                client = MongoClient(server, 27000)
+                db = client[settings.BUFFER_DB_REPL]
+                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
+                retlist = client[settings.BUFFER_DB_REPL][collection].find({"module":module}).limit(100).distinct("channel")
+                return HttpResponse(dumps(retlist),
+                                    content_type='application/json')
+            except:
+                print("Can't connect to server")
+                return HttpResponse([], content_type="application/json")
+
         try:
             client = MongoClient(server)
         except:
             print("Can't connect to server")
             return HttpResponse([], content_type="application/json")
+        
         if database in client.database_names() and collection in client[database].collection_names():              
             retlist = client[database][collection].find({"module":module}).limit(100).distinct("channel")
             client.close()
             return HttpResponse(dumps(retlist),
-                                content_type='application/json')
-        client.close()
-
+                            content_type='application/json')
+        #client.close()
+    
     return HttpResponse([], content_type="application/json")
 
 @login_required
 def getOccurrences(request):
-
+    
     if request.method == 'GET' and 'server' in request.GET and 'database' in request.GET and 'collection' in request.GET:
         server = request.GET['server']
         database = request.GET['database']
         collection = request.GET['collection']
-
+        
         searchdict = {}
         if "module" in request.GET:
             searchdict["module"] = int(request.GET['module'])
         if "channel" in request.GET:
             searchdict["channel"] = int(request.GET['channel'])
+
+        print("In get occurrences")
+        logger.error("In getOccurrences")
+        if server == "eb0":
+            try:
+                client = MongoClient(server, 27000)
+                db = client[settings.BUFFER_DB_REPL]
+                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
+                retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(50))
+                client.close()
+                logger.error(retlist)
+                print(retlist)
+                return HttpResponse(json_util.dumps(retlist),
+                                    content_type='application/json')
+            except:
+                print("Can't connect to event builder")
+                return HttpResponse([], content_type="application/json")
 
         try:
             client = MongoClient(server)
@@ -1070,12 +1164,12 @@ def getOccurrences(request):
             print("Can't connect to server")
             return HttpResponse([], content_type="application/json")
         if database in client.database_names() and collection in client[database].collection_names():
-            retlist = list(client[database][collection].find(searchdict, {"data":0}).sort("time,1").limit(50))            
+            retlist = list(client[database][collection].find(searchdict, {"data":0}).sort("time",1).limit(50))            
             if len(retlist) > 0:
                 print(retlist[0])
             client.close()
             return HttpResponse(json_util.dumps(retlist),
                                 content_type='application/json')
         client.close()
-
+    
     return HttpResponse([], content_type="application/json")

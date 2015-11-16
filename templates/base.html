@@ -6,9 +6,9 @@
   <head>
     <link rel="icon" type="image/png" href="{% static "img/favicon.ico" %}">
     <meta charset="utf-8">  
-    <title>XENON1T Online Monitoring - Powered by emo</title>     
+    <title>XENON1T Data Acquisition</title>     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <meta name="description" content="XENON1T Data Monitor">    
+    <meta name="description" content="XENON1T Data Acquisition">    
     <meta name="author" content="Daniel Coderre" >
     
     <!-- Declare pace and get it going. Note removed
@@ -47,12 +47,22 @@
 	    
     <link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
     <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
+<style>
+ .gitter-chat-embed {
+top: 40px;
+}
+</style>
+{% if user.is_authenticated %}
 <script>
+$(function(){
   ((window.gitter = {}).chat = {}).options = {
-    room: 'coderdj/daq-chat'
+    room: 'coderdj/daq-chat',
+//   targetElement: '#content'
   };
+});
 </script>
 <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+{% endif %}
 <style>
 .hero-unit {
 //    background-image:url("/components/img/pano2.jpg");
@@ -369,20 +379,25 @@ margin-left:-30px;margin-right:-30px;
     }
   </style>
   <div class="hero-unit fill" id="hero_unit">
-    <div id="title_text">
-      <br>
-      <h1>Welcome to the DAQ</h1>
-      <h2>(beta version)</h2>
-      <br>
-      <p>
-	<a href="/control" class="btn btn-primary btn-large" style="background-color:#5992c2">
-	  Take me to the control panel...
-	</a>
-      </p>
+    <div class="row">
+      <div class="col-md-12 col-lg-9" id="title_text">
+	<br>
+	<h1>Welcome to the DAQ</h1>
+	<h2>You are logged in as {{ user.get_username }}</h2>
+	<br>
+	<p>
+	  <a href="/control" class="btn btn-primary btn-large" style="background-color:#5992c2">
+	    Take me to the control panel...
+	  </a>
+	</p>
+      </div>
+      <div class="hidden-md col-lg-3" style="max-height:100px">
+
+      </div>
     </div>
   </div>
   <p class="bg-info" style="width:100%;padding-left:20px">
-    <strong>Beta Version!</strong> This is a <strong>beta</strong> deployment! Lots of things don't work perfectly yet. Other things don't work at all. Some is by design (the DAQ is not installed so there is no way to control it), other parts are still being implemented. There is some Mickey Mouse data in the DB in order to populate some of the plots, etc. Please report issues on github! If you want to implement something, volunteers are more than welcome.
+    <strong>Welcome!</strong> Thanks for taking a look at the DAQ interface. This site is <strong>fully functional</strong>, as in it is possible to control the DAQ from here. But please don't unless you know what you're doing! You might notice all the monitoring plots are empty... well we aren't running the experiment yet. Once we are they will be populated with real-time data. Please file issues at the GitHub!
   </p>
   <br><br><br>
   <div class="row">
@@ -431,7 +446,8 @@ margin-left:-30px;margin-right:-30px;
   {% endblock %}
 </div>
 	</div>
-   	{% else %}
+   {% else %}
+{% block content2 %}
 <div class="hero-unit fill" style="margin-top:30px">
   <br>
   <h1>DAQ Web Portal</h1>
@@ -472,7 +488,7 @@ margin-left:-30px;margin-right:-30px;
         XENON1T dokuwiki
       </a>
     </div>
-
+{% endblock %}
 	{% endif %}
 			
 

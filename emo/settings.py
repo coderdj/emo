@@ -37,6 +37,9 @@ LOG_DB_PORT = 27018
 LOG_DB_REPL = "run"
 BUFFER_DB_ADDR = "eb0"
 BUFFER_DB_PORT = 27000
+BUFFER_DB_REPL = "untriggered"
+BUFFER_DB_LOGIN = "reader"
+BUFFER_DB_PASSWORD = "luxstinks"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -72,6 +75,7 @@ INSTALLED_APPS = (
     'monitor',
     'log',
     'config',
+    'access_log'
 )
 
 MIDDLEWARE_CLASSES = (

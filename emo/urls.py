@@ -15,15 +15,17 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+#from django.contrib.auth.views import login
 from django.views.generic.base import TemplateView
 from management import views
 
 urlpatterns = [
-
+ 
     url(r'^$', TemplateView.as_view( template_name='base.html')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^login', 'django.contrib.auth.views.login',
-        {'template_name': 'login.html'}, name='login'),
+    #url(r'^accounts/login',login(template_name="login.html"),name="login"),
+#    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
+ #       kwargs={'template_name': 'login.html'}, name='login'),
     url(r'^logout', views.logout_page,name='logout'), #must add
     url(r'^profile/$', views.profile, name='profile'),
 
@@ -34,4 +36,8 @@ urlpatterns = [
     url(r'^monitor/', include('monitor.urls')),
     url(r'^log/', include('log.urls')),
     url(r'^config/', include('config.urls')),
+    url(r'^access/', include('access_log.urls')),
+url(r'^accounts/login/$', 'django.contrib.auth.views.login',
+        kwargs={'template_name': 'login.html'}, name='login'),
+
 ]

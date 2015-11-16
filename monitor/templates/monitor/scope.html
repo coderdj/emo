@@ -26,8 +26,8 @@
 	    <strong>Server: </strong>
 	    <select name="serverList" id="serverList" onchange="getData(this, 'server');">
 	      <option value="none">Choose a server</option>
+	      <option value="eb0">Event builder</option>
 	      <option value="172.17.15.71">Test PC</option>
-<!--	      <option value="xedaq01">xedaq01</option> -->
 	    </select>
 	    <span id="server_confirm"><i style="color:red;" class="fa fa-exclamation-circle"></i></span>
           </span>
@@ -251,7 +251,9 @@
     if( level == 'server' ){
        query_url = "/monitor/scope/getDatabase/";
        query_url += query_end;
+      console.log(query_url);
        $.getJSON(query_url,function(data){
+           console.log(data);
            if( data.length != 0 ){
                rstr = '<option value="none">Choose a database</option>';
                for( x=0; x<data.length; x+=1)

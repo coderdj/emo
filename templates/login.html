@@ -1,28 +1,22 @@
 {% extends "base.html" %}
-{% block content %}
+{% block content2 %}
 {% load staticfiles %}
 
-<br><br>
-<div class="col-lg-6">
+
+<div class="col-sm-12" style="margin-top:50px;">
    <h2>Login</h2>
-   <p>You need to login to view the site. If you want a user account please send an email using the contact form. This will later be integrated with the lab authentication system.</p>
+   <p>You need to log in to view the site. This is your normal lab user/password.</p>
 </div>
 
 <br>
-<div class="col-lg-6">
-<form action="{% url "login" %}" method="post" accept-charset="utf-8">
-  {% csrf_token %}
+<div class="col-sm-12">
+  <form action="{% url "login" %}" method="post" accept-charset="utf-8">
+    {% csrf_token %}
     {{ form }}
-  <input type="hidden" name="next" value="{{ next }}" />
-  <br>
-  <input class="btn btn-success" type="submit" value="Login" />
-</form>
+    <input type="hidden" name="next" value="{{ next }}" />
+    <br>
+    <input class="btn btn-success" style="margin-top:10px;" type="submit" value="Login" />
+  </form>
 </div>
-<br></br>
-<br></br>
-<br></br>
-<br></br>
-<br></br>
-<p>  <div style="padding-left: 30px;"><a href="/" class="btn btn-info btn-large">&laquo; Home</a></p></div>
 
 {% endblock %}
