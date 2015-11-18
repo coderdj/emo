@@ -213,14 +213,22 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                 if (update_seconds > 30 )
                     color = "#AAAAAA";
 
-                var html_string = "<div class='row emo-node-line' style='font-size:10pt;color:" + color + "'>" +
+		var html_string = "<tr style='color:" + color + "'>" +
+		        "<td>" + node_data[node_id]['node'] + "</td>" +
+                    "<td>" + node_data[node_id]['runmode'] + "</td>" +
+                    "<td>" + node_data[node_id]['nboards']+ "</td>" +
+                    "<td>" + node_data[node_id]['bltrate']+ "</td>" +
+                    "<td>" + node_data[node_id]['datarate']+ "</td>" +
+                    "<td>" + update_seconds.toString()+ "</td></tr>";
+
+/*                var html_string = "<div class='row emo-node-line' style='font-size:10pt;color:" + color + "'>" +
                     "<div class='col-xs-2'>" + node_data[node_id]['node'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['runmode'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['nboards'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['bltrate'] + "</div>"+
                     "<div class='col-xs-2'>" + node_data[node_id]['datarate'] + "</div>"+
                     "<div class='col-xs-2'>" + update_seconds.toString() + "</div>" +
-                    "</div>";
+                    "</div>";*/
 		console.log(node_data);
 		console.log(node_data[node_id]['node']);
 		if(node_data[node_id]['node'][0]=='r') // as in 'reader0x'
@@ -253,6 +261,7 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    var appstring = "";
 		    for(var index=0;index<nodeInfo[det_name].length;index+=1)
 			appstring+=nodeInfo[det_name][index];
+		    console.log(appstring);
 		    document.getElementById(det_name+"_node_div").innerHTML = appstring;
 		}
 		else{ // append a new header
@@ -271,27 +280,28 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			else
 			    timestring = "";
 		    }
-		    html_str = "<div class='col-xs-12 emobox' id='" + det_name + "_parent'>";
+		    html_str = "<div class='col-xs-12 emobox' style='min-width:500px;' id='" + det_name + "_parent'>";
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
 			GetStateHtml(detector_data, status_id) + "</a><a style='font-size:10pt;color:black;'>&nbsp;" 
 			+ timestring + "</a>" + "</h2></div>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
-				  "<div class='col-xs-4' style='font-size:10pt'><em>Run name:&nbsp;<span id='" + 
+				  "<div class='col-xs-4' style='font-size:10pt;text-overflow:ellipsis;'><em>Run name:&nbsp;<span id='" + 
 				  det_name + "_runname'></span></div>" + 
-				  "<div class='col-xs-2' style='font-size:10pt'><em>Started by:&nbsp;<span id='" + 
+				  "<div class='col-xs-2' style='word-wrap:break-word;font-size:10pt;text-overflow:ellipsis;'><em>Started by:&nbsp;<span id='" + 
 				  det_name + "_startedby'></span></div>" +  
-				  "<div class='col-xs-2' style='font-size:10pt'><em>Mode:&nbsp;<span id='" + 
+				  "<div class='col-xs-2' style='font-size:10pt;text-overflow:ellipsis;'><em>Mode:&nbsp;<span id='" + 
 				  det_name + "_runmode'></span></div>" +  
-				  "<div class='col-xs-4' style='font-size:10pt'><em>Start Date:&nbsp;<span id='" + 
+				  "<div class='col-xs-4' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em>Start Date:&nbsp;<span id='" + 
 				  det_name + "_startdate'></span></div>" +  
 				  "</div><hr>");
 		    html_str += "</div>";
 		    $('#'+div_id).append(html_str);
 		    if( detector_data['status'][status_id]['state'] == "Running")
                         FillOutRunInfo(det_name, detector_data, status_id);
-		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
+		    var appstring = "<table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
+/*		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
                         "<div class='col-xs-2'>Digitizers</div>"+
@@ -299,11 +309,14 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                         "<div class='col-xs-2'>Data Rate (MB/s)</div>"+
                         "<div class='col-xs-2'>Updated (s)</div>" +
                         "</div></strong>";
-		    $('#'+det_name + "_parent").append(header_html);
-		    var appstring = "<div id='"+det_name+"_node_div'>";
+			*/
+		    //$('#'+det_name + "_parent").append(header_html);
+		    //var appstring = "<div id='"+det_name+"_node_div'>";
+		    appstring += "<tbody id='"+det_name+"_node_div'>";
 		    for(var index=0;index<nodeInfo[det_name].length; index+=1)
 			appstring+= nodeInfo[det_name][index];
-		    appstring+= "</div></div>";
+		    //appstring+= "</div></div>";
+		    appstring += "</tbody></table>"
 		    console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
 		    
@@ -377,8 +390,10 @@ function UpdateDetectorText(dataUrl, divname){
 function UpdateNodes( nodes_div, nodesUrl ){
 
         $.getJSON( nodesUrl, function(data) {
-
-            var html_string = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
+	    
+	    //var html_string = "<table class='table'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></thead>";
+	    var html_string ="";
+/*            var html_string = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
                         "<div class='col-xs-2'>Num. digitizers</div>"+
@@ -386,7 +401,7 @@ function UpdateNodes( nodes_div, nodesUrl ){
                         "<div class='col-xs-2'>Data Rate</div>"+
                         "<div class='col-xs-2'>Seconds since update</div>" +
                         "</div></strong>";
-
+*/
             var currentTime = new Date();
 
             for ( var x=0; x<data.length; x++ ){
@@ -397,7 +412,15 @@ function UpdateNodes( nodes_div, nodesUrl ){
                 if (update_seconds > 30 )
                     color = "#AAAAAA";
 
-                html_string += "<div class='row emo-node-line' style='color:" + color + "'>" +
+		html_string += "<tr style='color:" + color + "'>" +
+		    "<td>" + data[x]['node'] + "</td>" +
+		    "<td>" + data[x]['runmode'] + "</td>" +
+		    "<td>" + data[x]['nboards']+ "</td>" +
+		    "<td>" + data[x]['bltrate']+ "</td>" +
+		    "<td>" + data[x]['datarate']+ "</td>" +
+		    "<td>" + update_seconds.toString()+ "</td></tr>";
+
+/*                html_string += "<div class='row emo-node-line' style='color:" + color + "'>" +
                         "<div class='col-xs-2'>" + data[x]['node'] + "</div>"+
                         "<div class='col-xs-2'>" + data[x]['runmode'] + "</div>"+
                         "<div class='col-xs-2'>" + data[x]['nboards'] + "</div>"+
@@ -405,7 +428,7 @@ function UpdateNodes( nodes_div, nodesUrl ){
                         "<div class='col-xs-2'>" + data[x]['datarate'] + "</div>"+
                         "<div class='col-xs-2'>" + update_seconds.toString() + "</div>" +
                         "</div>";
-
+*/
             }
 
             document.getElementById( nodes_div).innerHTML = html_string;

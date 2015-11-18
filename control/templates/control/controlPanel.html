@@ -4,6 +4,7 @@
 {% endblock %}
 {% block content %}
 <script src="{% static "emo/js/daqcontrol.js" %}" type="text/javascript" xmlns:rows="http://www.w3.org/1999/xhtml"></script>
+<script src="{% static "js/jquery-resize.min.js" %}" type="text/javascript"></script>
 
 
 <style>
@@ -78,8 +79,8 @@
         </div>
     </div>
 <!--<br>-->
-<div class="row">
-  <div class="col-xs-12" id="info_panel"><!-- style="height:40%;min-height:250px;margin-top:10px;">
+<div class="row" id="text_panel">
+  <div class="col-xs-12" id="info_panel" style="min-width:350px;"><!-- style="height:40%;min-height:250px;margin-top:10px;">
 <!--  <div class="col-xs-12" id="info_panel_header">
     </div>-->
 <div class="col-xs-12" id="info_panel_header"><!-- style="height:30%;background-color:white;border-color:#AAAAAA;
@@ -398,7 +399,10 @@ border-style=solid;border-width:1px;">-->
       //TextUpdate();
      //updateData( chart, pointUpdateUrl );
       update_graphic();
-			     UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
+      UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
+
+
+
 			     //UpdateDetectorText(dataUrl, "info_panel_header");
 			     //UpdateNodes( "info_panel_nodes", pointUpdateUrl );
       setTimeout( function() {
@@ -445,6 +449,10 @@ border-style=solid;border-width:1px;">-->
 
         loadData(thechart, historyUrlWithOptions, function(thechart){});
     }
+$("#rates_panel").resize(function(){
+//	redraw_graphic();
+	update_graphic();
+});
   // Load page function
   $( function() {
 

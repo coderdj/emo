@@ -4,6 +4,7 @@
     min-width:500px;
     width:60%;
     padding: 10px;
+    text-overflow:ellipsis;
 
 }
 .emo-status-menu-entry {
