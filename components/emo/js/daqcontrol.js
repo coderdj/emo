@@ -130,9 +130,10 @@ function loadData( chart, dataURL, callback )
 function GetTimeString(startdate){
     // Return the time string based on the run's start time
     // also computes how long run has been running in a nice way
-
     var nowdate = new Date();
     var diff = nowdate-startdate;
+    console.log(nowdate);
+    console.log(startdate);
     if(diff<0)
         diff=0;
     var hours = Math.floor(((diff)/1000)/3600);
@@ -164,7 +165,7 @@ function GetStateHtml(data, index){
     if(status == "Running")
 	return "<span style='color:green;'>running</span>";
     else if(status == "Idle")
-	return "<span style='color:red;'>idle</span>";
+	return "<span style='color:orange;'>idle</span>";
     else if(status == "Error")
 	return "<span style='color:red;'>crashed!</span>";
     else
@@ -193,6 +194,8 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
     $.getJSON( dataUrl, function(detector_data){
+console.log(detector_data);
+console.log("flipflop");
 	$.getJSON( nodesUrl, function(node_data) {
 
 	    
@@ -258,13 +261,15 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    var timestring="";
 		    if(detector_data['status'][status_id].startTime!=""){
 			thedatestring = detector_data['status'][status_id].startTime;
+			console.log(thedatestring);
 			thedatestring = thedatestring.substr(0, 
 							     thedatestring.length - 
 							     8);
-			startdate = new Date( thedatestring );
-			console.log("TIME");
+			thedatestring += "+01:00";
 			console.log(thedatestring);
-			if(detector_data['status'][status_id]['state'] == "RUNNING")
+			
+			startdate = new Date( thedatestring );
+			if(detector_data['status'][status_id]['state'] == "Running")
 			    timestring = GetTimeString( startdate );
 			else
 			    timestring = "";
@@ -272,8 +277,8 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    html_str = "<div class='col-xs-12 emobox' style='min-width:500px;' id='" + det_name + "_parent'>";
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
-			GetStateHtml(detector_data, status_id) + "</a><a style='font-size:10pt;color:black;'>&nbsp;" 
-			+ timestring + "</a>" + "</h2></div>";
+			GetStateHtml(detector_data, status_id) + "</a><strong style='font-size:10pt;color:black;'>&nbsp;" 
+			+ timestring + "</strong>" + "</h2></div>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
 				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Run name:&nbsp;<span id='" + 

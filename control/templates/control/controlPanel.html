@@ -288,8 +288,7 @@ border-style=solid;border-width:1px;">-->
   
   // Globals for this page
   //var chart = null;
-  var updateFreq = 50;          // 5 second update polling
-  var updateFreqStable = 10000;
+  var updateFreq = 10000;          // 5 second update polling
   var run_mode_list_url = "/config/fetch_mode_list";
   var chartdiv = "rates_panel";
   var pointUpdateUrl = "/control/get_node_updates";
@@ -386,7 +385,7 @@ border-style=solid;border-width:1px;">-->
 
   // Page update poll
   function UpdatePage( thechart ){
-  
+			     console.log("Call update page");
      // No starting runs if there are open alerts
      if(global_can_start_runs){ 
         document.getElementById('run_start_form').style.display = 'block';
@@ -397,22 +396,16 @@ border-style=solid;border-width:1px;">-->
         document.getElementById('no_start_runs').style.display = 'block';
      }
 
-      //TextUpdate();
-     //updateData( chart, pointUpdateUrl );
-//      update_graphic();
       UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
-		
-
-
-			     //UpdateDetectorText(dataUrl, "info_panel_header");
-			     //UpdateNodes( "info_panel_nodes", pointUpdateUrl );
-       setTimeout( function() {
+		  
 	update_graphic(function(){
              $("#Loading").hide();
-	    updateFreq = updateFreqStable;
-	UpdatePage( thechart );			     });
-      }, updateFreq );
-  };
+	     console.log("Page update finished");
+             setTimeout( function(){ 
+			     UpdatePage( thechart );			  
+			     }, updateFreq );
+	});
+}
 
   function DrawLogWindow( logdiv, Url ) {
       $.getJSON(Url, function(data){
@@ -453,11 +446,10 @@ border-style=solid;border-width:1px;">-->
 
         loadData(thechart, historyUrlWithOptions, function(thechart){});
     }
-$("#rates_panel").resize(function(){
-//	redraw_graphic();
-	UpdatePage();
-//	update_graphic();
-});
+
+//$("#rates_panel").resize(function(){
+//	UpdatePage(chart);
+//});
   // Load page function
   $( function() {
 
@@ -484,12 +476,6 @@ $("#rates_panel").resize(function(){
                 }
              }
       });
-
-//     drawChart( chart, chartdiv, function(thechart) {
-//	loadData( thechart, historyUrl, function(anotherchart) {
-  //            UpdatePage( thechart );
-  //        });
-//     });
 
 
   }); // end document ready function
@@ -538,7 +524,7 @@ $(".btn-group button").on("click", function() {
     else
         graphic_bin = $(this)[0].value;
     //console.log($(this)[0].value);
-    redraw_graphic();
+  //  redraw_graphic();
 });
 </script>
 {% endblock %}

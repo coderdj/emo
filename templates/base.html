@@ -583,9 +583,17 @@ margin-left:-30px;margin-right:-30px;
 			var currentTime = new Date();
 			var maxtdiff = 1000000;
 			var recentTime;
+	                var status_html="";
 			for (x = 0; x < data['status'].length; x++) {
 				status = data['status'][x]['state'];
-					
+				if (status == "Running")
+					status_html+="<i style='color:green;' class='fa fa-check-circle'></i>";
+				else if( status == "Idle" )
+					status_html+="<i style='color:orange'; class='fa fa-check-circle'></i>";
+				else if(status == "Error" )
+					status_html+="<i style='color:red;' class='fa fa-exclamation-circle'></i>";
+				else 
+					status_html+="<i style='color:orange;' class='fa fa-exclamation-triangle'></i>"
 				var docdate = new Date(data['status'][x]['createdAt']['$date']);
 				tdiff = currentTime - docdate;
 				if (tdiff < maxtdiff) {
@@ -593,7 +601,8 @@ margin-left:-30px;margin-right:-30px;
 					recentTime = docdate;
 				}
 			}
-			if (status == "Running"){
+			document.getElementById("status").innerHTML = status_html;
+/*			if (status == "Running"){
 				document.getElementById("status").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
 			}
 			else if ( status == "Idle" ) {
@@ -605,7 +614,7 @@ margin-left:-30px;margin-right:-30px;
 			else {
 				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
 			}
-
+*/
 			status_more = "<strong><div class='row emo-status-menu-entry'><div class='col-xs-2'>Detector</div>" +
 					"<div class='col-xs-2'>Status</div><div class=col-xs-4>Mode</div><div class='col-xs-4'>Run name</div></div></strong>";
 			for (x = 0; x < data['status'].length; x++) {
@@ -617,7 +626,7 @@ margin-left:-30px;margin-right:-30px;
 							data['status'][x]['currentRun'] + "</div></div>";
 				}
 				else{
-					status_more += "<strong style='color:red;'>" + data['status'][x]['state'] + "</strong> </div></div>";
+					status_more += "<strong style='color:orange;'>" + data['status'][x]['state'] + "</strong> </div></div>";
 				}
 			}
 			status_more+="</div>";
