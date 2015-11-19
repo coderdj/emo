@@ -63,8 +63,8 @@
         <div class="col-xs-12">
             <div class="pull-right" style="padding-right:15px;">
             <div class="btn-group" id="time_range_selector" role="group" aria-label="...">
-                <button type="button" value=172800 class="btn btn-default active range">48 hours</button>
-                <button type="button" value=86400 class="btn btn-default range">24 hours</button>
+                <button type="button" value=172800 class="btn btn-default range">48 hours</button>
+                <button type="button" value=86400 class="btn btn-default active range">24 hours</button>
                 <button type="button" value=21600 class="btn btn-default range">6 hours</button>
                 <button type="button" value=3600 class="btn btn-default range">1 hour</button>
             </div>
@@ -288,7 +288,8 @@ border-style=solid;border-width:1px;">-->
   
   // Globals for this page
   //var chart = null;
-  var updateFreq = 5000;          // 5 second update polling
+  var updateFreq = 50;          // 5 second update polling
+  var updateFreqStable = 10000;
   var run_mode_list_url = "/config/fetch_mode_list";
   var chartdiv = "rates_panel";
   var pointUpdateUrl = "/control/get_node_updates";
@@ -296,7 +297,7 @@ border-style=solid;border-width:1px;">-->
   var dataUrl = "/control/get_status_update";
   var logUrl = "/log/get_dispatcher_log";
   var chart;
-  var graphic_range = (48*60*60).toString();
+  var graphic_range = (24*60*60).toString();
   var graphic_bin = "600";
   var feedback_count = 0;
   var feedbackURL = "/control/run_start_feedback";
@@ -398,16 +399,18 @@ border-style=solid;border-width:1px;">-->
 
       //TextUpdate();
      //updateData( chart, pointUpdateUrl );
-      update_graphic();
+//      update_graphic();
       UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
-
+		
 
 
 			     //UpdateDetectorText(dataUrl, "info_panel_header");
 			     //UpdateNodes( "info_panel_nodes", pointUpdateUrl );
-      setTimeout( function() {
+       setTimeout( function() {
+	update_graphic(function(){
              $("#Loading").hide();
-	UpdatePage( thechart );			     
+	    updateFreq = updateFreqStable;
+	UpdatePage( thechart );			     });
       }, updateFreq );
   };
 
@@ -423,7 +426,7 @@ border-style=solid;border-width:1px;">-->
           document.getElementById( logdiv).innerHTML = html_string;
       });
   }        
-    function update_graphic(){
+    function update_graphic(callback){
        // update points if needed
        var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
        $.getJSON( historyUrlWithOptions, function(data) {
@@ -438,6 +441,7 @@ border-style=solid;border-width:1px;">-->
               },true);
           }
        });
+	callback();
     }
          
     function redraw_graphic(){
@@ -451,16 +455,19 @@ border-style=solid;border-width:1px;">-->
     }
 $("#rates_panel").resize(function(){
 //	redraw_graphic();
-	update_graphic();
+	UpdatePage();
+//	update_graphic();
 });
   // Load page function
   $( function() {
 
-  $("#Loading").show();
+      $("#Loading").show();
 
-  //DrawLogWindow( "message_panel", logUrl );
-    var chart = null;
-
+      //DrawLogWindow( "message_panel", logUrl );
+      var chart = null;
+      drawChart( chart, chartdiv, function(thechart) {
+                 UpdatePage( thechart );
+      });
       $.getJSON(run_mode_list_url, function(data){
              if(data!=null){
                 if("tpc" in data){
@@ -478,11 +485,11 @@ $("#rates_panel").resize(function(){
              }
       });
 
-     drawChart( chart, chartdiv, function(thechart) {
+//     drawChart( chart, chartdiv, function(thechart) {
 //	loadData( thechart, historyUrl, function(anotherchart) {
-              UpdatePage( thechart );
+  //            UpdatePage( thechart );
   //        });
-     });
+//     });
 
 
   }); // end document ready function
@@ -525,6 +532,7 @@ $(".nav a").on("click", function(){
 $(".btn-group button").on("click", function() {
     $(this).parent().find(".active").removeClass("active");
     $(this).addClass("active");
+    $(this).blur();
     if ($(this).hasClass("range"))
         graphic_range = $(this)[0].value;
     else

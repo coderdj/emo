@@ -57,8 +57,7 @@ function drawChart( chart, chartdiv, callback )
 
     }; //end waveform options    
     
-    chart = new Highcharts.Chart(waveformOptions);
-    callback(chart);
+    chart = new Highcharts.Chart(waveformOptions, callback(chart));
 
 }
 
@@ -221,16 +220,6 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                     "<td>" + node_data[node_id]['datarate']+ "</td>" +
                     "<td>" + update_seconds.toString()+ "</td></tr>";
 
-/*                var html_string = "<div class='row emo-node-line' style='font-size:10pt;color:" + color + "'>" +
-                    "<div class='col-xs-2'>" + node_data[node_id]['node'] + "</div>"+
-                    "<div class='col-xs-2'>" + node_data[node_id]['runmode'] + "</div>"+
-                    "<div class='col-xs-2'>" + node_data[node_id]['nboards'] + "</div>"+
-                    "<div class='col-xs-2'>" + node_data[node_id]['bltrate'] + "</div>"+
-                    "<div class='col-xs-2'>" + node_data[node_id]['datarate'] + "</div>"+
-                    "<div class='col-xs-2'>" + update_seconds.toString() + "</div>" +
-                    "</div>";*/
-		console.log(node_data);
-		console.log(node_data[node_id]['node']);
 		if(node_data[node_id]['node'][0]=='r') // as in 'reader0x'
 		    nodeInfo['tpc'].push(html_string);
 		else
@@ -287,13 +276,13 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			+ timestring + "</a>" + "</h2></div>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
-				  "<div class='col-xs-4' style='font-size:10pt;text-overflow:ellipsis;'><em>Run name:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Run name:&nbsp;<span id='" + 
 				  det_name + "_runname'></span></div>" + 
-				  "<div class='col-xs-2' style='word-wrap:break-word;font-size:10pt;text-overflow:ellipsis;'><em>Started by:&nbsp;<span id='" + 
-				  det_name + "_startedby'></span></div>" +  
-				  "<div class='col-xs-2' style='font-size:10pt;text-overflow:ellipsis;'><em>Mode:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='word-wrap:break-word;font-size:10pt;text-overflow:ellipsis;'><em>Started by:&nbsp;<span id='" + 
+				  det_name + "_startedby'></span></div></div><div class='row col-xs-12'>" +  
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Mode:&nbsp;<span id='" + 
 				  det_name + "_runmode'></span></div>" +  
-				  "<div class='col-xs-4' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em>Start Date:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em>Start Date:&nbsp;<span id='" + 
 				  det_name + "_startdate'></span></div>" +  
 				  "</div><hr>");
 		    html_str += "</div>";

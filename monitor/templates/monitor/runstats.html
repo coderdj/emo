@@ -2,10 +2,16 @@
 {% load staticfiles %}
 {% block head %}
 <script src="{% static "js/moment.js"%}"></script>
-<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
+<!--<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>-->
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "plotly_20150819a_basic/plotly.min.js" %}"></script>
 <script src="{% static "js/fullcalendar.min.js"%}"></script>
   <link href="{% static "css/fullcalendar.min.css"%}" rel="stylesheet" />
-
+<style>
+.fc-event{
+    cursor: pointer;
+}
+</style>
 <script type="text/javascript">
 function componentToHex(c) {
     var hex = c.toString(16);
@@ -57,6 +63,18 @@ error: function() {
                 console.log(colors[event.mode]);
                 element.css('background-color', colors[event.mode]);
             },
+            eventClick: function(calEvent, jsEvent, view) {
+                var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B\
+%22name%22%3A+%22" + calEvent.title + "%22%7D&submit="; 
+                window.location.href=url;
+//          alert('Event: ' + calEvent.title);
+//        alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
+//        alert('View: ' + view.name);
+
+        // change the border color just for fun
+  //      $(this).css('border-color', 'red');
+
+    }
         }
 
 );
@@ -154,18 +172,22 @@ function AddToData(time0, time1, updown, start)
     var second = new Date(time1);
     var diff = second-first;
     var hours = Math.ceil(((diff)/1000)/3600);
-    
-    var retarray = [];
+
+    var retdict = {'x':[], 'y':[]};
+//    var retarray = [];
     if(hours > 1)
         hours -=1; // round for partial hours
     for(var x=0; x<hours; x++){
         var D = new Date(first);
         D.setHours(D.getHours()+x);
-        retarray.push([D, updown]);
+//        retdict['x'].push(D);
+	retdict['x'].push(moment(D).format("YYYY-MM-DD HH"));
+        retdict['y'].push(updown);
+        //retarray.push([D, updown]);
 //	retarray.push([ new Date(D.strftime("%Y-%m-%d %H:%M:%S")), updown]);
 //        retarray.push([ start + x, updown ] );
     }
-    return retarray;
+    return retdict;
 }
 function ShowPlot(name){
  
@@ -186,23 +208,31 @@ console.log(url);
         $.getJSON(url, function(data){
 console.log(data);
 
-            var plot_data = []
+            var plot_data = {'x':[], 'y':[], 'type':'bar', 'xbins': {'size': 186400000.0}};
+
             var prev_end_time = null;
             for( var x=0; x<data['data'].length; x+=1){
                 // fart noise
                 if( prev_end_time != null ){
 		   app = AddToData(prev_end_time, data['data'][x][0], 0, plot_data.length);
-                   if(app.length!=0)
-                     $.merge(plot_data, app);
+                   if(app.length!=0){
+                     $.merge(plot_data['x'], app['x']);
+                     $.merge(plot_data['y'], app['y']);
+                  }
                 }
                 prev_end_time = data['data'][x][1];
                 app = AddToData(data['data'][x][0], data['data'][x][1], 1, plot_data.length);
-                if(app.length!=0)
-                    $.merge(plot_data, app);
+                if(app.length!=0){
+                     $.merge(plot_data['x'], app['x']);
+                     $.merge(plot_data['y'], app['y']);
+                  }
             }
 
             // Make the plot
             console.log(plot_data);
+            plotly_data=[plot_data];
+		 Plotly.newPlot('plot_div', plotly_data, {bargap:0.0});
+/*
 	    graph = new Dygraph( "plot_div", plot_data,  
                          {  
                //              legend: "never",  
@@ -213,19 +243,11 @@ console.log(data);
                              rollPeriod: 1,  
                              strokeWidth: 2,  
                              labels: ["time", "uptime"],  
-		/*	     axes: {
-				 x: {
-			            axisLabelFormatter: function(d, gran) {
-				var d = new Date(d);//.getTime());// + 7200*1000);
-				    return d.strftime("%Y-%m-%d");
-				    }
-			          }
-		             },*/
                              //ylabel: "",                                      
                            //  xlabel: "bin (10ns)",                            
                             // colors: ['#5992c2', '#ff0202'], //'#09E042'],      
 						 //height: height,  
-                      });
+                      });*/
          });
      }
 }
