@@ -249,6 +249,12 @@ console.log("flipflop");
 		    document.getElementById(det_name+"_startedby").innerHTML = detector_data['status'][status_id]['startedBy'];
 		    document.getElementById(det_name+"_runmode").innerHTML = detector_data['status'][status_id]['mode'];
                     document.getElementById(det_name+"_startdate").innerHTML = startdate;
+		    
+		    var timestring = "";
+		    startdate = new Date( thedatestring );
+                    if(detector_data['status'][status_id]['state'] == "Running")
+                        timestring = GetTimeString( startdate );
+		    document.getElementById(det_name+"_timestring_div").innerHTML = timestring;
 
 		    var appstring = "";
 		    for(var index=0;index<nodeInfo[det_name].length;index+=1)
@@ -277,7 +283,7 @@ console.log("flipflop");
 		    html_str = "<div class='col-xs-12 emobox' style='min-width:500px;' id='" + det_name + "_parent'>";
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
-			GetStateHtml(detector_data, status_id) + "</a><strong style='font-size:10pt;color:black;'>&nbsp;" 
+			GetStateHtml(detector_data, status_id) + "</a><strong id='" + det_name + "_timestring_div' style='font-size:10pt;color:black;'>&nbsp;" 
 			+ timestring + "</strong>" + "</h2></div>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
@@ -350,8 +356,12 @@ function UpdateDetectorText(dataUrl, divname){
             var update_seconds = Math.round( (currentTime - docdate)/1000 );
 	    
             // Put state with coloring to make it pop a little
-            if( data['status'][x]['state'] == "Running" && update_seconds < 30 )
+	    var timestring = "";
+            if( data['status'][x]['state'] == "Running" && update_seconds < 30 ){
                 html_string += "<div class='col-xs-2' style='color:green;height:100%;'><h5>Running</h5></div>";
+		startdate = new Date( thedatestring );
+                timestring = GetTimeString( startdate );                
+	    }
             else if( data['status'][x]['state'] == "Idle" && update_seconds < 30 )
                 html_string += "<div class='col-xs-2' style='color:red;height:100%;'><h5>Idle</h5></div>";
             else if( data['status'][x]['state'] == "Error" && update_seconds < 30 )
@@ -359,6 +369,7 @@ function UpdateDetectorText(dataUrl, divname){
             else
                 html_string += "<div class='col-xs-2' style='color:#AAAAAA;height:100%;'><h5>Unknown</h5></div>";
 	    
+	    document.getElementById("timestring_div").innerHTML=timestring;
             // If running we can provide a bunch more information
             if( data['status'][x]['state'] == "Running" ) {
                 //var startdate = new Date(data['status'][x]['startTime']);
