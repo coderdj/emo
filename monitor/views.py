@@ -71,12 +71,12 @@ def get_event_as_json(request):
 
     event_number = 0
     if request.method == "GET" and "event" in request.GET:
-        event_number = request.GET['event']
+        event_number = int(request.GET['event'])
     if event_number < 0:
         event_number = collection.count() -1
     if event_number >= collection.count():
         event_number = 0
-
+    print(event_number);
     # Get the doc. If there is no doc return an empty dict
     try:
         docs = collection.find().sort("_id", -1)
@@ -93,8 +93,52 @@ def get_event_as_json(request):
     ret_doc['dataset_name'] = doc['dataset_name']
     ret_doc['start_time'] = doc['start_time']
     ret_doc['event_number'] = event_number
-    return HttpResponse(json_util.dumps(ret_doc), content_type="application/json")
+    return HttpResponse(json_util.dumps(doc), content_type="application/json")
 
+def strip_doc(doc):
+    trigger_time_ns = (doc['start_time'])
+    timestring = time.strftime("%Y/%m/%d, %H:%M:%S", time.gmtime(trigger_time_ns / 10 ** 9))
+    ret = {"event_date": timestring, "run_name": doc['dataset_name'], "event_number": doc["event_number"],
+           "sum_waveforms": doc["sum_waveforms"], "peaks": [], "pulses": [], "all_hits": []}
+
+    for peak in doc['peaks']:
+        minpeak = {
+            "area": peak["area"],
+            "type": peak["type"],
+            "left": peak["left"],
+            "right": peak["right"],
+            "index_of_maximum": peak["index_of_maximum"],
+            "n_contributing_channels": peak['n_contributing_channels'],
+            "area_per_channel": peak["area_per_channel"],
+            "hits": [],
+        }
+        for hit in peak['hits']:
+            minpeak['hits'].append({"found_in_pulse": hit['found_in_pulse'],
+                                    "channel": hit['channel'],})
+        ret["peaks"].append(minpeak)
+
+    for hit in doc['all_hits']:
+        minhit = {
+            "index_of_maximum": hit["index_of_maximum"],
+            "channel": hit["channel"],
+            "area": hit["area"],
+            "left": hit["left"],
+            "right": hit["right"],
+            "found_in_pulse": hit["found_in_pulse"],
+        }
+        ret["all_hits"].append(minhit)
+
+    for pulse in doc['pulses']:
+        minpulse = {
+            "baseline": pulse['baseline'],
+            "left": pulse["left"],
+            "right": pulse["right"],
+            "channel": pulse["channel"],
+            "raw_data": pulse["raw_data"]
+        }
+        ret["pulses"].append(minpulse)
+
+    return ret
 @login_required
 def get_event_for_display(request):
 
@@ -105,7 +149,7 @@ def get_event_for_display(request):
         optionally
             : hit pattern
     """
-
+    print("Got request")
     # Get the doc. If there is no doc return an empty dict
     run = ""
     if request.method == "GET" and 'run' in request.GET:
@@ -132,32 +176,36 @@ def get_event_for_display(request):
     except:
         return HttpResponse({}, content_type="application/json")
 
-    hits_plot = make_bokeh_hits_plot(doc['all_hits'])
-    waveform_plot = make_bokeh_waveform_plot(doc['sum_waveforms'], doc['peaks'])
-    hit_displays = make_bokeh_hit_displays(doc['peaks'])
-    hits_plot.x_range = waveform_plot.x_range
-    # full_plot = vplot(waveform_plot, hits_plot)
-    full_plot = gridplot([[waveform_plot], [hits_plot]],
-                         toolbar_location="left" )
-    #d_plot = gridplot( [[hit_displays['s1'], hit_displays['s2']]])
+    #hits_plot = make_bokeh_hits_plot(doc['all_hits'])
+    #waveform_plot = make_bokeh_waveform_plot(doc['sum_waveforms'], doc['peaks'])
+    #hit_displays = make_bokeh_hit_displays(doc['peaks'])
+    #hits_plot.x_range = waveform_plot.x_range
+
+    #full_plot = gridplot([[waveform_plot], [hits_plot]],
+    #                    toolbar_location="left" )
 
 
-    script, div = components(full_plot)
-    #dscript, ddiv = components(d_plot)
 
-    trigger_time_ns = (doc['start_time'])
-    timestring = time.strftime("%Y/%m/%d, %H:%M:%S", time.gmtime(trigger_time_ns / 10 ** 9))
-    print(timestring)
+    #script, div = components(full_plot)
+
+    #trigger_time_ns = (doc['start_time'])
+    #timestring = time.strftime("%Y/%m/%d, %H:%M:%S", time.gmtime(trigger_time_ns / 10 ** 9))
+    #print(timestring)
+    ret = strip_doc(doc)
+    #ret = {"event_date": timestring, "run_name":doc['dataset_name'], "event_number":doc['event_number'],
+    #       'sum_waveforms':doc['sum_waveforms'], "peaks": doc['peaks'], "pulses": doc['pulses']}
     #ret = {"hits_script": hits_js, "hits_div": hits_div, "waveform_script": waveform_js,
     #      "waveform_div": waveform_div}
-    ret = {"script": script, "div": div, #'dscript': dscript, "ddiv": ddiv,
-           'run_name': doc['dataset_name'], 'event_number': doc['event_number'], 'event_date': timestring }
+    #ret = {#"script": script, "div": div,
+    #       'run_name': doc['dataset_name'], 'event_number': doc['event_number'], 'event_date': timestring }
 
-    ret['sum_waveforms'] = doc['sum_waveforms']
-    ret['peaks'] = doc['peaks']
-    ret['event_number'] = event_number
-
-    ret = json_util.loads(json_util.dumps(ret))
+    #ret['sum_waveforms'] = doc['sum_waveforms']
+    #ret['peaks'] = doc['peaks']
+    #ret['pulses'] = doc['pulses']
+    #ret['event_number'] = event_number
+    #ret['bulk'] = doc;
+    #ret = json_util.loads(json_util.dumps(ret))
+    print("Serving request")
     return HttpResponse(json_util.dumps(ret), content_type="application/json")
 
 

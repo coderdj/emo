@@ -188,7 +188,174 @@ function ExtractChannelWaveforms(data, whichs2, hidelist){
     return retarray;
 }
 
-function UnzipWaveforms(data){
+function emo_draw_waveform(div, data){
+    xaxis = [];
+    var tpc_index = -1;
+    waveforms = UnzipWaveforms(data, 1);
+
+    tpc_max = Math.max.apply(null,waveforms['tpc']);
+    tpc_min = Math.min.apply(null, waveforms['tpc']);
+    veto_max = Math.max.apply(null,waveforms['veto']);
+    veto_min = Math.min.apply(null, waveforms['veto']);
+    var waveform_max = tpc_max;
+    var waveform_min = tpc_min;
+    if(veto_max>tpc_max) waveform_max = veto_max;
+    if(veto_min < tpc_min) waveform_min = veto_min;
+  
+
+        var trace_tpc = {
+            x: waveforms['x'],
+            y: waveforms['tpc'],
+            mode: 'lines',
+        //    xaxis: 'x',
+            yaxis: 'y2',
+            name: "TPC Sum",
+            line: {'color': '#5992c2'}
+        };
+    var trace_veto = {
+        x: waveforms['x'],
+        y: waveforms['veto'],
+        mode: 'lines',
+  //      xaxis: 'x',
+	yaxis: 'y2',
+        name: "Veto",
+        line: {'color': '#ff4040'}
+
+    };
+
+    plot_data = [trace_veto, trace_tpc];
+
+    // hits plot
+    scatter_data = {x:[], y:[], left: [], right: []};
+    for(var x=0;x<data['all_hits'].length;x+=1){
+        scatter_data['x'].push(data['all_hits'][x]['index_of_maximum']);
+        scatter_data['y'].push(data['all_hits'][x]['channel']);
+        scatter_data['left'].push(data['all_hits'][x]['index_of_maximum'] - data['all_hits'][x]['left']);
+        scatter_data['right'].push(data['all_hits'][x]['right'] - data['all_hits'][x]['index_of_maximum']);
+
+
+    }
+     var trace = {
+            y: scatter_data['y'], //data['all_hits'][x]['channel'],
+            //x: [data['all_hits'][x]['left'], data['all_hits'][x]['right']],
+            x: scatter_data['x'],//data['all_hits'][x]['index_of_maximum'],
+            type: 'scatter',
+            mode: "markers",
+            name: "All hits",
+            marker: { symbol: 1, color: "red", opacity: 0.5,
+            },
+            error_x: {
+              type: "array",
+                visible: true,
+                symmetric: false,
+                array: scatter_data['right'],
+                color: "#333333",
+                thickness: 1,
+                arrayminus: scatter_data['left'],
+            },
+            xaxis: 'x',
+//            yaxis: 'y2',
+            //name: "Channel " + data['all_hits'][x]['channel'].toString(),
+        };
+    plot_data.push(trace);
+    
+    // Now add annotaions for all S1/S2 peaks
+    peaks_s2 = get_peaks(data, 's2');
+    peaks_s1 = get_peaks(data, 's1');
+    annos = [];
+    shapes = [];
+    for( var s2=0;s2<peaks_s2.length;s2+=1){
+	peak = data['peaks'][peaks_s2[s2]];
+	anno = {		
+	    x:peak['index_of_maximum'],
+	    y:waveforms['tpc'][peak['index_of_maximum']],
+	    xref:'x',
+	    yref:'y2',
+	    text:'S2['+s2.toString()+']',
+	    showarrow:true,
+	    arrowhead:7,
+	    ax:0,
+	    ay:-40
+	};
+	annos.push(anno);
+	shape =    {
+	    type: 'rect',
+	    // x-reference is assigned to the x-values
+	    xref: 'x',
+	    // y-reference is assigned to the plot paper [0,1]
+	    yref: 'paper',
+	    x0: peak['left'],
+	    y0: 0,
+	    x1: peak['right'],
+	    y1: 1.05*waveform_max,
+	    fillcolor: '#4fa783',
+	    opacity: 0.2,
+	    line: {
+		width: 1,
+		opacity: 0.4
+	    }
+	};
+	shapes.push(shape);
+    };
+    for( var s1=0;s1<peaks_s1.length;s1+=1){
+	peak = data['peaks'][peaks_s1[s1]];
+	anno = {
+	    x:peak['index_of_maximum'],
+	    y:waveforms['tpc'][peak['index_of_maximum']],
+	    xref:'x',
+	    yref:'y2',
+	    text:'S1['+s1.toString()+']',
+	    showarrow:true,
+	    arrowhead:7,
+	    ax:0,
+	    ay:-40
+	};
+	annos.push(anno);
+	shape =    {
+	    type: 'rect',
+	    // x-reference is assigned to the x-values
+	    xref: 'x',
+	    // y-reference is assigned to the plot paper [0,1]
+	    yref: 'paper',
+	    x0: peak['left'],
+	    y0: 0,
+	    x1: peak['right'],
+	    y1: 1.05*waveform_max,
+	    fillcolor: '#b342b4',
+	    opacity: 0.2,
+	    line: {
+		width: 1,
+		opacity: 0.4
+	    }
+	};
+	shapes.push(shape);
+    };
+
+    wmin = 2*waveform_min;
+    wmax = 1.05*waveform_max;
+    
+    var layout = {	
+        xaxis: {tickformat:"f", anchor: 'y', title: "Samples [10ns]"}, //domain: [0, 0.45]},
+        yaxis: {domain: [0, 0.5], title: "PMT channel", range: [0, 255]},
+        yaxis2: {domain: [0.5,1.], title: "Charge [p.e.]", range: [wmin,wmax], autorange: false,},
+        margin: {l:50, r:0, t:0, b:40},
+	annotations: annos,
+	shapes: shapes,
+//	hovermode: 'y',
+    };
+
+    
+    Plotly.newPlot(div, plot_data, layout, {"showLink": false, "displaylogo": false});
+
+
+    //var trace1 = {
+    //    x: [1, 2, 3],
+    //    y: [4, 5, 6],
+    //    type: 'scatter'
+    //};
+}
+
+function UnzipWaveforms(data, format){
     // Unzip compressed waveforms and put the sum and filtered into one dict 
     // Return value is this dict 
     var veto_waveform = [];
@@ -229,13 +396,26 @@ function UnzipWaveforms(data){
             tpc_waveform.push(parseFloat(data['sum_waveforms'][idx_tpc]['samples'][i]));
     }
 
-    // Put together                                                                
-    var total_data = [];
-    for(i=0;i<tpc_waveform.length;i++)
-        if(i<veto_waveform.length)
-            total_data.push([i,tpc_waveform[i],veto_waveform[i]]);
+    // Put together
+    var total_data;
+    if(format==1)
+        total_data = {"x":[], "tpc": [], "veto": []};//[];
+    else
+        total_data = [];
+    for(i=0;i<tpc_waveform.length;i++) {
+        if (i < veto_waveform.length) {
+            if(format==0) {
+                total_data.push([i, tpc_waveform[i], veto_waveform[i]]);
+            }
+            if(format==1) {
+                total_data['x'].push(i);
+                total_data['tpc'].push(tpc_waveform[i]);
+                total_data['veto'].push(veto_waveform[i]);
+            }
+        }
+    }
     return total_data;
-};
+}
 
 function draw_full_waveform( div, unzipped_data, height ){
     
@@ -280,7 +460,7 @@ function getNPeaks(data, type){
     }
     return count;
 }
-function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
+function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
     
     // Check for invalid peak types
     if( peaktype != 's1' && peaktype != 's2' ){
@@ -309,8 +489,60 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title ){
     
     // Slice the waveform around the S1
     waveform = unzipped_data.slice( leftb, rightb );
-    
-    draw_waveform( div, waveform, title, 320 );
+
+    // From here for plotly plot
+
+    // Sum waveform trace
+    sum_x = [];
+    sum_y = [];
+    for(var x=0;x<waveform.length;x+=1){
+	sum_x.push(leftb+x);
+	sum_y.push(waveform[x][1]);
+    }
+    plot_data = [];
+    trace_sum = {
+	x: sum_x,
+	y: sum_y,
+	mode: 'lines',
+	color: "#5992c2",
+	name: "Sum waveform"
+    };
+//    plot_data.push(trace_sum);
+    for(var h=0;h<data['peaks'][peaks[ID]]['hits'].length;h+=1){
+	var pulse = data['pulses'][data['peaks'][peaks[ID]]['hits'][h]['found_in_pulse']];
+	sum_x = [];
+	sum_y = [];
+	for(var x=0;x<pulse['raw_data'].length;x+=1){
+	    sum_x.push(pulse['left']+x);
+	    sum_y.push((16000-pulse['raw_data'][x])-pulse['baseline']);
+	}
+	var trace = {
+	    'hoverinfo': 'none',
+	    x: sum_x,
+	    y: sum_y,
+	    mode: 'lines',
+	    name: "Channel " + pulse['channel'].toString(),
+	    line: {"width": 1},
+	};
+	plot_data.push(trace);
+	
+    }
+    layout={
+	'showlegend': false,
+	'xaxis': {
+	    'autorange': false,
+	    'range': [leftb, rightb],
+	    'tickformat':"f",
+	},
+	'margin': {
+	    l:30, r:0, t:30, b:20,
+	},  
+    };
+    Plotly.newPlot(div, plot_data, layout, {'showLink':false, 'displaylogo':false}, callback());
+    // End plotly plot
+
+    // Uncomment for Dygraphs plot
+    //draw_waveform( div, waveform, title, 320 );
 }
 
 function draw_waveform( div, thedata, thetitle, height ){
@@ -380,7 +612,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     var iScaleMultiplier = 2.5;
     var iPositionTopArray = 1050;
     var iPositionBottomArray = -150;
-    var iPmtHeightCorrection = 100;
+    var iPmtHeightCorrection = 300;
     var iPmtSpeedFactor = 15;
 
     // Clear hits array first
@@ -401,19 +633,26 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     console.log(data);
     // Loop through hits and define 'pmt' size and color
 //    for(x=0;x<data['peaks'][peaks[index]]['hits'].length;x++){
-    for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1){
-	// This makes a RELATIVE amplitude (height of pmt
-	// is only determined by other hits in S2)
+    for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1) {
+        // This makes a RELATIVE amplitude (height of pmt
+        // is only determined by other hits in S2)
 //	amp = data['peaks'][peaks[index]]['hits'][x]['area']/data['peaks'][peaks[index]]['area'];
-	amp = data['peaks'][peaks[index]]['area_per_channel'][x] / 
-	    data['peaks'][peaks[index]]['area'];
-	channel = x;//parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
-        amp*=20;
-    //console.log(x.toLocaleString() + amp.toString());
-	//if( amp == 0. ) amp = 0.01;
-	if( amp > 1. ) amp = 1.;
-	var hit = new THREE.Mesh(new THREE.CylinderGeometry(35,35,0),
-				 new THREE.MeshLambertMaterial({color:0xffff00}));
+        amp = data['peaks'][peaks[index]]['area_per_channel'][x] /
+            data['peaks'][peaks[index]]['area'];
+        channel = x;//parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
+        amp *= 20;
+        //console.log(x.toLocaleString() + amp.toString());
+        //if( amp == 0. ) amp = 0.01;
+        if (amp > 1.) amp = 1.;
+        var hit = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0),
+            new THREE.MeshLambertMaterial({color: 0xffff00}));
+
+        hit.name=x.toString();
+	hit['area']=data['peaks'][peaks[index]]['area_per_channel'][x].toFixed(2);
+        hit.callback = function() {
+            console.log(this.name);
+        };
+
     //console.log("amp");
 	//console.log(amp);
 	// The color will be determined such that the largest hit is 

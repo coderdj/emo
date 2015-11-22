@@ -4,9 +4,12 @@
 
 <script src="{% static "emo/js/tpc_3d.js"%}"></script>
 <script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
-<script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
-<script src="{% static "js/three.js" %}"></script>
+<!--<script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>-->
+<script src="{% static "js/three.min.js" %}"></script>
 <script src="{% static "js/OrbitControls.js"%}"></script>
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+<script src="{% static "js/plotly-latest.min.js" %}"></script>
+<script src="{% static "js/simplify.js" %}"></script>
 
 <script src="{%  static "bootstrap-fileinput-master/js/fileinput.min.js"%}"></script>
 <link rel="stylesheet" href="{% static "bootstrap-fileinput-master/css/fileinput.min.css" %}"/>
@@ -28,144 +31,166 @@
       50% 50%
       no-repeat;
   }
-
+  .Loading_small{
+  display: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top:0;
+  left: 0;
+  z-index: 1000;
+  background: rgba( 255, 255, 255, .8 );
+  url('{% static "img/loader_blue.gif" %}')
+  50% 50%
+  no-repeat;
+  }
 </style>
     {%  endblock %}
 {% block content %}
     <div id="Loading" class="Loading">Loading Next Event</div>
-    <p class="bg-info" style="width:100%;padding-left:20px">Note: this is XENON100 data. The hit display is scaled by a factor of ~2.4 to fit into the XENON1T TPC geometry.</p>
+    <span id="pmt_tooltip" style="display:none;position:fixed;overflow:hidden;z-index:1000;">
+      <img alt="" src="http://www.google.com/images/srpr/logo4w.png" />
+    </span>
+      
+<p class="bg-info" style="width:100%;padding-left:20px">Note: this is XENON100 data. The hit display is scaled by a factor of ~2.4 to fit into the XENON1T TPC geometry.</p>
     <p class="bg-info" style="width:100%;padding-left:20px">Hint: To begin choose a dataset and hit "Newest". We should have enough space to store 20-30 waveforms per dataset permanently.</p>
 
-    <div class="row" style="margin:10px;margin-bottom:0px;min-height:325px;">
+    <div class="row" style="margin:10px;margin-bottom:0px;min-height:360px;">
       <div class="col-xs-9 col-sm-9 emobox_flat" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
-	<div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">	  
-	  <div class="panel panel-default" style="height:100%;margin:0;min-height:325px;">
-	    <div class="panel-heading">
-              <h4 style="margin:0">Peak: <span id="peak_id"></span></h4>
-            </div>
-            <span class="list-group-item" style="border:0">
-              <strong>Area: </strong>
-              <span id="peak_area"></span>
-            </span>
-            <span class="list-group-item" style="border:0">
-              <strong>Left: </strong><span id="peak_lt"></span>
-            </span>       
-	    <span class="list-group-item" style="border:0">
-              <strong>Right: </strong><span id="peak_rt"></span>
-            </span>
-	    <span class="list-group-item" style="border:0">
-              <strong>Coin: </strong><span id="peak_coin"></span>
-            </span>
-	    <div>
-              <div class="btn-group btn-group-xs" role="group"
-                   aria-label="Disp Control" style="padding:5px;">
-                <button class="btn btn-info btn-sm" id="btn_show_top"
-                        onclick="show_display(this,'top')">Top Array</button>
-		<button class="btn btn-default btn-sm" id="btn_show_bottom"
-                        onclick="show_display(this,'bottom')">Bottom Array</button>
-		<button class="btn btn-default btn-sm" id="btn_show_both"
-                        onclick="show_display(this,'both')">Front View</button>
+	    <div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">
+	        <div class="panel panel-default" style="height:100%;margin:0;min-height:360px;">
+	            <div class="panel-heading">
+                    <h4 style="margin:0">Peak: <span id="peak_id"></span></h4>
+                </div>
+                <span class="list-group-item" style="border:0">
+                    <strong>Area: </strong>
+                    <span id="peak_area"></span>
+                </span>
+                <span class="list-group-item" style="border:0">
+                    <strong>Left: </strong><span id="peak_lt"></span>
+                </span>
+	            <span class="list-group-item" style="border:0">
+                    <strong>Right: </strong><span id="peak_rt"></span>
+                </span>
+	            <span class="list-group-item" style="border:0">
+                    <strong>Coin: </strong><span id="peak_coin"></span>
+                </span>
+	            <div>
+                    <div class="btn-group btn-group-xs" role="group"
+                        aria-label="Disp Control" style="padding:5px;">
+                        <button class="btn btn-info btn-sm" id="btn_show_top"
+                            onclick="show_display(this,'top')">Top Array</button>
+		                <button class="btn btn-default btn-sm" id="btn_show_bottom"
+                            onclick="show_display(this,'bottom')">Bottom Array</button>
+		                <button class="btn btn-default btn-sm" id="btn_show_both"
+                            onclick="show_display(this,'both')">Front View</button>
 
-              </div>
+                    </div>
+	            </div>
+	        </div>
+        </div>
+	    <div class="col-xs-5" id="peak_hitpattern" style="margin:0;padding:0;height:100%;min-height:360px;"></div>
+	    <div class="col-xs-5"  style="min-height:360px;height:100%;padding:0px;">
+	      <div class="Loading_small" id="Loading_small"></div>
+	      <div id="peak_zoom" style="height:100%;min-height:360px"></div>
 	    </div>
-	  </div>
-	</div>	
-	<div class="col-xs-5" id="peak_hitpattern" style="margin:0;padding:0;height:100%;min-height:325px;"></div>
-	<div class="col-xs-5" id="peak_zoom" style="min-height:325px;height:100%;padding:0px;"></div>
       </div>
       <div class="col-xs-3 col-sm-3">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h4 style="margin:0">Info/Control</h4>
-	  </div>
-	  <div class="row" style="margin-top:3px;padding-left:10px;">
-            <div class="col-xs-3"><strong>Run:</strong></div>
-            <div class="col-xs-9">
-              <select id="run_picker" name="run_picker" width="150" 
-		      style="width:150px"></select>
-            </div>
+          <div class="panel panel-default">
+	            <div class="panel-heading">
+	                <h4 style="margin:0">Info/Control</h4>
+	            </div>
+	            <div class="row" style="margin-top:3px;padding-left:10px;">
+                    <div class="col-xs-3"><strong>Run:</strong></div>
+                    <div class="col-xs-9">
+                    <select id="run_picker" name="run_picker" width="150" style="width:150px"></select>
+                </div>
           </div>
-	  <div class="row" style="margin-top:3px;padding-left:10px;">
-	    <div class="col-xs-3"><strong>Event:</strong></div>
-	    <div class="col-xs-9">
-	      <div class="btn-group btn-group-xs" role="group" 
-		   aria-label="Event Control">
-		<button class="btn btn-info btn-sm"
-			onclick="update_data_newest()" style="margin-right:3px">
-		  Newest</button>
-		<button class="btn btn-info btn-sm"
-			onclick="update_data_prev()" 
-			style="margin-right:3px;margin-left:3px">Previous</button>
-		<button class="btn btn-info btn-sm"
-			onclick="update_data_next()" style="margin-left:3px;">
-		  Next</button>
+	    <div class="row" style="margin-top:3px;padding-left:10px;">
+	        <div class="col-xs-3"><strong>Event:</strong></div>
+	        <div class="col-xs-9">
+	            <div class="btn-group btn-group-xs" role="group"
+		            aria-label="Event Control">
+		            <button class="btn btn-info btn-sm"
+			            onclick="update_data_newest()" style="margin-right:3px">Newest</button>
+		            <button class="btn btn-info btn-sm" onclick="update_data_prev()"
+			            style="margin-right:3px;margin-left:3px">Previous</button>
+		            <button class="btn btn-info btn-sm"
+			            onclick="update_data_next()" style="margin-left:3px;">
+		            Next</button>
 
-	      </div>
+	            </div>
+	        </div>
 	    </div>
-	  </div>
-	  <div class="row" style="margin-top:3px;padding-left:10px;">
-	    <div class="col-xs-12">
-	      <div class="btn-group btn-group-xs" role="group"
-                   aria-label="Event Control">
-		<button class="btn btn-default btn-sm"
-			onclick="loadjson()" style="margin-right:3px;color:black;">
-		  Load from file</button>		
-		<button class="btn btn-default btn-sm"
-			onclick="savejson()" style="margin-left:3px;color:black;">
-		  Save to file</button>
-	      </div>
+	    <div class="row" style="margin-top:3px;padding-left:10px;">
+	        <div class="col-xs-12">
+	            <div class="btn-group btn-group-xs" role="group"
+                       aria-label="Event Control">
+		            <button class="btn btn-default btn-sm"
+			            onclick="loadjson()" style="margin-right:3px;color:black;">
+		            Load from file</button>
+		            <button class="btn btn-default btn-sm"
+			            onclick="savejson()" style="margin-left:3px;color:black;">
+		            Save to file</button>
+		            <button class="btn btn-default btn-sm"
+			            id="make_hits_plot" onclick="make_hits_plot()">
+		            Hits plot (slow!)</button>
+		            <button class="btn btn-default btn-sm"
+			            id="make_dygraph_plot" onclick="DrawPeak()">
+		            Simple peak plot</button>
+	            </div>
+	      
+	        </div>
 	    </div>
-	  </div>
 		
-	  <div style="margin:3px;margin-top:5px;">
-	    <div>
-	      <div class="btn-group btn-group-xs" role="group" 
-		   aria-label="Peak Control">	      
-	      <button class="btn btn-default btn-sm" id="s1_button"
-		      onclick="ChooseS1()">S1</button>
-	      <button class="btn btn-success btn-sm" id="s2_button"
-		      onclick="ChooseS2()">S2</button>
-	      </div>
-	      <div class="btn-group btn-group-xs" role="group"
-                   aria-label="Peak Control">
-		<button class="btn btn-info btn-sm" onclick="PrevPeak();">
-		  <span class="glyphicon glyphicon-chevron-left"></span>
-		Prev Peak		 
-	      </button>
-              <button class="btn btn-info btn-sm" onclick="NextPeak();">Next Peak 
-	      <span class="glyphicon glyphicon-chevron-right"></span>
-	      </button>
-              </div>
-	      </div>
-	  </div>
+	    <div style="margin:3px;margin-top:5px;">
+	        <div>
+	            <div class="btn-group btn-group-xs" role="group"
+		            aria-label="Peak Control">
+	                <button class="btn btn-default btn-sm" id="s1_button"
+		               onclick="ChooseS1()">S1</button>
+	                <button class="btn btn-success btn-sm" id="s2_button"
+		                onclick="ChooseS2()">S2</button>
+	            </div>
+	            <div class="btn-group btn-group-xs" role="group"
+                        aria-label="Peak Control">
+		                <button class="btn btn-info btn-sm" onclick="PrevPeak();">
+		                     <span class="glyphicon glyphicon-chevron-left"></span>
+		                        Prev Peak
+	                    </button>
+                        <button class="btn btn-info btn-sm" onclick="NextPeak();">Next Peak
+	                        <span class="glyphicon glyphicon-chevron-right"></span>
+	                    </button>
+                </div>
+	        </div>
+	    </div>
 	  
-	  <div class="list-group" style="font-size:10pt">
-	    <span class="list-group-item">
+	    <div class="list-group" style="font-size:10pt">
+	     <span class="list-group-item">
 	      <strong>Run: </strong>
               <span id="run_name"></span>
-	    </span>
-	    <span class="list-group-item">
-	      <strong>Event: </strong>                                             
-            <span id="event_number"></span>
-	    </span>
-	    <span class="list-group-item">
+         </span>
+            <span class="list-group-item">
+	            <strong>Event: </strong>
+                <span id="event_number"></span>
+	        </span>
+	        <span class="list-group-item">
               <strong>Collected: </strong><span id="event_date"></span> 
-	    </span>
-	    <span class="list-group-item" style="padding-left:0;padding-right:0"> 
-	      <div style="width:50%;padding-left:15px;float:left;overflow:hidden"><strong>S1s: </strong><span id="event_s1s"></span>
-		</div>
-	      <div style="width:50%;padding-right:15px;overflow:hidden">
-	      <strong>S2s: </strong><span id="event_s2s"></span>	      	      
-	      </div>
+	        </span>
+	        <span class="list-group-item" style="padding-left:0;padding-right:0">
+	            <div style="width:50%;padding-left:15px;float:left;overflow:hidden"><strong>S1s: </strong><span id="event_s1s"></span>
+		        </div>
+	            <div style="width:50%;padding-right:15px;overflow:hidden">
+	                <strong>S2s: </strong><span id="event_s2s"></span>
+	            </div>
             </span>
-	  </div>
+	    </div>
 	</div>
       </div>
     </div>
     <div class="col-xs-12 container" style="width:100%;">
-    <div class="col-xs-12 emobox_flat" id="full_waveform" style="padding-left:5px;padding-right:5px;"></div>
-
-
+    <div class="col-xs-12 emobox_flat" id="full_waveform" style="min-height:600px;padding-left:5px;padding-right:5px;"></div>
+</div>
 <script type="text/javascript">
   var s1_index = -1;
   var s2_index = -1;
@@ -181,7 +206,102 @@
   var renderer = null;
   var hits = [];
   var tpc_geo_path = "{% static 'emo/js/emo_tpc_model.js' %}";
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  var mightBeClick = 0;
+  var showing_small = false;
+  
+  //function onDocumentMouseDown( event ) {
+  $("#peak_hitpattern").mousedown(function(){
+  mightBeClick = 1;
+  });
+  $("#peak_hitpattern").mouseup(function() {
+  if(mightBeClick == 0)
+  return;
+  rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ( (event.clientX-rect.left) / renderer.domElement.clientWidth ) * 2 - 1;
+  mouse.y = - ( (event.clientY-rect.top) / renderer.domElement.clientHeight ) * 2 + 1;
+  peak_zoom = document.getElementById("peak_zoom");
+  raycaster.setFromCamera( mouse, camera );
+  var intersects = raycaster.intersectObjects( hits );
+  
+  if ( intersects.length > 0 ) {
+  if(peak_zoom.data){ 
+      var update = {
+      visible: false,
+      };
+      Plotly.restyle(peak_zoom, update);
+      }
+  
+      intersects[0].object.callback();
+      if(peak_zoom.data){
+  var curveIndex = -1;
+  var thedata = peak_zoom['data'];
+  for(var x=0;x<thedata.length; x+=1){
+	console.log(peak_zoom.data[x]['name']);
+	console.log("Channel " + intersects[0]['object']['name'].toString());
+	if(peak_zoom.data[x]['name'] == "Channel " + intersects[0]['object']['name'].toString()){
+		curveIndex = x;
+		break;
+	}
+  }
+  if (curveIndex != -1){
+				console.log(peak_zoom.data);
+				$("#Loading_small").show();				
+	var update = {
+		opacity: 1.,
+		visible: true,
+   //          line: {width: 3},
+	};
+	showing_small=true;
+	Plotly.restyle(peak_zoom, update, curveIndex);
+				Plotly.relayout(peak_zoom, {"title": "Channel " + intersects[0]['object']['name'].toString()});
+				$("#Loading_small").hide();
+   }
+   else
+	Plotly.relayout(peak_zoom, {"title": "Channel " + intersects[0]['object']['name'].toString() + " (empty)"});
+					   				   
+					   
+				}
+				}
+					   else{
+					   if(peak_zoom.data && showing_small){
+				// reset back to default
+				showing_small=false;
+					   var update = {					   
+					   visible: true,
+					   };
+					   Plotly.restyle(peak_zoom, update);
+					   Plotly.relayout(peak_zoom, {"title": "All channels"});
+					   }
+					   
+					   }
+   
 
+  });
+				$("#peak_hitpattern").mousemove(function(){
+				mightBeClick = 0;
+      rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ( (event.clientX-rect.left) / renderer.domElement.clientWidth ) * 2 - 1;
+      mouse.y = - ( (event.clientY-rect.top) / renderer.domElement.clientHeight ) *2+1;
+      raycaster.setFromCamera( mouse, camera );
+      var intersects = raycaster.intersectObjects( hits );
+      if ( intersects.length > 0 ) {
+          var pmt_tooltip = document.getElementById('pmt_tooltip'); 
+          pmt_tooltip.style.display = 'block';
+          pmt_tooltip.style.top = (event.clientY + 5) + 'px';
+          pmt_tooltip.style.left = (event.clientX - 5) + 'px';
+          pmt_tooltip.innerHTML = "<div class='emobox' style='width:120px;height:50px;padding:1px;'>" +
+            "<p><strong>PMT: </strong> " + intersects[0]['object']['name'].toString() + "</p>"
+            + "<p><strong>Area: </strong>" + intersects[0]['object']['area'] + " p.e.</p></div>";
+      }
+      else{
+          var pmt_tooltip = document.getElementById('pmt_tooltip');
+  
+          pmt_tooltip.style.display = 'none';  
+      }
+  
+  });
   function show_display(obj, which){
   $("#btn_show_top").removeClass("btn-info");
   $("#btn_show_bottom").removeClass("btn-info");
@@ -196,7 +316,7 @@
       //  camera.lookAt(new THREE.Vector3(0, -1000, 0));
 
      }
-     else if(which == 'bottom'){
+  else if(which == 'bottom'){
         camera.position.set(0, 530, 0);
     //    camera.lookAt(new THREE.Vector3(0, 1000, 0));
 
@@ -259,7 +379,8 @@
      if(currentdata == null) return;
      if(disp_type == 's1' && (s1_index > ns1 || s1_index<0)) return;
      if(disp_type == 's2' && (s2_index > ns2 || s2_index<0)) return;
- 
+
+     $("#Loading_small").show();
      // this is a list of indices of the peaks of your chosen type
      peaks = get_peaks(currentdata, disp_type);
      
@@ -277,11 +398,11 @@
      document.getElementById("peak_area").innerHTML = currentpeak['area'].toFixed(2);
      document.getElementById("peak_lt").innerHTML = currentpeak['left'];
      document.getElementById("peak_rt").innerHTML = currentpeak['right'];
-				      console.log(currentpeak);
-     document.getElementById("peak_coin").innerHTML = currentpeak['hits'].length;
-     var total_data = UnzipWaveforms(currentdata);
-     draw_peak( "peak_zoom", currentdata, total_data, peak_index, 
-				     disp_type, "" );
+     document.getElementById("peak_coin").innerHTML = currentpeak['n_contributing_channels'];
+     var total_data = UnzipWaveforms(currentdata,0);
+	document.getElementById("peak_zoom").innerHTML="";
+	draw_peak( "peak_zoom", currentdata, total_data, peak_index, 
+				     disp_type, "", function(){$("#Loading_small").hide()});
      draw_hitpattern(scene, camera, renderer, hits, currentdata, 
 				      disp_type, peak_index);
  //     DrawPeak(currentpeak, document.getElementById("peak_hitpattern"),
@@ -301,15 +422,15 @@
       controls.update();
       }
 //	var pos = "X: " + camera.position.x + " y: " + camera.position.y + " z: " + camera.position.z;
-//				      console.log(pos);
+
     }
 
     $(document).ready(function() {
 
-
+//    document.addEventListener("mousedown", onDocumentMouseDown, false);
      // fill run picker
      $.getJSON(run_list_url, function(data){
-	     console.log(data);
+
              if(data!=null){
                   for(x=0;x<data['runs'].length;x++){
                         $("#run_picker").append("<option name='"
@@ -322,14 +443,13 @@
      //   update_data();
      $("#loading").show();
      suspend_animations = true;
-	console.log(document.getElementById("peak_hitpattern").offsetWidth);
+
         var div = "peak_hitpattern";
 	var VIEW_ANGLE = 80;
     var NEAR = .1;
     var FAR = 10000;
     var WIDTH = document.getElementById(div).offsetWidth;
     var HEIGHT = document.getElementById(div).offsetHeight;
-    console.log(WIDTH);
     var ASPECT = WIDTH/HEIGHT;
         renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending,
                                         alpha: true});
@@ -338,16 +458,14 @@
 	initialize_mini_display(scene, camera, renderer, tpc_geo_path,
 		              "peak_hitpattern", 
                               function(){ 
-                               console.log(camera);
                                controls = new THREE.OrbitControls(camera,
                                                             renderer.domElement);
                                controls.target = (new THREE.Vector3(0, 500, 0));
                                $("#loading").hide();
                                suspend_animations = false;
                                animate();
-                               console.log("done");
                                
-        });
+			      });
     });
 
     function update_data(){
@@ -355,19 +473,17 @@
          the_url += ";event=";
          the_url += event_number.toString();
          document.getElementById("Loading").style.display = 'block';
-console.log("HERE0");
-console.log(the_url);
          $.getJSON(the_url, function(data){
-console.log("HERE");
+
              draw_waveform_local(data, function(){
                 document.getElementById("Loading").style.display = 'none';
 			      });
              currentdata=data;
-             console.log(currentdata);
+
              event_number = data['event_number'];
           })
 //	.success(function() { alert("second success"); })
-.error(function() { alert("Error fetching waveform"); document.getElementById("Loading").style.display = 'none'; console.log(arguments); });
+.error(function() { alert("Error fetching waveform"); document.getElementById("Loading").style.display = 'none';  });
 //.complete(function() { alert("complete"); });
 
     }
@@ -384,30 +500,31 @@ console.log("HERE");
          update_data();
     }
     function draw_waveform_local(data, callback){
-       s1_index = -1;
-       s2_index = -1;
-       ns1 = 0;
-       ns2 = 0
-       disp_type = 's2';
+        s1_index = -1;
+        s2_index = -1;
+        ns1 = 0;
+        ns2 = 0
+        disp_type = 's2';
        
-       ns1 = getNPeaks(data, 's1');
-       ns2 = getNPeaks(data, 's2');
-	currentdata = data;
+        ns1 = getNPeaks(data, 's1');
+        ns2 = getNPeaks(data, 's2');
+	    currentdata = data;
        
-       if(ns1 > 0 ) s1_index = 0;
-       if(ns2 > 0 ) s2_index = 0;
+        if(ns1 > 0 ) s1_index = 0;
+        if(ns2 > 0 ) s2_index = 0;
         document.getElementById("full_waveform").innerHTML = "";
-        $("#full_waveform").append(data['div']);
-        $("#full_waveform").append(data['script']);
-console.log(Bokeh.Collections('Plot'));
-	for(var idex=0; idex<Bokeh.Collections('Plot').length;idex+=1){
+        emo_draw_waveform("full_waveform", data);
+        //$("#full_waveform").append(data['div']);
+        //$("#full_waveform").append(data['script']);
+
+        /*
+        for(var idex=0; idex<Bokeh.Collections('Plot').length;idex+=1){
 
         Bokeh.Collections('Plot').at(idex).set("plot_width", $("#full_waveform").width());
         Bokeh.Collections('Plot').at(idex).set("plot_width", $("#full_waveform").width());
 }
- //       document.getElementById("hit_patterns").innerHTML = "";
-//        $("#hit_patterns").append(data['ddiv']);
- //       $("#hit_patterns").append(data['dscript']);
+*/
+
         document.getElementById("run_name").innerHTML = data['run_name'];
         document.getElementById("event_number").innerHTML = data['event_number'];
         document.getElementById("event_date").innerHTML = data['event_date'];
@@ -474,16 +591,77 @@ function savejson(){
     }
     function parse_file(path){
         path=document.getElementById("file-input-id");
-        console.log(path.files);
+
         reader = new FileReader();
         reader.onload = function (e) {
                 output = e.target.result;
-                console.log(output);
+
             currentdata = JSON.parse(output);
             draw_waveform_local(JSON.parse(output));
         };//end onload()
             reader.readAsText(path.files[0]);
-    }
+				}
+
+
+  function make_hits_plot(){
+      document.getElementById("peak_zoom").innerHTML="";
+      /*json_url = "/monitor/get_event_as_json";
+      json_url += "/?run=" + $("#run_picker").val();
+      json_url += ";event=";
+      json_url += (event_number).toString();
+    */
+    //  $.getJSON(json_url, function(dat){
+
+	dat = currentdata;
+
+
+			var pleft = dat['peaks'][peaks[s2_index]]['left'];
+			var pright = dat['peaks'][peaks[s2_index]]['right'];
+			var full_data = [];
+			for(x=0;x<254;x+=1){
+				    full_data.push({ x:[], y:[], z:[], mode:'lines', name:'',  type: 'scatter3d', showlegend:false, line:{width:3} });
+            }
+			for(x=0;x<dat['pulses'].length;x+=1){
+			    start = dat['pulses'][x]['left'];
+				raw = dat['pulses'][x]['raw_data'];
+                puleft = dat['pulses'][x]['left'];
+				puright = dat['pulses'][x]['right'];
+				var overlapped=true;
+				if(pleft<puleft && pright<puleft)
+					overlapped=false;
+				if(pleft>puright && pright>puright)
+				    overlapped=false;
+                if(!overlapped) continue;
+				chan = dat['pulses'][x]['channel'];
+                tempdata = [];
+                for(y=0;y<raw.length;y+=1){
+                    if(start+y < pleft || start+y>pright)
+                        continue;
+                    baseline=dat['pulses'][x]['baseline']+16000;
+                    datrow={x: start+y, y:(baseline-raw[y])};
+                    tempdata.push(datrow);
+                }
+
+
+                simpledata = simplify(tempdata,1,false);
+                for(y=0;y<simpledata.length;y+=1){
+                        full_data[chan]['x'].push(chan);
+                    full_data[chan]['y'].push(simpledata[y]['x']);
+                    full_data[chan]['z'].push(simpledata[y]['y']);
+                }
+//						full_data.push(data);
+            }
+          var less_data = [];
+          for(x=0;x<full_data.length;x+=1) if(full_data[x]['x'].length>0) less_data.push(full_data[x]);
+          var layout={margin: {l:0, r:0, t:0, b:0}, scene:{aspectratio:{x:1,y:2,z:1}, yaxis:{tickformat:"f",title:"ADC Sample"},
+              zaxis:{title:"Charge [ADC units]"}, xaxis:{tickformat:"f",title:"Channel"}}};
+          Plotly.newPlot('peak_zoom', less_data, layout, {'showLink':false, 'displaylogo':false});
+
+    //  });
+
+  };
+
+
 
 </script>
 {% endblock %}
