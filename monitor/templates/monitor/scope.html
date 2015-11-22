@@ -14,7 +14,7 @@
   <div class="row">       
     <div class="col-md-9"> 
       <div class="panel panel-default"> 
-        <div id="scope_panel" class="panel-body" style="width:95%;height:500px;auto">
+        <div id="scope_panel" class="panel-body" style="width:95%;min-height:550px;auto">
 	</div>   
       </div>   <!-- end panel -->
     </div> <!-- end col-md-9 -->
@@ -109,10 +109,11 @@
   var table = null;
   var chart = null;
   var selected_row = 0;
-  
+  var title_str = "waveform";
+
   function DrawElement(row, search){
     console.log("draw el");
-  console.log(table.page.info().recordsDisplay);
+    console.log(table.page.info().recordsDisplay);
     if(table == null) return;
     if(row < 0 || row > table.page.info().recordsDisplay)
       return;
@@ -130,12 +131,16 @@
     console.log(row);
       $(table.row(row).nodes()).addClass('selected');
     console.log(table.row(row).nodes());
-      console.log(data);      
+      console.log(table.row(row).data());      
+      title_str = "Channel: " + table.row(row).data()['module'] + "." +
+                  table.row(row).data()['channel'] + " at " + 
+                  table.row(row).data()['time'] + " samples";
+    
       if( chart == null ){
           chart = new Dygraph(scope_panel, data['adc_value'], {
   //legend: 'always',
           legend: 'follow',
-          title: 'waveform',
+          title: title_str,
           showRoller: true,
           rollPeriod: 1,
           //labels: ["bin (10ns)","waveform"],
@@ -147,11 +152,11 @@
       if(data['adc_value'].length > 0){
     if(data['adc_value'][0].length == 2){
         chart.updateOptions({"labels": ["bin (10ns)","channel a"],
-     "file": data['adc_value']});
+     "file": data['adc_value'], "title": title_str});
     }
     else{
         chart.updateOptions({"labels":["bin (10ns)","channel a", "channel b"],
-     "file": data['adc_value']});
+     "file": data['adc_value'], "title": title_str});
     }
   }
     }); //end getJSON
@@ -234,6 +239,7 @@
 
     if(dropdown.value == "none")
        return;
+    selected_row = 0;
 
     var query_end="?";
     if( document.getElementById("serverList").value != "none" )

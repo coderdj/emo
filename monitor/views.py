@@ -1130,7 +1130,7 @@ def getModules(request):
             print("Can't connect to server")
             return HttpResponse([], content_type="application/json")
         if database in client.database_names() and collection in client[database].collection_names():
-            retlist = client[database][collection].distinct("module")
+            retlist = client[database][collection].find().limit(100).distinct("module")
             client.close()
             return HttpResponse(dumps(retlist),
                                 content_type='application/json')
@@ -1153,7 +1153,7 @@ def getChannels(request):
                 client = MongoClient(server, 27000)
                 db = client[settings.BUFFER_DB_REPL]
                 db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
-                retlist = client[settings.BUFFER_DB_REPL][collection].find({"module":module}).limit(100).distinct("channel")
+                retlist = client[settings.BUFFER_DB_REPL][collection].find({"module":module}).limit(30).distinct("channel")
                 return HttpResponse(dumps(retlist),
                                     content_type='application/json')
             except:
