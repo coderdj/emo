@@ -6,7 +6,13 @@ from control.models import RunStartForm, RunStopForm
 import datetime
 import pytz
 import numpy as np
+import pandas as pd
 from django.conf import settings
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger('emo')
+
 
 client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
 logclient = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
@@ -103,64 +109,31 @@ def GetNodeHistory(request):
             nseconds = int(request.GET['range'])
         if 'bin' in request.GET.keys():
             resolution = int(request.GET['bin'])
-    print(nseconds)
+
     # Get size of bins
     bin_size = resolution
-
+    
     nowtime = datetime.datetime.now(datetime.timezone.utc)
-    nowtime_seconds = (nowtime - datetime.datetime(1970,1,1, tzinfo=pytz.utc)).total_seconds()
-    created_time = datetime.datetime.now( datetime.timezone.utc ) - datetime.timedelta(seconds=nseconds)
-
-    nodes = collection.distinct('node')
-
+    nowtime_seconds = (nowtime - datetime.datetime(1970,1,1, 
+                                                   tzinfo=pytz.utc)).total_seconds()
+    created_time = datetime.datetime.now( datetime.
+                                          timezone.utc ) - datetime.timedelta(
+                                              seconds=nseconds)
+    
+    nodes = collection.distinct('node')    
+    dataframe = pd.DataFrame(list(collection.find({"createdAt": 
+                                                   {"$gt": created_time}})))
+    dataframe['datetime'] = pd.to_datetime(dataframe['timeseconds'], unit='s')
     ret = []
-    for node in nodes:
-
-        # MongoDB query
-        ret_docs = collection.find({"node":node, "createdAt": {"$gt": created_time}}).sort("timeseconds", 1)
-        ret_list = []
-        last_time = 0
-
-        # Start at beginning of time range
-        last_bin_start = nowtime_seconds - nseconds
-        n_entries_bin = 0
-        bin_total = 0.
-
-        if ret_docs.count() == 0:
-            continue
-        # Loop docs and pull data
-        for doc in ret_docs:
-
-            # If we're out of the last bin
-            if doc['timeseconds'] > last_bin_start + bin_size:
-
-                avg_rate = 0.
-                time_value = last_bin_start + round(bin_size/2)
-
-                # Record
-                if n_entries_bin != 0:
-                    avg_rate = bin_total / n_entries_bin
-                    bin_total = 0.
-                    n_entries_bin = 0.
-
-                ret_list.append([1000*(time_value),avg_rate])
-
-                while last_bin_start + bin_size < doc['timeseconds']:
-                    last_bin_start += bin_size
-                    if last_bin_start + bin_size < doc['timeseconds']:
-                        ret_list.append( [1000*(round(last_bin_start + (bin_size/2))), 0.])
-
-            bin_total += doc['datarate']
-            n_entries_bin += 1.
-            last_time = doc['timeseconds']
-
-        # Fill the rest with zeros up to current time        
-        while nowtime_seconds-10 > last_time:
-            last_time += bin_size
-            ret_list.append([1000*(round(last_time)), 0.])
-        ret.append( { "node": node, "data": ret_list } )
+    for node in pd.unique(dataframe.node.ravel()):
+        subtable = dataframe[dataframe.node==node].set_index('datetime')
+        subtable = subtable.resample(str(bin_size)+'s', how='mean')
+        subtable['timeseconds'] = subtable['timeseconds'].multiply(1000)
+        ret.append({ "node": node, "data": 
+                     list(subtable[['timeseconds','datarate']].values.tolist())})
+            
     client.close()
-
+    
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
 

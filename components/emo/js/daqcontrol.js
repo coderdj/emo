@@ -97,32 +97,29 @@ function updateData( chart, updateUrl )
 };
 
 
-function loadData( chart, dataURL, callback )
+function loadData( chart, data, callback )
 // Loads data from the URL into the chart. 
 // Used the first time only
 {
     var fillColors = ["rgba(92,184,92,0.2)", "rgba(217,83,79,0.2)",
     "rgba(91,192,222,0.2)", "rgba(240,173,78,0.2)", "rgba(220,133,21,0.2)"];
     var colors = ["#5cb85c","#d9534f", "#5bc0de", "#f0ad4e", "#785223" ];
-
-    $.getJSON( dataURL, function(data) {
-
-        for( x=0; x<data.length; x++ ){
-            var dict = {};
-            if( x< 5 )
-                dict = {
-                   color: colors[x],
-                   fillColor: fillColors[x],
-                   data: data[x]['data'],
-                   name: data[x]['node'],
-                };
-            else
-                dict = { data: data[x]['data'], name: data[x]['node']};
-            chart.addSeries(dict, false);
-        }
-
-        chart.redraw();
-    });
+    
+    for( x=0; x<data.length; x++ ){
+	var dict = {};
+	if( x< 5 )
+            dict = {
+		color: colors[x],
+		fillColor: fillColors[x],
+		data: data[x]['data'],
+		name: data[x]['node'],
+            };
+	else
+            dict = { data: data[x]['data'], name: data[x]['node']};
+	chart.addSeries(dict, false);
+    }
+    
+    chart.redraw();
     callback(chart);
 }
 
@@ -251,9 +248,14 @@ console.log("flipflop");
                     document.getElementById(det_name+"_startdate").innerHTML = startdate;
 		    
 		    var timestring = "";
-		    startdate = new Date( thedatestring );
+		    thedatestring = detector_data['status'][status_id].startTime;
+                    console.log(thedatestring);
+                    thedatestring = thedatestring.substr(0, thedatestring.length - 8);
+		    thedatestring += "+01:00";
+
+		    startdate = new Date( thedatestring  );
                     if(detector_data['status'][status_id]['state'] == "Running")
-                        timestring = GetTimeString( startdate );
+                    timestring = GetTimeString( startdate );
 		    document.getElementById(det_name+"_timestring_div").innerHTML = timestring;
 
 		    var appstring = "";

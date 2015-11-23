@@ -216,9 +216,12 @@ border-style=solid;border-width:1px;">-->
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h4 class="modal-title">Start a new run </h4>
+	<span id="loading_bar"></span>
       </div>
       <div class="modal-body" style="min-height:200px;overflow-y:auto;">
-	<div style="display:block;margin-left:auto;margin-right:auto;" id="loading_bar"></div>
+	<br>
+
+<!--	<div style="display:block;margin-left:auto;margin-right:auto;" id="loading_bar"></div>-->
 	<div id="start_run_modal_content">
 	</div>
       </div>
@@ -305,12 +308,11 @@ border-style=solid;border-width:1px;">-->
   // Run feedback function
   function FeedbackLoop(){
     $.getJSON(feedbackURL, function(data){
-      console.log(data);
       if("messages" in data){
-      console.log("here");
+
       
       for( x=0; x<data['messages'].length; x+=1 ){
-			console.log("in for");
+
         // Put messages into feedback modal
 	if(data['messages'][x]['replyenum'] == 11)
 	  feedback_html += "<p><strong>Received affirmation: </strong>" + 
@@ -336,7 +338,7 @@ border-style=solid;border-width:1px;">-->
         else
           feedback_html += "<p><strong style='color:blue'>Unknown: </strong>" +
                            data['messages'][x]['message'] + "</p>";
-        console.log(feedback_html);
+
         document.getElementById("start_run_modal_content").innerHTML=feedback_html; 
       }// end for
       }
@@ -354,9 +356,7 @@ border-style=solid;border-width:1px;">-->
 
   // Submit run start form
   $('#run_start_form').submit(function(e){
-     console.log("submitted");
      $.post('/control/start_run', $(this).serialize(), function(data){  
-        console.log("in function");
         //$('#startRunModal').modal('show');
         document.getElementById("start_run_modal_content").innerHTML="Command received.";
         //$('.message').html(data.message);
@@ -367,13 +367,12 @@ border-style=solid;border-width:1px;">-->
     $("#runFeedbackModal").modal('show');
     feedback_count = 0;
     feedback_html = "";
-    document.getElementById("loading_bar").innerHTML = "<img style='display:block;margin-left:auto;margin-right:auto;' src='{% static 'img/ajax-loader.gif'%}'/>";
+    document.getElementById("loading_bar").innerHTML = "<img style='display:block;margin-left:auto;margin-right:auto;' src='{% static 'img/loader_bar.gif'%}'/>";
     FeedbackLoop();
    });
 
   // Submit run stop form
   $('#run_stop_form').submit(function(e){
-     console.log("Clicked stop");
      $.post('/control/stop_run', $(this).serialize(), function(data){
         console.log("Stopped the run");
    });
@@ -385,7 +384,6 @@ border-style=solid;border-width:1px;">-->
 
   // Page update poll
   function UpdatePage( thechart ){
-			     console.log("Call update page");
      // No starting runs if there are open alerts
      if(global_can_start_runs){ 
         document.getElementById('run_start_form').style.display = 'block';
@@ -400,7 +398,6 @@ border-style=solid;border-width:1px;">-->
 		  
 	update_graphic(function(){
              $("#Loading").hide();
-	     console.log("Page update finished");
              setTimeout( function(){ 
 			     UpdatePage( thechart );			  
 			     }, updateFreq );
@@ -425,7 +422,7 @@ border-style=solid;border-width:1px;">-->
        $.getJSON( historyUrlWithOptions, function(data) {
           var thechart=$("#rates_panel").highcharts();
           if(thechart.series.length != data.length){
-             redraw_graphic();
+             redraw_graphic(data);
              return;
           }
           for( x=0; x<data.length; x++ ){
@@ -437,19 +434,21 @@ border-style=solid;border-width:1px;">-->
 	callback();
     }
          
-    function redraw_graphic(){
+    function redraw_graphic(data){
         var thechart=$("#rates_panel").highcharts();
         while( thechart.series.length > 0 ) {
             thechart.series[0].remove( false );
         }
         var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
-
-        loadData(thechart, historyUrlWithOptions, function(thechart){});
+	if(data == null)
+        $.getJSON( historyUrlWithOptions, function(newdata) {
+            loadData(thechart, newdata, function(thechart){});
+				    });
+	else
+           loadData(thechart, data, function(thechart){});
+//        loadData(thechart, historyUrlWithOptions, data, function(thechart){});
     }
 
-//$("#rates_panel").resize(function(){
-//	UpdatePage(chart);
-//});
   // Load page function
   $( function() {
 

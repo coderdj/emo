@@ -105,6 +105,7 @@ AUTH_LDAP_GLOBAL_OPTIONS = {
 import logging
 
 logger = logging.getLogger('django_auth_ldap')
+#logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
@@ -134,7 +135,7 @@ LOGGING = {
             'propagate': True,
             'level':'DEBUG',
         },
-        'MYAPP': {
+        'emo': {
             'handlers': ['file'],
             'level': 'DEBUG',
         },
