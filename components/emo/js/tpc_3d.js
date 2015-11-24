@@ -612,7 +612,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     var iScaleMultiplier = 2.5;
     var iPositionTopArray = 1050;
     var iPositionBottomArray = -150;
-    var iPmtHeightCorrection = 300;
+    var iPmtHeightCorrection = 500;
     var iPmtSpeedFactor = 15;
 
     // Clear hits array first
@@ -631,22 +631,31 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
     }
     console.log(peaks);
     console.log(data);
+    var maxamp = 0.;
+    for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1) {
+	if(data['peaks'][peaks[index]]['area_per_channel'][x]>maxamp)
+	    maxamp = data['peaks'][peaks[index]]['area_per_channel'][x];
+    }
     // Loop through hits and define 'pmt' size and color
 //    for(x=0;x<data['peaks'][peaks[index]]['hits'].length;x++){
     for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1) {
         // This makes a RELATIVE amplitude (height of pmt
         // is only determined by other hits in S2)
 //	amp = data['peaks'][peaks[index]]['hits'][x]['area']/data['peaks'][peaks[index]]['area'];
-        amp = data['peaks'][peaks[index]]['area_per_channel'][x] /
-            data['peaks'][peaks[index]]['area'];
+        amp = data['peaks'][peaks[index]]['area_per_channel'][x] / maxamp;
+        //data['peaks'][peaks[index]]['area'];
         channel = x;//parseInt(data['peaks'][peaks[index]]['hits'][x]['channel']);
-        amp *= 20;
+        //amp *= 20;
         //console.log(x.toLocaleString() + amp.toString());
         //if( amp == 0. ) amp = 0.01;
         if (amp > 1.) amp = 1.;
-        var hit = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0),
-            new THREE.MeshLambertMaterial({color: 0xffff00}));
+	colz = GetColor( amp ); 
+	
 
+        var hit = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0),
+				 new THREE.MeshLambertMaterial({color: 0xffff00}));
+	hit.material.color.setRGB(colz[0], colz[1], colz[2]);
+	hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
         hit.name=x.toString();
 	hit['area']=data['peaks'][peaks[index]]['area_per_channel'][x].toFixed(2);
         hit.callback = function() {
@@ -657,17 +666,18 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 	//console.log(amp);
 	// The color will be determined such that the largest hit is 
 	// at the 'top' of the pallete and the smallest should be at the bottom
-	colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
+	//colz = GetColor( amp ); ///data['peaks'][peaks[0]]['hits'][0]['area']);
 	if(amp == 0.) amp = 0.01;
 	// Set color
-	hit.material.color.setRGB( colz[0],
-                                   colz[1],
-                                   colz[2] );
+
+	//hit.material.color.setRGB( colz[0],
+        //                           colz[1],
+        //                           colz[2] );
 
 	// Make it glow
-        hit.material.emissive.setRGB(colz[0],
-                                     colz[1],
-                                     colz[2] );
+        //hit.material.emissive.setRGB(colz[0],
+        //                             colz[1],
+        //                             colz[2] );
 
 	// Look up what this does
 	hit.overdraw = true;
@@ -886,10 +896,18 @@ function GetColor( amp )
     if( col_b < 35 ) col_b = 35;
     if( col_b > 217 ) col_b = 217;
 
+    col_b =   150 * Math.sin(3.14*amp);//( 1.0 + Math.sin( 6.3*amp ) )/2;
+    col_g =  150 * (1.-Math.cos(3.14*amp));//( 1.0 + Math.cos( 6.3*amp ) )/2;
+    col_r =   150 * ( 1.0 - Math.sin( 3.14*amp ) );///2;
+
     colz[0] = col_r / 255.;
     colz[1] = col_g / 255.;
     colz[2] = col_b / 255.;
-    
+
+//    colz[0] =  (.2 + Math.sin( amp )/2);// /2;
+//    colz[1] =  (.2 + Math.cos( amp )/2);// /2;
+//    colz[2] =  (.7 - Math.sin( amp )/2);// /2;
+    console.log(colz);
     return colz;
 }
 
