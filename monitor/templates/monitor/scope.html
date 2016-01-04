@@ -3,6 +3,8 @@
 {% block head %}
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
+<script src="{% static "Dygraph/js/dygraph-extra.js"%}"></script>
+
 <script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
 <script src="{% static "DataTables-1.10.9/media/js/dataTables.bootstrap.min.js"%}"></script>
 <script src="{% static "DataTables-1.10.9/extensions/Select/js/dataTables.select.min.js"%}"></script>
@@ -18,7 +20,7 @@
   <div class="row">       
     <div class="col-md-9"> 
       <div class="panel panel-default"> 
-        <div id="scope_panel" class="panel-body" style="width:95%;height:400px;auto">
+        <div id="scope_panel" class="panel-body" style="width:95%;height:400px;">
 	</div>   
       </div>   <!-- end panel -->
     </div> <!-- end col-md-9 -->
@@ -75,8 +77,10 @@
 	      <div class="btn-group">
 		<button type="button" class="btn btn-info" onClick="getPrevNext(1);">
 		  <span class="glyphicon glyphicon-chevron-right"></span> Next </button> 
-	      </div>
+	      </div>	      
 	    </div>
+	 
+	    <button class="btn btn-default" onclick="SavePlotAs()">Save as PNG</button>
 	  </span>
 	</div>
       </div>
@@ -115,6 +119,14 @@
   var selected_row = 0;
   var title_str = "waveform";
 
+  function SavePlotAs(){
+      if (chart==null)
+         return;
+      var imgExport = document.createElement('imgExport');
+      Dygraph.Export.asPNG(chart,imgExport);
+      window.location.href = imgExport.src.replace('image/png','image/octet-stream');
+  }
+
   function DrawElement(row, search){
     console.log("draw el");
     console.log(table.page.info().recordsDisplay);
@@ -141,6 +153,7 @@
                   table.row(row).data()['time'] + " samples";
     
       if( chart == null ){
+    console.log("Chart redraw");
           chart = new Dygraph(scope_panel, data['adc_value'], {
   //legend: 'always',
           legend: 'follow',
@@ -150,17 +163,23 @@
           //labels: ["bin (10ns)","waveform"],
           ylabel: "amplitude",
           xlabel: "bin (10ns)",
-          valueRange: [0, 0x3FFF],
+          isZoomedIgnoreProgrammaticZoom: true,
+//          valueRange: [0, 0x3FFF],
+
       });
     }
       if(data['adc_value'].length > 0){
+      x_min = chart.xAxisRange()[0];
+      x_max = chart.xAxisRange()[1];
+      y_min = chart.yAxisRange()[0];
+      y_max = chart.yAxisRange()[1];
     if(data['adc_value'][0].length == 2){
-        chart.updateOptions({"labels": ["bin (10ns)","channel a"],
-     "file": data['adc_value'], "title": title_str});
+        chart.updateOptions({isZoomedIgnoreProgrammaticZoom: true, "labels": ["bin (10ns)","channel a"],
+     "file": data['adc_value'], });
     }
     else{
         chart.updateOptions({"labels":["bin (10ns)","channel a", "channel b"],
-     "file": data['adc_value'], "title": title_str});
+     "file": data['adc_value'], "title": title_str, "isZoomedIgnoreProgrammaticZoom": true});
     }
   }
     }); //end getJSON

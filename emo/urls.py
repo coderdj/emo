@@ -28,6 +28,7 @@ urlpatterns = [
  #       kwargs={'template_name': 'login.html'}, name='login'),
     url(r'^logout', views.logout_page,name='logout'), #must add
     url(r'^profile/$', views.profile, name='profile'),
+    url(r'^supermanrequest', views.getStartingUser, name='getstartinguser'),
 
     # Documentation
     url(r'^docs/', include('docs.urls')),

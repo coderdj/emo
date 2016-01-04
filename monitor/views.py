@@ -28,19 +28,12 @@ import logging
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-# These options will be set somewhere else later?
-online_db_name = settings.MONITOR_DB_NAME
-mongodb_address = settings.MONITOR_DB_ADDR
-mongodb_port = settings.MONITOR_DB_PORT
-
 # Connect to pymongo
-client = MongoClient(mongodb_address, mongodb_port)
-db = client[online_db_name]
-if settings.MONGO_USER != "":
-    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+client = MongoClient(settings.MONITOR_DB_ADDR)
+db = client[settings.MONITOR_DB_NAME]
 
 # Connect to buffer DB
-bufferclient = MongoClient( settings.BUFFER_DB_ADDR, settings.BUFFER_DB_PORT)
+bufferclient = MongoClient( settings.BUFFER_DB_ADDR)
 
 @login_required
 def get_waveform_run_list(request):
@@ -468,10 +461,9 @@ def get_aggregate_list(request):
 def get_runs_list(get_request):
 
     # Mongo Objects                                                                 
-    client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+
     collection = db['runs']
     
     run_list = []
@@ -519,10 +511,8 @@ def get_available_plots(request):
         return
 
     # Mongo Objects
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    client = MongoClient(settings.MONITOR_DB_ADDR)
     db = client[ settings.MONITOR_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     # Build the run list based on info in request
     run_list = get_runs_list(request.GET)    
@@ -620,10 +610,8 @@ def get_plot(request):
     plot_name = request.GET['name']
 
     # Mongo Objects                                                                 
-    client = MongoClient(settings.MONITOR_DB_ADDR, settings.MONITOR_DB_PORT)
+    client = MongoClient(settings.MONITOR_DB_ADDR)
     db = client[ settings.MONITOR_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     # Build the run list based on info in request               
     run_list = get_runs_list(request.GET)
@@ -886,10 +874,9 @@ def get_uptime(request):
         onlyDM = False
 
     # Make DB query
-    runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    runs_client = MongoClient(settings.RUNS_DB_ADDR)
     runsdb = runs_client[settings.RUNS_DB_NAME]
-    if settings.MONGO_USER != "":
-        runsdb.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+
     runs_coll = runsdb['runs']
 
     query_set=[]
@@ -941,10 +928,8 @@ def get_calendar_events(request):
         return
 
 
-    runs_client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    runs_client = MongoClient(settings.RUNS_DB_ADDR)
     rundb = runs_client[settings.RUNS_DB_NAME]
-    if settings.MONGO_USER != "":
-        rundb.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
     run_coll = rundb["runs"]
 
     start_time = dateutil.parser.parse(request.GET['start'])
@@ -996,9 +981,8 @@ def getWaveform(request):
 
         if server == "eb0":
             try:
-                client = MongoClient(server, 27000)
+                client = MongoClient(BUFFER_DB_ADDR)
                 db = client[settings.BUFFER_DB_REPL]
-                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
                 retdoc = db[collection].find_one(searchdict)
                 retjson = {}
 
@@ -1082,12 +1066,16 @@ def getCollection(request):
 
         if server == "eb0":
             try:
-                client = MongoClient(server, 27000)                
+                client = MongoClient(BUFFER_DB_ADDR)                
                 db = client[settings.BUFFER_DB_REPL]
-                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
-                retlist = db.collection_names()
+                coll_list = db.collection_names()
+                retlist = []
+                for name in coll_list:
+                    if client[database][name].count() > 0:
+                        retlist.append(name)
+                client.close()
                 return HttpResponse(dumps(retlist),
-                                content_type='application/json')
+                                    content_type='application/json')
             except:
                 print("Can't connect to server")
                 return HttpResponse(["error"], content_type="application/json")
@@ -1097,7 +1085,11 @@ def getCollection(request):
             print("Can't connect to server")
             return HttpResponse([], content_type="application/json")
         if database in client.database_names():
-            retlist = client[database].collection_names()
+            coll_list = client[database].collection_names()
+            retlist=[]
+            for name in coll_list:
+                if client[database][name].count() > 1:
+                    retlist.append(name)
             client.close()
             return HttpResponse(dumps(retlist),
                                 content_type='application/json')
@@ -1115,9 +1107,8 @@ def getModules(request):
     
         if server == "eb0":
             try:
-                client = MongoClient(server, 27000)
+                client = MongoClient(BUFFER_DB_ADDR)
                 db = client[settings.BUFFER_DB_REPL]
-                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
                 retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 return HttpResponse(dumps(retlist),
                             content_type='application/json')
@@ -1150,9 +1141,8 @@ def getChannels(request):
         
         if server == "eb0":
             try:
-                client = MongoClient(server, 27000)
+                client = MongoClient(BUFFER_DB_ADDR)
                 db = client[settings.BUFFER_DB_REPL]
-                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
                 retlist = client[settings.BUFFER_DB_REPL][collection].find({"module":module}).limit(30).distinct("channel")
                 return HttpResponse(dumps(retlist),
                                     content_type='application/json')
@@ -1193,9 +1183,8 @@ def getOccurrences(request):
         logger.error("In getOccurrences")
         if server == "eb0":
             try:
-                client = MongoClient(server, 27000)
+                client = MongoClient(BUFFER_DB_ADDR)
                 db = client[settings.BUFFER_DB_REPL]
-                db.authenticate(settings.BUFFER_DB_LOGIN, settings.BUFFER_DB_PASSWORD, mechanism='SCRAM-SHA-1')
                 retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(50))
                 client.close()
                 logger.error(retlist)

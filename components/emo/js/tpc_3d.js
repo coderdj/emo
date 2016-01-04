@@ -490,6 +490,38 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
     // Slice the waveform around the S1
     waveform = unzipped_data.slice( leftb, rightb );
 
+    // From here for dygraphs plot
+  /*  var dygraph_data = [];
+    for(var x=0;x<waveform.length;x+=1){
+	dygraph_data.push([leftb+x, waveform[x]]);
+    }
+    for(var h=0; h<data['peaks'][peaks[ID]]['hits'].length; h+=1){
+	var pulse = data['pulses'][data['peaks'][peaks[ID]]['hits'][h]['found_in_pulse']];
+	for( var x=0; x<dygraph_data.length; x+=1){
+	    thisx = leftb+x;
+	    if(thisx>=pulse['left'] && thisx<pulse['right']){
+		rdata=(pulse['raw_data'][(pulse['left']-leftb)+x]);
+		dygraph_data[x].push(16000-rdata-pulse['baseline']);
+	    }
+	    else
+		dygraph_data[x].push(0);
+	}
+    }
+    chart = new Dygraph(div, dygraph_data, {
+	legend: 'never',
+
+          title: "All channels",
+	labelsDivWidth : 0,
+          showRoller: false,
+//          rollPeriod: 1,
+        //labels: ["bin (10ns)","waveform"],
+          ylabel: "amplitude",
+          xlabel: "bin (10ns)",
+        //  valueRange: [0, 0x3FFF],
+      });
+    callback();
+    return;
+*/
     // From here for plotly plot
 
     // Sum waveform trace

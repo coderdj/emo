@@ -17,14 +17,11 @@ def get_dispatcher_log(request):
     """
     Make the dispatcher log page
     """
-    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)#, settings.LOG_DB_REPL)
-
+    c = MongoClient(settings.LOG_DB_ADDR)
     d = c[settings.LOG_DB_NAME]
-    if settings.MONGO_USER != "":
-        d.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     mongo_collection = d['log']
-
+    
     mongo_query = {"sender": "default_sender"}
     log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:50]
 
@@ -37,10 +34,8 @@ def log(request):
     """
     Make the main log page
     """
-    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)#, settings.LOG_DB_REPL)
+    c = MongoClient(settings.LOG_DB_ADDR)
     d = c[settings.LOG_DB_NAME]
-    if settings.MONGO_USER != "":
-        d.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     mongo_collection = d['log']
    
@@ -95,10 +90,8 @@ def new_comment(request):
     """
     Add a new comment to a log entry.
     """
-    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)#, settings.LOG_DB_REPL)
+    c = MongoClient(settings.LOG_DB_ADDR)
     d = c[settings.LOG_DB_NAME]
-    if settings.MONGO_USER != "":
-        d.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     mongo_collection = d['log']
 
@@ -142,10 +135,8 @@ def new_comment(request):
 @login_required(login_url="/login/")
 def new_log_entry(request):
 
-    c = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)#, settings.LOG_DB_REPL)
+    c = MongoClient(settings.LOG_DB_ADDR)
     d = c[settings.LOG_DB_NAME]
-    if settings.MONGO_USER != "":
-        d.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     mongo_collection = d['log']
 

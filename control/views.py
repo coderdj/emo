@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from control.models import RunStartForm, RunStopForm
 import datetime
 import pytz
+import math
 import numpy as np
 import pandas as pd
 from django.conf import settings
@@ -14,8 +15,8 @@ import logging
 logger = logging.getLogger('emo')
 
 
-client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
-logclient = MongoClient(settings.LOG_DB_ADDR, settings.LOG_DB_PORT)
+client = MongoClient(settings.ONLINE_DB_ADDR)
+logclient = MongoClient(settings.LOG_DB_ADDR)
 
 @login_required
 def GetStatusUpdate(request):
@@ -28,9 +29,7 @@ def GetStatusUpdate(request):
     """
     # Connect to pymongo
     db = client[ settings.ONLINE_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
-
+    
     collection = db[ "daq_status" ]
 
     detectors = collection.distinct("detector")
@@ -42,8 +41,6 @@ def GetStatusUpdate(request):
     retdict = {"status": ret}
 
     logdb = logclient[settings.LOG_DB_NAME]
-    if settings.MONGO_USER != "":
-        logdb.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     logcollection = logdb["log"]
     if logcollection.find({"priority": {"$gt": 1, "$lt": 5}}).count() != 0:
@@ -65,10 +62,10 @@ def GetNodeUpdates(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+    client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+    #if settings.MONGO_USER != "":
+    #    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     collection = db[ "daq_rates" ]
 
@@ -93,11 +90,9 @@ def GetNodeHistory(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+    client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
-
+    
     collection = db[ "daq_rates" ]
 
     # Right now set nseconds to last 2 days. Will be a configurable query soon.
@@ -129,8 +124,14 @@ def GetNodeHistory(request):
         subtable = dataframe[dataframe.node==node].set_index('datetime')
         subtable = subtable.resample(str(bin_size)+'s', how='mean')
         subtable['timeseconds'] = subtable['timeseconds'].multiply(1000)
-        ret.append({ "node": node, "data": 
-                     list(subtable[['timeseconds','datarate']].values.tolist())})
+        thelist = []
+        for item in subtable[['timeseconds','datarate']].values.tolist():
+            if math.isnan(item[0]) or not item[0]>=0:
+                continue
+            thelist.append(item)
+        #ret.append({ "node": node, "data": 
+        #             list(subtable[['timeseconds','datarate']].values.tolist())})
+        ret.append({"node": node, "data": thelist})
             
     client.close()
     
@@ -158,11 +159,8 @@ def stop_run(request):
     insert_doc['comment'] = rs_form.cleaned_data['comment']
 
     # Connect to pymongo                                                         
-    client = MongoClient(settings.ONLINE_DB_ADDR,
-                         settings.ONLINE_DB_PORT)
+    client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     collection = db[ "daq_control" ]
     collection.insert_one(insert_doc)
@@ -172,11 +170,8 @@ def stop_run(request):
 def GetDispatcherReply(request):
 
     # Connect to pymongo                                                            
-    client = MongoClient(settings.ONLINE_DB_ADDR,
-                         settings.ONLINE_DB_PORT)
+    client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     collection = db[ "dispatcherreply" ]    
     cursor = collection.find({}).sort("_id", 1)
@@ -229,11 +224,8 @@ def start_run(request):
             insert_doc[key] = rs_form.cleaned_data[key]
             
         # Connect to pymongo                                                        
-        client = MongoClient(settings.ONLINE_DB_ADDR,
-                             settings.ONLINE_DB_PORT)
+        client = MongoClient(settings.ONLINE_DB_ADDR)
         db = client[ settings.ONLINE_DB_NAME ]
-        if settings.MONGO_USER != "":
-            db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
         run_collection = db['run_modes']
 

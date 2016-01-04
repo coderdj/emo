@@ -1,5 +1,5 @@
 from django.contrib.auth import logout
-from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from management.models import UserRequest, UserProfile
@@ -15,6 +15,15 @@ def logout_page(request):
     """
     logout(request)
     return HttpResponseRedirect('/')
+
+@login_required
+def getStartingUser(request):
+    
+    superman = "nobody"
+    for userobj in UserProfile.objects.all():
+        if (datetime.datetime.now( datetime.timezone.utc ) - userobj.control_permission_date).days < 7:
+            superman=userobj.user.username
+    return HttpResponse(json.dumps({"starting_user": superman}), content_type = 'application/json')
 
 @login_required
 def profile(request):

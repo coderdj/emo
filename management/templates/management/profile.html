@@ -12,9 +12,7 @@
       <li> You <strong>may</strong> post new log messages</li>
       <li> You <strong>may</strong> view the run history</li>
       <li> You <strong>may</strong> view the acquisition status and control panels</li>
-      {% if user.is_superuser %}
-      <li> You <strong>may</strong> start and stop data taking</li>
-      {% elif canstartruns %}
+      {% if canstartruns %}
       <li> You <strong>may</strong> start and stop data taking until {{ expiration|date:"D d M Y" }}</li>
       {% else %}       
       <li> You <strong>may not</strong> start and stop data taking

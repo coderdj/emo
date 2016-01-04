@@ -66,7 +66,7 @@ function updateData( chart, updateUrl )
 {
     $.getJSON(updateUrl,function(data){
 	var detlist = ['reader00', 'reader01', 'reader02', 'reader03', 'reader04', 'muon_veto'];
-        var idlist = ['reader00','reader01','reader02','reader03', 'reader04', 'muon_veto_0'];        
+        var idlist = ['reader00','reader01','reader02','reader03', 'reader04', 'reader05'];        
 	console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;
@@ -220,7 +220,7 @@ console.log("flipflop");
                     "<td>" + node_data[node_id]['datarate']+ "</td>" +
                     "<td>" + update_seconds.toString()+ "</td></tr>";
 
-		if(node_data[node_id]['node'][0]=='r') // as in 'reader0x'
+		if(node_data[node_id]['node']!='reader5') // as in 'reader0x'
 		    nodeInfo['tpc'].push(html_string);
 		else
 		    nodeInfo['muon_veto'].push(html_string);

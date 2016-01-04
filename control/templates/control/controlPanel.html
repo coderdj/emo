@@ -38,18 +38,23 @@
   </div>
 </div>
 
-{% if request.user.is_superuser != True and request.user.profile.canstartruns != True %}
+<p class="bg-danger" style="width:100%;padding-left:20px">Please note: after a recent update there is a bug in the baseline determination. I've disabled it until I fix the bug. Cheers. Dan.</p>
+{% if request.user.profile.canstartruns != True %}
 <p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission. </p>
 {% endif %}
 
-<p class="bg-info" style="width:100%;padding-left:20px">Note: As of now this thing is controlling the XENON1T DAQ. Only take control if you know you should! Thanks! - Dan </p>
 <div class="row" style="height:20px;margin:0px;margin-top:15px;">
-  <div class="col-sm-3 col-xs-12">
-    <h3><strong>DAQ Control Panel</strong></h3>
+  <div class="col-sm-6 col-xs-12">
+    <div style="clear: both">
+      <h3 style="display:inline"><strong>DAQ Control Panel</strong></h3>
+      &nbsp;
+      <h5 style="display:inline"><strong>Current shifter: <span id="superman"></span></strong></h5>
+    </div>
+<!--    <h5>Current shifter: <span id="superman"></span></h5> -->
     <br>
   </div>
-  {% if request.user.is_superuser or request.user.profile.canstartruns %}
-  <div class="col-sm-9 col-xs-12 pull-right">
+  {% if request.user.profile.canstartruns %}
+  <div class="col-sm-6 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
       <button data-toggle="modal" class="btn btn-success" href="#startRunModal">Start Run</button>
       <button class="btn btn-danger" data-toggle="modal" href="#runStopModal">Stop Run</button>
@@ -160,7 +165,9 @@ border-style=solid;border-width:1px;">-->
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc" checked="checked"></div>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc"  disabled="disabled">
+		  <input type="hidden" name="baselines_tpc" value="false"/>
+		  </div>
                 </label>
               </div>
             </div>
@@ -168,7 +175,10 @@ border-style=solid;border-width:1px;">-->
               <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
               <div class="col-xs-6">
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="noise_tpc" checked="checked"></div>
+                  <div class="col-xs-6"><input type="checkbox" name="noise_tpc" disabled="disabled">
+		    <input type="hidden" name="noise_tpc" value="false"/>
+
+		  </div>
                 </label>
               </div>
             </div>
@@ -184,7 +194,10 @@ border-style=solid;border-width:1px;">-->
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv" checked="checked"></div>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv" disabled="disabled">
+		    <input type="hidden" name="baselines_mv" value="false"/>
+
+		  </div>
                 </label>
               </div>
             </div>
@@ -192,7 +205,9 @@ border-style=solid;border-width:1px;">-->
               <div class="col-xs-6"><strong>Make noise spectra:</strong></div>
               <div class="col-xs-6">
                 <label>
-		  <div class="col-xs-6"><input type="checkbox" name="noise_mv" checked="checked"></div>
+		  <div class="col-xs-6"><input type="checkbox" name="noise_mv" disabled="disabled">
+		    <input type="hidden" name="noise_mv" value="false"/>
+		  </div>
                 </label>
               </div>
             </div>
@@ -298,6 +313,7 @@ border-style=solid;border-width:1px;">-->
   var historyUrl = "/control/get_node_history";
   var dataUrl = "/control/get_status_update";
   var logUrl = "/log/get_dispatcher_log";
+  var currentShifterUrl = "/supermanrequest";
   var chart;
   var graphic_range = (24*60*60).toString();
   var graphic_bin = "600";
@@ -384,6 +400,11 @@ border-style=solid;border-width:1px;">-->
 
   // Page update poll
   function UpdatePage( thechart ){
+			     
+     $.getJSON(currentShifterUrl, function(data){
+	document.getElementById("superman").innerHTML = data['starting_user'];
+     });
+
      // No starting runs if there are open alerts
      if(global_can_start_runs){ 
         document.getElementById('run_start_form').style.display = 'block';
@@ -421,13 +442,13 @@ border-style=solid;border-width:1px;">-->
        var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
        $.getJSON( historyUrlWithOptions, function(data) {
           var thechart=$("#rates_panel").highcharts();
-          if(thechart.series.length != data.length){
+          if(thechart.series.length != data.length){		
              redraw_graphic(data);
              return;
           }
           for( x=0; x<data.length; x++ ){
               thechart.series[x].update({
-                data: data[x]["data"],
+		data: data[x]["data"],		
               },true);
           }
        });

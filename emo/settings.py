@@ -18,29 +18,6 @@ from django_auth_ldap.config import LDAPSearch
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = '/home/dan/emo/'
 
-# MongoDB connectivity
-ONLINE_DB_NAME = "run"
-ONLINE_DB_ADDR = "master"
-ONLINE_DB_PORT = 27018
-ONLINE_DB_REPL = "run"
-MONITOR_DB_NAME = "run"
-MONITOR_DB_ADDR = "master"
-MONITOR_DB_PORT = 27018
-MONITOR_DB_REPL = "run"
-RUNS_DB_NAME = "run"
-RUNS_DB_ADDR = "master"
-RUNS_DB_PORT = 27018
-RUNS_DB_REPL = "run"
-LOG_DB_NAME = "run"
-LOG_DB_ADDR = "master"
-LOG_DB_PORT = 27018
-LOG_DB_REPL = "run"
-BUFFER_DB_ADDR = "eb0"
-BUFFER_DB_PORT = 27000
-BUFFER_DB_REPL = "untriggered"
-BUFFER_DB_LOGIN = "reader"
-BUFFER_DB_PASSWORD = "luxstinks"
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -50,7 +27,22 @@ with open('/etc/secret_key.txt') as f:
 MONGO_PW=""
 with open('/etc/dbpass.txt') as ftwo:
     MONGO_PW = ftwo.read().strip()
+BUFFER_PW = ""
+with open('/etc/dbpass2.txt') as ftree:
+    BUFFER_PW = ftree.read().strip()
 MONGO_USER="web"
+BUFFER_USER = "reader"
+
+ONLINE_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
+ONLINE_DB_NAME = "run"
+MONITOR_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
+MONITOR_DB_NAME = "run"
+LOG_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
+LOG_DB_NAME = "run"
+RUNS_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
+RUNS_DB_NAME = "run"
+BUFFER_DB_ADDR = "mongodb://" + BUFFER_USER + ":" + BUFFER_PW + "@eb0:27000,eb0:27001,eb1:27000/untriggered?replicaSet=event_builder_0"
+BUFFER_DB_REPL = "untriggered"
 #MONGO_USER="pax"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False

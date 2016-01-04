@@ -6,14 +6,16 @@ from config.models import ModeSubmissionForm
 from django.shortcuts import render
 import datetime
 from django.conf import settings
+import logging
 
+# Get an instance of a logger    
+logger = logging.getLogger('emo')
 mode_db_collection = "run_modes"
 
 # Connect to pymongo
-client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+#client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+client = MongoClient(settings.ONLINE_DB_ADDR)
 db = client[settings.ONLINE_DB_NAME]
-if settings.MONGO_USER != "":
-    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
 collection = db[mode_db_collection]
 
@@ -81,7 +83,7 @@ def run_mode_config(request):
     """
 
     if request.method == "POST":
-        print("HI")
+        
         theform = ModeSubmissionForm(request.POST)
 
         if theform.is_valid():
@@ -104,6 +106,8 @@ def run_mode_config(request):
                 try:
                     collection.insert(thebson)
                 except Exception as e:
+                    logger.error("Insert failed")
+                    logger.error(e)
                     print("Insert failed")
                     print((e))
 

@@ -24,10 +24,9 @@ class ModeSubmissionForm(forms.Form):
             raise forms.ValidationError(self.fields['bulk'].error_messages['no_det'])
 
         mode_db_collection = "run_modes"
-        client = MongoClient(settings.ONLINE_DB_ADDR, settings.ONLINE_DB_PORT)
+        client = MongoClient(settings.ONLINE_DB_ADDR)
         db = client[settings.ONLINE_DB_NAME]
-        if settings.MONGO_USER != "":
-            db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
+
         collection = db[mode_db_collection]
 
         if thebson['name'] in collection.distinct('name'):

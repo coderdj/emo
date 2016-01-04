@@ -17,10 +17,8 @@ def runs(request):
     filter_query = {}
 
     # Connect to pymongo
-    client = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)    
+    client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
-    if settings.MONGO_USER != "":
-        db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     collection = db[ "runs" ]
     fields = collection.distinct( "runmode" )
@@ -119,10 +117,8 @@ def new_comment(request):
     """                                                                         
     Add a new comment to a run entry.
     """
-    c = MongoClient(settings.RUNS_DB_ADDR, settings.RUNS_DB_PORT)
+    c = MongoClient(settings.RUNS_DB_ADDR)
     d = c[settings.RUNS_DB_NAME]
-    if settings.MONGO_USER != "":
-        d.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
 
     mongo_collection = d['runs']
 
