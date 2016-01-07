@@ -10,6 +10,7 @@
 {% block content %}
 
 <div class="container" style="margin-top:20px;background-color:white">
+  <div class="col-xs-12"><h3>XENON100 Slow Control Values</h3></div>
   <div class="col-xs-12" id="chart_div" style="height:200px;width:100%"></div>
 <br>
   <div class="col-xs-12" id="data_div"></div>
@@ -76,6 +77,7 @@ var a = $("#chart_div").highcharts({
                 legend: {
                     enabled: false
                 },
+tooltip: { enabled: false },
 					 plotOptions: {
                     area: {
                         fillColor: {
@@ -96,11 +98,15 @@ var a = $("#chart_div").highcharts({
                         lineWidth: 1,
                         states: {
                             hover: {
-                                lineWidth: 1
+					   enabled: false,
+					   lineWidth: 1
                             }
                         },
-                        threshold: null
-                    }
+
+                        threshold: null,
+			cropThreshold: 20000
+
+                    },
                 },
 
                 series: [{
