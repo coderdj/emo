@@ -2,6 +2,9 @@ from django import forms
 from bson.json_util import loads
 from pymongo import MongoClient
 from django.conf import settings
+import logging
+# Get an instance of a logger                                                   
+logger = logging.getLogger('emo')
 
 # Create your models here.
 class ModeSubmissionForm(forms.Form):
@@ -10,11 +13,14 @@ class ModeSubmissionForm(forms.Form):
                                             'no_name': 'You must include a unique name field in your run mode.',
                                             'no_det': 'You must include a detector field in your run mode.',
                                             'dupe_name': 'Run mode names must be unique!'})
+    overwrite = forms.BooleanField(required=False)
 
-    def clean_bulk(self):
+    def clean(self):
+
+        cleaned_data = super(ModeSubmissionForm, self).clean()
 
         try:
-            thebson = loads(self.cleaned_data['bulk'])
+            thebson = loads(cleaned_data['bulk'])
         except:
             raise forms.ValidationError(self.fields['bulk'].error_messages['badjson'])
             
@@ -28,8 +34,10 @@ class ModeSubmissionForm(forms.Form):
         db = client[settings.ONLINE_DB_NAME]
 
         collection = db[mode_db_collection]
-
-        if thebson['name'] in collection.distinct('name'):
+        logger.error(cleaned_data)
+        logger.error(cleaned_data['overwrite'])
+        if thebson['name'] in collection.distinct('name') and cleaned_data['overwrite'] == False:
             raise forms.ValidationError(self.fields['bulk'].error_messages['dupe_name'])
 
-        return self.cleaned_data['bulk']
+        #return self.cleaned_data['bulk']
+        return cleaned_data

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<script src="{% static "js/moment.js"%}"></script>
+<!--<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>-->
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "js/plotly-latest.min.js" %}"></script>
+ 
+{% endblock %}
+{% block content %}
+
+<div class="container">
+  <div class="col-xs-12" name="chart_div"></div>
+  <div class="col-xs-12" name="data_div"></div>
+</div>
+
+<script type="text/javascript">
+
+  var point_url = "/slow_control/get_sensor_newest";
+
+  function UpdatePoints(){
+     // Set up template
+     $.getJSON(point_url, function(data){
+    
+
+        for(i=0; i<data['sensors'].length; i+=1){
+             dom_name = "#" + data['sensors'][i]['name'] + "_row";
+             if($(dom_name).length == 0) {					  
+                $("data_div").append("<div class='row' name='" + data['sensors'][i]['name'] + "_row'><div class='col-xs-6'>" +
+				  + "<h5>" + data['sensors'][i]['name'] + "</h5>" 
+			          + "</div><div class='col-xs-6' name='" + 
+				data['sensors'][i]['name'] + "_data'>" + 
+			        data['sensors'][i]['value'] + "</div></div>");
+				}
+		else
+		    document.getElementById(data['sensors'][i]['name']+"_row").innerHTML = data['sensors'][i]['value'];
+        }
+      
+
+      });
+	setTimeout(function(){ UpdatePoints()}, 5000);
+  };
+
+$(document).ready(function(){
+	UpdatePoints();
+});
+</script>
+{% endblock %}

@@ -43,6 +43,9 @@ RUNS_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,maste
 RUNS_DB_NAME = "run"
 BUFFER_DB_ADDR = "mongodb://" + BUFFER_USER + ":" + BUFFER_PW + "@eb0:27000,eb0:27001,eb1:27000/untriggered?replicaSet=event_builder_0"
 BUFFER_DB_REPL = "untriggered"
+SC_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
+SC_DB_NAME="run"
+
 #MONGO_USER="pax"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -67,6 +70,7 @@ INSTALLED_APPS = (
     'monitor',
     'log',
     'config',
+    'slow_control',
     'access_log'
 )
 

@@ -46,18 +46,23 @@
             {% csrf_token %}
             <textarea id="json_text" name="bulk">{{ form.bulk.value }}</textarea>
         </div>
-        <div class="col-xs-8" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
+        <div class="col-xs-6" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
         <div class="col-xs-3" style="margin-top:10px;">
             <i>Note: only valid JSON is accepted</i>
         </div>
-        <div class="col-xs-1" style="margin-top:10px;">
+        <div class="col-xs-3" style="margin-top:10px;">
             {% if request.user.is_superuser %}
-            <button type="submit" class="btn btn-info">Submit</button>
+	    <div class="col-xs-6">
+	      {{ form.overwrite }} &nbsp;overwrite&nbsp;
+	    </div>
+	    <div class="col-xs-6">
+              <button type="submit" class="btn btn-info">Submit</button>
+	    </div>
             {%  endif %}
         </div>
     </form>
 
-    <div class="col-xs-12" style="margin-top:20px">
+<!--    <div class="col-xs-12" style="margin-top:20px">
         <h4>Options reference:</h4>
         <p>
             Here is some general reference for the options here. For more information see the kodiaq docs.
@@ -81,7 +86,7 @@
                 </tr>
     </table>
         </p>
-    </div>
+    </div>-->
 
 
 <div class="modal" id="delete_mode_modal">

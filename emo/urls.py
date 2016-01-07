@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^log/', include('log.urls')),
     url(r'^config/', include('config.urls')),
     url(r'^access/', include('access_log.urls')),
+    url(r'^slow_control/', include('slow_control.urls')),
 url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         kwargs={'template_name': 'login.html'}, name='login'),
 

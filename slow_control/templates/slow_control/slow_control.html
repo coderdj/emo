@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<script src="{% static "js/moment.js"%}"></script>
+<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "js/plotly-latest.min.js" %}"></script>
+ 
+{% endblock %}
+{% block content %}
+
+<div class="container" style="margin-top:20px;background-color:white">
+  <div class="col-xs-12" id="chart_div" style="height:200px;width:100%"></div>
+<br>
+  <div class="col-xs-12" id="data_div"></div>
+</div>
+
+<script type="text/javascript">
+
+  var point_url = "/slow_control/get_sensor_newest";
+  var history_url = "/slow_control/get_sensor_history";
+  var default_name="";
+  function UpdatePoints(callback){
+     // Set up template
+     $.getJSON(point_url, function(data){
+  console.log(data);
+
+        for(i=0; i<data['sensors'].length; i+=1){
+             dom_name = "#" + data['sensors'][i]['name'] + "_row";
+             if(default_name=="") default_name=data['sensors'][i]['name'];
+             if($(dom_name).length == 0) {			
+console.log(dom_name);		  
+                $("#data_div").append("<div class='row' style='padding:1' id='" + data['sensors'][i]['name'] + "_row'><div class='col-xs-4'>" +
+				  "<h5>" + data['sensors'][i]['name'] + "</h5>" 
+			          + "</div><div class='col-xs-4' id='" + 
+				data['sensors'][i]['name'] + "_data'>" + 
+			        data['sensors'][i]['value'] + "</div>" + 
+ "<div class='col-xs-4'><button class='btn btn-info' onClick='plot_history(" + '"' + 
+data['sensors'][i]['name'] + '"' + ")'>Plot</button></div></div>");
+				}
+		else
+		    document.getElementById(data['sensors'][i]['name']+"_data").innerHTML = data['sensors'][i]['value'];
+        }
+    if(typeof callback == 'function')
+      callback(default_name);
+
+      });
+	setTimeout(function(){ UpdatePoints()}, 5000);
+  };
+
+  function plot_history(name){
+
+					   console.log("HERE");
+         $.getJSON(history_url, function(data){
+	     if (name in data){
+//highcharts
+console.log(data[name]);
+var a = $("#chart_div").highcharts({
+                chart: {
+                    zoomType: 'x'
+                },
+                title: {
+                    text: name
+                },
+					   xAxis: {
+                    type: 'datetime'
+					           },
+                yAxis: {
+                    title: {
+					                   text: ''
+                    }
+                },
+                credits: {
+                    enabled: false
+                },
+                legend: {
+                    enabled: false
+                },
+					 plotOptions: {
+                    area: {
+                        fillColor: {
+                            linearGradient: {
+                                x1: 0,
+                                y1: 0,
+                                x2: 0,
+					                   y2: 1
+                            },
+					                       stops: [
+                                [0, Highcharts.getOptions().colors[0]],
+                                [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            ]
+                        },
+                        marker: {
+                            enabled: false
+                        },
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                lineWidth: 1
+                            }
+                        },
+                        threshold: null
+                    }
+                },
+
+                series: [{
+                    type: 'area',
+                    name: 'sensor',
+                    data: data[name]
+                }]
+            });
+
+/*x=[]; y=[];
+ymin=2000000000;
+ymax=-2000000000;
+					   for(i=0;i<data[name].length;i+=1){
+if(data[name][i][1]>ymax) ymax=data[name][i][1];
+if(data[name][i][1]<ymin) ymin=data[name][i][1];
+x.push(new Date(data[name][i][0]));y.push(data[name][i][1]);}
+console.log(x);
+var plot_data = {'x':x, 'y':y, 'type':'bar'};
+var layout={bargap:0.0, margin: {l:40, r:40, t:25, b:40}, yaxis:{range:[ymin-.01*ymin, ymax+.01*ymax]}};
+Plotly.newPlot("chart_div", [plot_data], layout,{'showLink':false, 'displaylogo':false});
+*/
+}
+ 
+  });
+
+  }
+$(document).ready(function(){
+	UpdatePoints(plot_history);
+});
+</script>
+{% endblock %}

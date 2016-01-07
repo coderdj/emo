@@ -94,8 +94,8 @@ def run_mode_config(request):
             try:
                 thebson = loads(theform.cleaned_data['bulk'])
             except:
-                print("Couldn't load BSON")
-                print(theform.cleaned_data)
+                logger.error("Couldn't load BSON")
+                logger.error(theform.cleaned_data)
 
             if thebson != {}:
                 thebson['user'] = request.user.username
@@ -104,7 +104,7 @@ def run_mode_config(request):
                     del thebson['_id']
                 print(thebson)
                 try:
-                    collection.insert(thebson)
+                    collection.update({"name": thebson['name']}, {"$set": thebson}, upsert=True)
                 except Exception as e:
                     logger.error("Insert failed")
                     logger.error(e)
