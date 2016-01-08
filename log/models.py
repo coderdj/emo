@@ -13,7 +13,7 @@ class LogEntryForm(forms.Form):
     message = forms.CharField(max_length=1000)
     run_name = forms.CharField(max_length=200, initial="none", required=False)
     detector = forms.CharField(max_length=200, initial="none", required=False)
-
+    redirect = forms.CharField(max_length=200, initial="", required=False)
 
 PRIORITY_CHOICES = (    
     (-1, "All"),

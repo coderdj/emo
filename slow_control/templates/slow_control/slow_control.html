@@ -10,17 +10,35 @@
 {% block content %}
 
 <div class="container" style="margin-top:20px;background-color:white">
-  <div class="col-xs-12"><h3>XENON100 Slow Control Values</h3></div>
+  <div class="row" style="margin-top:5px;">
+    <div class="col-xs-6"><h3>XENON100 Slow Control Values</h3></div>
+    <div class="col-xs-6">Updated:&nbsp;<span style="width:100%;" id="update_time"></span>
+</div>
   <div class="col-xs-12" id="chart_div" style="height:200px;width:100%"></div>
+  <div class="col-xs-12" id="chart_div_2" style="height:200px;width:100%"></div>
 <br>
-  <div class="col-xs-12" id="data_div"></div>
+  <div class="col-xs-12" id="data_div">
+    <table class="table table-condensed">
+      <thead>
+	<th>Sensor</th>
+	<th>Description</th>
+	<th>Reading</th>
+	<th>Plot</th>
+      </thead>
+      <tbody id="data_table">
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script type="text/javascript">
 
   var point_url = "/slow_control/get_sensor_newest";
   var history_url = "/slow_control/get_sensor_history";
+  var plot_1 = null;
+  var plot_2 = null;
   var default_name="";
+  var default_name_2="";
   function UpdatePoints(callback){
      // Set up template
      $.getJSON(point_url, function(data){
@@ -28,35 +46,68 @@
 
         for(i=0; i<data['sensors'].length; i+=1){
              dom_name = "#" + data['sensors'][i]['name'] + "_row";
-             if(default_name=="") default_name=data['sensors'][i]['name'];
-             if($(dom_name).length == 0) {			
-console.log(dom_name);		  
-                $("#data_div").append("<div class='row' style='padding:1' id='" + data['sensors'][i]['name'] + "_row'><div class='col-xs-4'>" +
-				  "<h5>" + data['sensors'][i]['name'] + "</h5>" 
-			          + "</div><div class='col-xs-4' id='" + 
-				data['sensors'][i]['name'] + "_data'>" + 
-			        data['sensors'][i]['value'] + "</div>" + 
- "<div class='col-xs-4'><button class='btn btn-info' onClick='plot_history(" + '"' + 
-data['sensors'][i]['name'] + '"' + ")'>Plot</button></div></div>");
-				}
-		else
+
+	     // First run
+             if($(dom_name).length == 0) {
+		if((default_name=="" && data['sensors'][i]['name']!='cryostat_vacuum') || data['sensors'][i]['name'] == 'p2') default_name=data['sensors'][i]['name'];
+                else if(default_name_2=="" || data['sensors'][i]['name']=='cryostat_vacuum') default_name_2=data['sensors'][i]['name'];
+
+		rowstring = "<tr id='" + data['sensors'][i]['name'] + "_row'><td>" +
+		"<h5 style='margin:0'>" + data['sensors'][i]['name'] + "</h5>" 
+		+ "</td><td>";
+		if(data['sensors'][i]['name'] in data['key'])
+		    rowstring+=data['key'][data['sensors'][i]['name']];
+               rowstring+="</td><td id='" + 
+		data['sensors'][i]['name'] + "_data'>" + 
+		  data['sensors'][i]['value'] + "</td>" + 
+ "<td><button style='margin:0' class='btn btn-info' onClick='plot_history_1(" + '"' + 
+data['sensors'][i]['name'] + '"' + ")'>Plot 1</button>&nbsp;<button style='margin:0' class='btn btn-warning' onClick='plot_history_2(" + '"' + data['sensors'][i]['name'] + '"' + ")'>Plot 2</button></td></tr>";
+$("#data_table").append(rowstring);
+		}
+ 		// Subsequent updates
+		else{
 		    document.getElementById(data['sensors'][i]['name']+"_data").innerHTML = data['sensors'][i]['value'];
+                    if(data['sensors'][i]['name'] == default_name)
+                        UpdatePlot(data, "chart_div", i)
+                    if(data['sensors'][i]['name'] == default_name_2)
+                        UpdatePlot(data, "chart_div_2", i);
+                 }
+           if(i==0){
+			document.getElementById("update_time").innerHTML = (new Date(data['time']['$date'])).toString()
+}
         }
-    if(typeof callback == 'function')
-      callback(default_name);
+    if(typeof callback == 'function'){
+	callback(default_name);
+        plot_history_2(default_name_2);
+}
 
       });
 	setTimeout(function(){ UpdatePoints()}, 5000);
   };
 
-  function plot_history(name){
+  function UpdatePlot(data, div, i){
+					   index=($("#"+div).data("highchartsChart"));
+     var  plot = Highcharts.charts[index];
+     if(plot == null || data == null)
+       return;
+     plot.series[0].addPoint([data['time']['$date'], data['sensors'][i]['value'] ], true, true);
+  }
+  function plot_history_2(name){
+        default_name_2 = name;
+	plot_history(name, "#chart_div_2", 6, 1);
+}
+function plot_history_1(name){
+        default_name = name;
+	plot_history(name, "#chart_div", 0, 2);
+}
+  function plot_history(name, chartdiv, plot_color, plot){
 
 					   console.log("HERE");
          $.getJSON(history_url, function(data){
 	     if (name in data){
 //highcharts
 console.log(data[name]);
-var a = $("#chart_div").highcharts({
+options = {
                 chart: {
                     zoomType: 'x'
                 },
@@ -80,6 +131,7 @@ var a = $("#chart_div").highcharts({
 tooltip: { enabled: false },
 					 plotOptions: {
                     area: {
+                        lineColor: Highcharts.getOptions().colors[plot_color],
                         fillColor: {
                             linearGradient: {
                                 x1: 0,
@@ -88,8 +140,8 @@ tooltip: { enabled: false },
 					                   y2: 1
                             },
 					                       stops: [
-                                [0, Highcharts.getOptions().colors[0]],
-                                [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                                [0, Highcharts.getOptions().colors[plot_color]],
+                                [1, Highcharts.Color(Highcharts.getOptions().colors[plot_color]).setOpacity(0).get('rgba')]
                             ]
                         },
                         marker: {
@@ -114,7 +166,12 @@ tooltip: { enabled: false },
                     name: 'sensor',
                     data: data[name]
                 }]
-            });
+            };
+if(plot==1)
+plot_1 = $(chartdiv).highcharts(options);
+else if(plot==2)
+plot_2 = $(chartdiv).highcharts(options);
+
 
 /*x=[]; y=[];
 ymin=2000000000;
@@ -134,7 +191,7 @@ Plotly.newPlot("chart_div", [plot_data], layout,{'showLink':false, 'displaylogo'
 
   }
 $(document).ready(function(){
-	UpdatePoints(plot_history);
+	UpdatePoints(plot_history_1);
 });
 </script>
 {% endblock %}

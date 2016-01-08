@@ -22,8 +22,8 @@ def get_dispatcher_log(request):
 
     mongo_collection = d['log']
     
-    mongo_query = {"sender": "default_sender"}
-    log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:50]
+    mongo_query = {"priority": 0}
+    log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:20]
 
     return HttpResponse(dumps(log_list), content_type="application/json")
 
@@ -135,6 +135,7 @@ def new_comment(request):
 @login_required(login_url="/login/")
 def new_log_entry(request):
 
+    redirect_url = "/log/"
     c = MongoClient(settings.LOG_DB_ADDR)
     d = c[settings.LOG_DB_NAME]
 
@@ -154,12 +155,18 @@ def new_log_entry(request):
                 "run": new_form.cleaned_data['run_name'],
                 "detector": new_form.cleaned_data['detector'],
             }
+            if new_form.cleaned_data['redirect'] != "":
+                redirect_url = new_form.cleaned_data['redirect']
 
             mongo_collection.insert(new_entry)
-
-        return HttpResponsePermanentRedirect('/log/')
+        if redirect_url != "none":
+            return HttpResponsePermanentRedirect(redirect_url)
+        else:
+            return HttpResponse("good")
     else:
         new_form = LogEntryForm()
+    if redirect_url != 'none':
+        return HttpResponsePermanentRedirect(redirect_url)
+    return HttpResponse("good")
 
-    return HttpResponsePermanentRedirect('/log')
     #return render(request, 'log/newlogentry.html', {'form': new_form})
