@@ -44,7 +44,7 @@
   </div>
 </div>
 
-<p class="bg-danger" style="width:100%;padding-left:20px">Please note: after a recent update there is a bug in the baseline determination. I've disabled it until I fix the bug. Cheers. Dan.</p>
+<!--<p class="bg-danger" style="width:100%;padding-left:20px">Please note: after a recent update there is a bug in the baseline determination. I've disabled it until I fix the bug. Cheers. Dan.</p>-->
 {% if request.user.profile.canstartruns != True %}
 <p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission. </p>
 {% endif %}
@@ -488,7 +488,10 @@ console.log(data[x]);
 
   // Load page function
   $( function() {
-
+	$("#content").resize(function()
+		{console.log("HERE");
+ $('#rates_panel').highcharts().setSize($("#rates_panel").width(), 300, false); 
+});
      // Submit function for log form
      var frm = $('#new_log_entry');
      frm.submit(function(){

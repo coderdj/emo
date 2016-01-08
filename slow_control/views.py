@@ -8,12 +8,12 @@ import datetime
 
 # This should later go in the DB itself
 descriptions = {
-    "pfeiffer_id": "Pump output, increases",
+    "pfeiffer_id": "Pump timestamp output",
     "cryostat_vacuum": "Vacuum reading in cryostat",
     "p2": "Pressure of xenon in the recuperating system (atm)",
-    "omega_id": "Another increasing number",
+    "omega_id": "Omega timestamp output",
     "p1": "Pressure of xenon gas inside the  detector (atm)",
-    "lakeshore_id": "Another increasing number we probably don't care about",
+    "lakeshore_id": "Lakeshore timestamp output",
     "cold_finger": " The temperature of the coldfinger, which is the temperature on the heatlink between the PTR and the cell",
     "heater": "Power needed to keep the cell at a constant temperature, percentage of max voltage",
     "baking_pt100_3": "Cooling water temperature for He compressor",

@@ -150,8 +150,8 @@ color: #a642b4;
 }
 
 /* Making the sidebar responsive */
-
-/*@media (max-width: 900px) {
+/*
+@media (max-width: 900px) {
 
 	.main-content{
 		max-width: none;

@@ -689,7 +689,16 @@ le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?prio
 	}
 	var UpdateUrl = "/control/get_status_update";
 	$(function(){
-//           $(".sidebar.left").sidebar().trigger("sidebar:open");
+		if($(window).width()<=450){
+        //   $(".sidebar.left").sidebar().trigger("sidebar:close");
+	$(".sidebar.left").trigger("sidebar:toggle");
+    $("#content").toggleClass('emo-sidebar-show');
+      $("#content").toggleClass('emo-sidebar-hide');
+
+//     $('div#main').toggleClass('sidebar-show');
+
+     window.dispatchEvent(new Event('resize'));
+}
 
 		$(".sidebar-links div a").on('click', function(){
 	         if($(this).closest('div').hasClass("selected"))
