@@ -84,6 +84,10 @@ def log(request):
     return render(request, 'log/log.html', {"log_list": log_list, "form": search_form})
 
 
+def get_hash_tags(text):
+    # Takes in a text block and returns a list of hash tags
+    return [tag.strip("#") for tag in text.split() if tag.startswith("#")]
+
 @login_required
 def new_comment(request):
 
@@ -123,6 +127,7 @@ def new_comment(request):
                     "text": text,
                     "date": date,
                     "user":  user,
+                    "tags": get_hash_tags(text),
                     "priority": 0
                     }
 
@@ -154,6 +159,7 @@ def new_log_entry(request):
                 "time": pytz.utc.localize(datetime.datetime.now()),
                 "run": new_form.cleaned_data['run_name'],
                 "detector": new_form.cleaned_data['detector'],
+                "tags": get_hash_tags(text),
             }
             if new_form.cleaned_data['redirect'] != "":
                 redirect_url = new_form.cleaned_data['redirect']
@@ -170,3 +176,4 @@ def new_log_entry(request):
     return HttpResponse("good")
 
     #return render(request, 'log/newlogentry.html', {'form': new_form})
+

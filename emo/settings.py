@@ -71,9 +71,13 @@ INSTALLED_APPS = (
     'log',
     'config',
     'slow_control',
+    'analytical',
     'access_log'
 )
 
+GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-72309033-1'
+GOOGLE_ANALYTICS_SITE_SPEED = True
+CLICKY_SITE_ID = '100914067'
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

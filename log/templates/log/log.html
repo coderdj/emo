@@ -123,7 +123,7 @@ function format ( d ) {
         ret += '<tr style="border-width:1px;border-color:#EEEEEE;border-style:solid;">'+
           '<td style="width:15%">'+dateString+'</td>'+
           '<td style="width:10%">'+d.comments[x].user+'</td>'+
-          '<td style="min-width:60%">'+ d.comments[x].text+ '</td>'+
+          '<td style="min-width:60%" class="hashes">'+ d.comments[x].text+ '</td>'+
         '</tr>';
      }}
 ret += '</table>';
@@ -138,14 +138,24 @@ ret += '</table>';
              ret += '&nbsp;<input type="checkbox" name="close_issue">Close Issue</input>';
      }
       ret +=  '</form>';
+
      return ret;
 }
+function toHashtagUrl(hashtag) {
+return "#";
+//  return "http://myservice.com?q=" + hashtag;
+}
+
 
 $(document).ready(function(){
 
    var thedata = {{ log_list|safe }};
 	var table = $('#logtable').DataTable({
 	  "data": thedata,
+ "drawCallback": function( settings ) {
+$(".hashes").linkify(toHashtagUrl);
+
+    },
           "columns": [
             {
                 "className":      'details-control',
@@ -161,7 +171,7 @@ $(document).ready(function(){
 	     return dateString;
     } },
             { "data": "sender" },
-            { "data": "message", "width": "60%" },
+            { "data": "message", "width": "60%", className: "hashes" },
             { "data": "comments", "render":function(data){if(data==null) return 0; return data.length} },
             { "data": "priority",
               "render": function(data){
@@ -224,6 +234,8 @@ $(document).ready(function(){
             row.child( format(row.data()) ).show();
             tr.addClass('shown');
         }
+	$(".hashes").linkify(toHashtagUrl);
+
     } );
 });
 

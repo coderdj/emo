@@ -1,3 +1,9 @@
+function ExpanderClick(button) {
+    if(button.innerHTML=="Expand")
+	button.innerHTML="Hide detail";
+    else
+	button.innerHTML="Expand";
+};
 
 function drawChart( chart, chartdiv, callback )
 // Draws a chart at the chart div
@@ -294,7 +300,7 @@ console.log("flipflop");
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
 			GetStateHtml(detector_data, status_id) + "</a><strong id='" + det_name + "_timestring_div' style='font-size:10pt;color:black;'>&nbsp;" 
-			+ timestring + "</strong>" + "</h2></div>";
+			+ timestring + "</strong>" + "<div class='pull-right'><button class='btn btn-default' style='background-color:white' type='button' data-toggle='collapse' data-target='#"+det_name+"_collapse' aria-expanded='false' aria-controls='"+det_name+"_collapse' onClick='ExpanderClick(this)'>Expand</button></div></h2></div><hr>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
 				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Run name:&nbsp;<span id='" + 
@@ -305,12 +311,12 @@ console.log("flipflop");
 				  det_name + "_runmode'></span></div>" +  
 				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em>Start Date:&nbsp;<span id='" + 
 				  det_name + "_startdate'></span></div>" +  
-				  "</div><hr>");
+				  "</div>");
 		    html_str += "</div>";
 		    $('#'+div_id).append(html_str);
 		    if( detector_data['status'][status_id]['state'] == "Running")
                         FillOutRunInfo(det_name, detector_data, status_id);
-		    var appstring = "<table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
+		    var appstring = "<div class='col-xs-12 collapse' id='"+det_name+"_collapse' style='padding:0'><table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
 /*		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
@@ -326,7 +332,7 @@ console.log("flipflop");
 		    for(var index=0;index<nodeInfo[det_name].length; index+=1)
 			appstring+= nodeInfo[det_name][index];
 		    //appstring+= "</div></div>";
-		    appstring += "</tbody></table>"
+		    appstring += "</tbody></table></div>"
 		    console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
 		    

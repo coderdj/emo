@@ -1,50 +1,46 @@
 {% extends "base.html" %}
 {% load staticfiles %}
-
+{% block head %}
+<style>
+  .mode-table{  
+  height: 30vh;
+  min-height: 300px;
+  width: calc(100%-30px);
+  overflow-y: scroll;
+  margin-top: -2px;
+}
+.top-table{
+  width: calc(100%-30px);
+  margin: 0;
+}
+.mode-window{
+  height: 30vh !important;
+  max-height: 30vh;
+  min-height: 300px;
+  width:calc(100% - 30px);
+  overflow-y: scroll;
+}
+</style>
+{% endblock %}
 {% block content %}
     <link href="{% static "codemirror-5.3/lib/codemirror.css" %}" rel="stylesheet">
     <script src="{% static "codemirror-5.3/lib/codemirror.js" %}"></script>
     <script src="{% static "codemirror-5.3/mode/python/python.js" %}"></script>
 <style>.CodeMirror {
   border: 1px solid #eee;
-  height: auto;
+  height: 30vh;
 }</style>
 
-    <div class="col-xs-12" style="margin-top:10px;">
-        <h3>DAQ Run Modes</h3>
-	<h5><strong>Note: </strong> Normal users may view DAQ operations modes here. Only admin users may modify them.</h5>
-    </div>
-        <div class="col-xs-12" style="margin-top:10px;">
-            <table class="table table-bordered table-condensed" style="background-color:white;";>
-                <tr class="emo-node-header">
-                    <th> Name</th>
-                    <th> Created </th>
-                    <th>Created by</th>
-                    <th> Comment </th>
-                    <th></th>
-                </tr>
-                {% for mode in runmodes %}
-                    <tr>
-                    <td style="padding:1px;">{{ mode.name }}</td>
-                    <td style="padding:1px;"> {{ mode.date }} </td>
-                    <td style="padding:1px;">{{ mode.user }}</td>
-                    <td style="padding:1px;"> {{ mode.comment }} </td>
-                    <td style="padding:1px;width:200px;"> <input class="btn btn-info btn-mini" type="button" style="margin:0px;margin-left:10px" value="Fetch"
-                   onclick="FillMode('{{ mode.name }}')" />
-                    {% if request.user.is_superuser %}
-                <input class="btn btn-danger btn-mini" data-toggle="modal" type="button" href="#delete_mode_modal"
-                       style="margin:0px;margin-left:10px;" value="Remove" onclick="RemoveMode('{{ mode.name }}')"/>
-        {% endif %}</td>
-                </tr>
-            {% endfor %}
+<div class="col-xs-12" style="margin-top:10px;display:inline;">
+  <h3 style="display:inline">DAQ Run Modes</h3>
+  <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
+</div>
 
-            </table>
-        </div>
-    <form method="POST" action="/config/">
-        <div class="col-xs-12" id="run_json_div">
-	  <div class="emo-det-header" style="padding-top:3px;padding-bottom:3px;padding-left:2px;">Showing mode: <strong><span id="mode_name">'new'</span></strong></div>
+<form method="POST" action="/config/">
+  <div class="col-xs-12" id="run_json_div" style="margin-top:10px">
+    <div class="emo-det-header" style="color:black;background-color:#F5F5F5;padding-top:3px;padding-bottom:3px;padding-left:2px;">Showing mode: <strong><span id="mode_name">'new'</span></strong></div>
             {% csrf_token %}
-            <textarea id="json_text" name="bulk">{{ form.bulk.value }}</textarea>
+          <textarea class="mode-window" id="json_text" name="bulk">{{ form.bulk.value }}</textarea>
         </div>
         <div class="col-xs-6" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
         <div class="col-xs-3" style="margin-top:10px;">
@@ -62,6 +58,59 @@
         </div>
     </form>
 
+
+
+<div class="col-xs-12" style="margin-top:10px;">
+  <table class="table table-bordered table-condensed top-table" style="background-color:white;">
+    <thead>
+      <tr class="emo-node-header" style="color:#DDDDDD;background-color:#5992c2;border-color:#AAAAAA;height:50px;line-height:40px;">
+        <!--<th style="width:300px"> Name</th>
+        <th style="width:200px"> Created </th>
+        <th style="width:100px">Created by</th>
+        <th style="width:400px"> Comment </th>
+        <th style="width:200px"></th>-->
+	<th style="border:0;padding-top:0px;padding-bottom:15px;font-size:12pt;">Available run modes:</th>
+      </tr>
+    </thead>
+  </table>
+  <div class="mode-table" style="margin-top:0px">
+    <table class="table table-bordered table-condensed" style="background-color:white;margin-left:-1px;margin-top:0;">
+      
+      <tbody>
+        {% for mode in runmodes %}
+	{% if mode.first == True %}
+	<tr class="emo-det-header" style="background-color:#F5F5F5;color:black;">
+	  <td style="border:0;">
+	    <strong>Detector: {{ mode.det }}</strong>
+	  </td>
+	  <td style="border:0;">
+          </td>
+	  <td style="border:0;">
+          </td>
+	  <td style="border:0;">
+          </td>
+	  <td style="border:0;">
+          </td>
+
+	</tr>
+	{% endif %}
+        <tr>
+          <td style="padding:1px;">{{ mode.name }}</td>
+          <td style="padding:1px;"> {{ mode.date }} </td>
+          <td style="padding:1px;">{{ mode.user }}</td>
+          <td style="padding:1px;"> {{ mode.comment }} </td>
+          <td style="padding:1px;width:200px;"> <input class="btn btn-info btn-mini" type="button" style="margin:0px;margin-left:10px" value="Fetch"                                                     onclick="FillMode('{{ mode.name }}')" />
+            {% if request.user.is_superuser %}
+            <input class="btn btn-danger btn-mini" data-toggle="modal" type="button" href="#delete_mode_modal"
+                   style="margin:0px;margin-left:10px;" value="Remove" onclick="RemoveMode('{{ mode.name }}')"/>
+            {% endif %} 
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 <!--    <div class="col-xs-12" style="margin-top:20px">
         <h4>Options reference:</h4>
         <p>
@@ -111,6 +160,37 @@
       </div>
     </div>
 </div>
+
+
+<div class="modal" id="helpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title"><strong>Run Modes Page</strong></h4>
+      </div>
+      <div class="modal-body">
+	<p>
+          <strong>What is a run mode?</strong>
+          <br style="margin:10px">
+	  A run mode is a DAQ-specific options file that tells the DAQ programs what options to use for a particular run. It has no effect outside of the DAQ system. Certain run modes are meant to be run only when the detector is in a certain state (i.e. running a calibration mode with a calibration source in). Some simple checks may be performed to verify the state of the detector but in general it is the shifter's responsibility to choose a mode that makes sense.
+	</p>
+	<p>
+          <strong>How do I edit DAQ options?</strong>
+          <br style="margin:10px">
+	  To edit options you have to have elevated priviledges. In general we give these to people in the DAQ group. It is very possible, easy even, to give the DAQ a set of options that will brick the digitizers and force a hard reset. Therefore we want to maintain an overview of what people to do the DAQ. If you have a special request please contact the DAQ group.
+	</p>
+	<strong>How do I know which options were used for a run?</strong>
+          <br style="margin:10px">
+	  The entire options file is dumped into the run document for each run. Even if the settings change later, the original file is still stored in the run doc. This is easy because we use JSON for our run modes and the run docs are MongoDB documents.
+	  </p>
+      </div>
+       <div class="modal-footer">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>
+    </div><!-- end content -->
+  </div> <!-- end dialog -->
+</div> <!-- end modal -->
 
 
 

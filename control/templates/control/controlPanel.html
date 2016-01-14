@@ -33,7 +33,34 @@
       50% 50%
       no-repeat;
   }
-
+.btn-range{ margin-bottom: 0}
+.fadeout {
+    position: absolute; 
+    bottom: 0;
+    left: 0;
+    height: 100px;
+    width:100%;
+    background: -webkit-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    ); 
+    background-image: -moz-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: -o-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: -ms-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+} 
 </style>
 <div id="Loading" class="Loading">
   <div class="col-xs-3 col-xs-offset-5" style="margin-top:150px;">
@@ -45,11 +72,11 @@
 </div>
 
 <!--<p class="bg-danger" style="width:100%;padding-left:20px">Please note: after a recent update there is a bug in the baseline determination. I've disabled it until I fix the bug. Cheers. Dan.</p>-->
-{% if request.user.profile.canstartruns != True %}
+<!--{% if request.user.profile.canstartruns != True %}
 <p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission. </p>
-{% endif %}
+{% endif %}-->
 
-<div class="row" style="height:20px;margin:0px;margin-top:15px;">
+<div class="row" style="height:20px;margin:0px;margin-top:15px;margin-bottom:15px;">
   <div class="col-sm-6 col-xs-12">
     <div style="clear: both">
       <h3 style="display:inline"><strong>DAQ Control Panel</strong></h3>
@@ -57,7 +84,6 @@
       <h5 style="display:inline"><strong>Current shifter: <span id="superman"></span></strong></h5>
     </div>
 <!--    <h5>Current shifter: <span id="superman"></span></h5> -->
-    <br>
   </div>
   {% if request.user.profile.canstartruns %}
   <div class="col-sm-6 col-xs-12 pull-right">
@@ -72,17 +98,19 @@
 </div>
     <div class="row" style="margin-top:5px;">
         <div class="col-xs-12">
+	  <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:15px" title="I can't even...">Help</a>
+
             <div class="pull-right" style="padding-right:15px;">
             <div class="btn-group" id="time_range_selector" role="group" aria-label="...">
-                <button type="button" value=172800 class="btn btn-default range">48 hours</button>
-                <button type="button" value=86400 class="btn btn-default active range">24 hours</button>
-                <button type="button" value=21600 class="btn btn-default range">6 hours</button>
-                <button type="button" value=3600 class="btn btn-default range">1 hour</button>
+                <button type="button btn-range" value=172800 class="btn btn-default range">48 hours</button>
+                <button type="button btn-range" value=86400 class="btn btn-default active range">24 hours</button>
+                <button type="button btn-range" value=21600 class="btn btn-default range">6 hours</button>
+                <button type="button btn-range" value=3600 class="btn btn-default range">1 hour</button>
             </div>
             <div class="btn-group" id="time_bin_selector" role="group" aria-label="...">
-                <button type="button" value=600 class="btn btn-default active bin">10 min</button>
-                <button type="button" value=120 class="btn btn-default bin">2 min</button>
-                <button type="button" value=30 class="btn btn-default bin">30 sec</button>
+                <button type="button btn-range" value=600 class="btn btn-default active bin">10 min</button>
+                <button type="button btn-range" value=120 class="btn btn-default bin">2 min</button>
+                <button type="button btn-range" value=30 class="btn btn-default bin">30 sec</button>
 <!--
                 <button type="button" value=10 class="btn btn-default bin">10 sec</button>-->
             </div>
@@ -90,26 +118,26 @@
         </div>
     </div>
 <!--<br>-->
-<div class="row" id="text_panel">
-  <div class="col-xs-12" id="info_panel" style="min-width:350px;"><!-- style="height:40%;min-height:250px;margin-top:10px;">
-<!--  <div class="col-xs-12" id="info_panel_header">
-    </div>-->
-<div class="col-xs-12" id="info_panel_header"><!-- style="height:30%;background-color:white;border-color:#AAAAAA;
-border-style=solid;border-width:1px;">-->
-</div>
 <div class="col-xs-12">
-<div class="col-xs-12 emobox" id="message_wrapper">
-  <form id="new_log_entry" action="/log/new_log_entry" method='post'>{% csrf_token %}
-<p style="margin-bottom:0">
-    <input type='text' id='new_comment_text' name='message' class='form-control'  placeholder='What are you up to...' style="display:inline-block"></input>
-    <input class='btn btn-info btn-lg' style="display:inline-block;width:120px;margin-bottom:0" type=submit value='New log entry'/>
-</p>
-<input type="hidden" name="redirect" value="none"/>
-  </form>
-  <div class="col-xs-12" id="message_panel" style="height:150px;margin-top:5px;max-height:200px;overflow-y:scroll;"></div>
+  <div class="col-xs-12 emobox" id="message_wrapper">
+    <form id="new_log_entry" action="/log/new_log_entry" method='post'>{% csrf_token %}
+      <p style="margin-bottom:0">
+	<input type='text' id='new_comment_text' name='message' class='form-control'  placeholder='Make a log entry...' style="display:inline-block"></input>
+	<input class='btn btn-info btn-lg' style="display:inline-block;width:120px;margin-bottom:0" type=submit value='New log entry'/>
+      </p>
+      <input type="hidden" name="redirect" value="none"/>
+    </form>
+  
+<div class="col-xs-12" id="message_panel" style="height:85px;margin-top:5px;overflow-y:scroll;margin-bottom:5px;">
+<div class="fadeout"></div>
 </div>
 </div>
 </div>
+<div class="row" id="text_panel">
+  <div class="col-xs-12" id="info_panel" style="min-width:350px;">
+    <div class="col-xs-12" id="info_panel_header">
+    </div>
+  </div>
 </div>
 
 
@@ -312,7 +340,47 @@ border-style=solid;border-width:1px;">-->
       </form>
     </div>
   </div>
-<div>
+</div>  
+
+<!-- Help modal -->
+<div class="modal" id="helpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title">Help</h4>
+      </div>
+      <div class="model-body" style="padding:10px;">
+	<p>
+	  Here's a how-to guide for the things you can do on this page. For furter instructions please contact the DAQ group.
+	</p>
+	<p>
+	  <strong>Starting a run</strong>
+	  <br style="margin:10px">
+	  To start a run you must be the current shifter. You can see if you are the current shifter by looking at the top of the page and confirming your user name is given. If you want to become the shifter go to the top right of the menu bar to <em>My Profile</em> and follow the instructions from there.
+
+	  If you are a shifter you should be able to start and stop runs using the buttons on the top of the page.
+	</p>
+	<p>
+	  <strong>Writing in the log</strong>
+	  <br style="margin:10px">
+	  There's an embedded log on this page. Use it! But don't confuse it with the chat. The log is in case you want some note recorded for the future or if you are doing something specific with the DAQ and want it pinned for other users to see. Using the embedded log as a pin board is certainly fine! 
+	  
+	  Only the most recent few user messages will appear on the log. To see more go to the log page, where you can also filter to see only user messages.
+	</p>
+	<p>
+	  <strong>Changing DAQ Settings</strong>
+          <br style="margin:10px">
+	  Short answer: you can't change DAQ settings. You can view the various settings files by going to <em>Run Modes</em> on the left menu bar. If you are a DAQ group member and want write access to the settings files contact the DAQ group. There are certain combinations of register settings that could brick the DAQ and require a hard reset. For this reason we avoid giving general write access to these documents. 
+	</p>
+	
+      </div>
+      <div class="modal-footer">
+	<a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>
+    </div><!-- end content -->
+  </div> <!-- end dialog -->
+</div> <!-- end modal -->
 
 
 
@@ -438,6 +506,10 @@ border-style=solid;border-width:1px;">-->
 			     }, updateFreq );
 	});
 }
+function toHashtagUrl(hashtag) {
+return "#";
+//  return "http://myservice.com?q=" + hashtag;
+}
 
   function DrawLogWindow( logdiv, Url ) {
 
@@ -447,7 +519,7 @@ border-style=solid;border-width:1px;">-->
 console.log(data[x]);
                 html_string += "<tr><td style='width:200px'>" + (new Date(data[x]['time']['$date'])).toISOString().slice(0,16) + "</td>" +
                                 "<td style='width:200px'><strong>" + data[x]['sender'] + "</strong></td>" +
-                                "<td>" + data[x]['message'] + "</td></tr>";
+                                "<td class='hashes'>" + data[x]['message'] + "</td></tr>";
             }
           html_string += "</tbody></table>"
           document.getElementById( logdiv).innerHTML = html_string;
@@ -467,8 +539,12 @@ console.log(data[x]);
 		data: data[x]["data"],		
               },true);
           }
+      $(".hashes").linkify(toHashtagUrl);
+
        });
+
 	callback();
+
     }
          
     function redraw_graphic(data){

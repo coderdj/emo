@@ -1,6 +1,5 @@
 html, body{
 min-height: 100%;
-
 }
 #main{
 min-height: 100%;
@@ -86,7 +85,7 @@ a.show-sidebar:hover {
   background: #ebebeb;
   box-shadow: 0 0 6px #131313;
   padding-bottom: 3000px !important;
-  margin-bottom: -2980px !important;
+  margin-bottom: -3000px !important;
   overflow: hidden;
   -webkit-transition: 0.2s;
   -moz-transition: 0.2s;
@@ -179,8 +178,12 @@ a.show-sidebar:hover {
   background: #ebebeb;
 }
 #main {
-  margin-top: 50px;
+#  margin-top: 40px;
+padding-left: 0px;
+padding-right: 0px;
+padding-top:40px;
 #  min-height: 800px;
+#min-height: calc(100vh-40px);
 min-height: 100vh;
 #  min-height:100%;
  overflow: hidden;
@@ -2320,7 +2323,7 @@ color: #333333;
 }
 @media (max-width: 767px) {
   #main {
-    margin-top: 100px;
+    margin-top: 0px;
   }
   #messages-menu {
     top:140px;

@@ -29,13 +29,28 @@ def get_sensor_newest(request):
     
     newest = mongo_collection.find_one({}, sort= [ ("_id", -1) ])
     newest['key'] = descriptions
-    return HttpResponse(dumps(newest), content_type="application/json")
+
+    retdict = { "time": newest['time'], 'categories': {}}
+    for sensor in newest['sensors']:
+        if sensor['category'] not in retdict['categories'].keys():
+            retdict['categories'][sensor['category']] = []
+
+        retdict['categories'][sensor['category']].append(sensor)
+        
+
+    return HttpResponse(dumps(retdict), content_type="application/json")
 
 @login_required
 def get_sensor_history(request):
     
     max_points = 500
+    req_sensor = "" #all
     # include here some GET for filtering sensor/number of points    
+    if request.method == "GET":
+        if 'sensor' in request.GET:
+            req_sensor = request.GET['sensor']
+        if 'events' in request.GET:
+            max_points = int(request.GET['events'])
 
     mongo_collection = d['slow_control']
     cursor = mongo_collection.find({}, sort= [ ("_id", -1) ], limit=max_points)
@@ -44,6 +59,8 @@ def get_sensor_history(request):
     for doc in cursor:
         for i in range(0, len(doc['sensors'])):
             sensor = doc['sensors'][i]
+            if req_sensor != "" and req_sensor!=sensor['name']:
+                continue
             if sensor['name'] in retdoc.keys():
                 retdoc[sensor['name']].append([(doc['time']-datetime.datetime(1970,1,1))/datetime.timedelta(seconds=1)*1000, sensor['value']])
             else:

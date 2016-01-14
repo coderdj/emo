@@ -1,96 +1,192 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block head %}
+<script src="{% static "js/jquery-resize.min.js" %}" type="text/javascript"></script>
 <script src="{% static "js/moment.js"%}"></script>
 <script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>
 <script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
  <script src="{% static "js/plotly-latest.min.js" %}"></script>
- 
+<style>
+.btn-mini {
+    padding: 1px 4px;
+    font-size: 9px;
+    line-height: 12px;
+}
+/*#sbar {
+//    background-color:#ddd;
+    position: fixed;
+//    padding: 2em;
+    right: 0%;
+    width: 600px;
+//    top: 0%;
+//    bottom: 0px;
+  //  transform: translateX(10%);
+height: 100%;
+}*/
+td{
+padding:2px;
+}
+.chartquarter{
+height: calc(100% / 4);
+min-height:150px;
+}
+</style> 
 {% endblock %}
 {% block content %}
 
-<div class="container" style="margin-top:20px;background-color:white">
-  <div class="row" style="margin-top:5px;">
-    <div class="col-xs-6"><h3>XENON100 Slow Control Values</h3></div>
-    <div class="col-xs-6">Updated:&nbsp;<span style="width:100%;" id="update_time"></span>
-</div>
-  <div class="col-xs-12" id="chart_div" style="height:200px;width:100%"></div>
-  <div class="col-xs-12" id="chart_div_2" style="height:200px;width:100%"></div>
-<br>
-  <div class="col-xs-12" id="data_div">
-    <table class="table table-condensed">
-      <thead>
-	<th>Sensor</th>
-	<th>Description</th>
-	<th>Reading</th>
-	<th>Plot</th>
-      </thead>
-      <tbody id="data_table">
-      </tbody>
-    </table>
+<div class="row" id="main_row">
+  <div class="col-xs-12 col-sm-7 col-lg-5 col-xl-4" id='sbar' style="background-color:white;height:100%;overflow-y:scroll">
+    <div class="col-xs-12" id="data_div" style="padding:0">                                      
+      <div class="row" style="margin-top:5px;">
+	<div class="col-xs-12"><h3>XENON100 Slow Control</h3></div>
+	<div class="col-xs-12">Update:&nbsp;
+          <span style="width:100%;" id="update_time"></span>
+	  <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
+	</div>
+      </div>
+      <hr style="margin-top:5px;margin-bottom:10px;">
+    </div> 
+  </div>
+
+  <div class="col-xs-12 col-sm-5 col-lg-7 col-xl-8" style="background-color:white;height:100%">
+    <div class="row" style="margin-top:5px;height:100%">
+      <div class="col-xs-12 chartquarter" id="chart_div" 
+	   style="width:100%;padding:0"></div>
+      <div class="col-xs-12 chartquarter" id="chart_div_2" 
+	   style="width:100%;padding:0"></div>
+      <div class="col-xs-12 chartquarter" id="chart_div_3"
+           style="width:100%;padding:0"></div>
+      <div class="col-xs-12 chartquarter" id="chart_div_4"
+           style="width:100%;padding:0"></div>
+    </div>
   </div>
 </div>
 
+<div class="modal" id="helpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title"><strong>Help!</strong></h4>
+      </div>
+      <div class="modal-body">
+	<p>
+	  This is a simple display for XENON100 slow control values. Enjoy.</p>
+	<p>
+          <strong>How does the app work?</strong>
+          <br style="margin:10px">
+	  A little python script running on xecluster pulls the sensor readings every 10 seconds and puts them into a TTL MongoDB collection sitting in the DAQ sub-cluster. The values are displayed here from that DB. 
+	</p>
+	<p>
+	  <strong>How do I know how old the data is? </strong>
+	  <br style="margin:10px">
+	  The values are polled by the web interface roughly every 10 seconds. Both the displayed numbers and the values in the plot will auto-update. The timestamp at the top of the left column says when the last update was. As long as it shows the current time the values are up-to-date.
+	</p>
+	<p>
+	  <strong>How do I plot a value? </strong>
+	  <br style="margin:10px">
+	  To plot a value click the button (1/2/3/4) on the same line as the corresponding reading. The past 1-2 hours of data will automatically be plotted in the corresponding graph. There is currently no way to change how far back the data is plotted, but this could be added on request.
+	<p>
+          <strong>How do I zoom?</strong>
+          <br style="margin:10px">
+	  Click and drag a box on the chart and it will zoom to that box.
+	</p>	
+	<p>
+          <strong>How do I save a plot?</strong>
+          <br style="margin:10px">
+	  There is a button (three horizontal lines) on the top right of each plot. Click it and you can save as an image.
+	</p>
+	<p>
+          <strong>What does sensor {X} mean?</strong>
+          <br style="margin:10px">
+	  You can hover over a sensor name and get the description. Right now they are all blank. Some expert could send us a list of 1 sentence descriptions and we would put them in.
+	</p>
+	<p>
+          <strong>It would be super cool if I could {feature_request}</strong>
+          <br style="margin:10px">
+          Let us know. If {feature_request} is straightforward we can implement it.
+        </p>
+      </div>
+      <div class="modal-footer">
+	<a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>
+    </div><!-- end content -->
+  </div> <!-- end dialog -->
+</div> <!-- end modal -->
 <script type="text/javascript">
-
+  
   var point_url = "/slow_control/get_sensor_newest";
   var history_url = "/slow_control/get_sensor_history";
   var plot_1 = null;
   var plot_2 = null;
-  var default_name="";
-  var default_name_2="";
+  var plot_3 = null;
+  var plot_4 = null;
+  var default_name="p1";
+  var default_name_2="p2";
+  var default_name_3="cryostat_vacuum";
+  var default_name_4="heater";
   function UpdatePoints(callback){
      // Set up template
      $.getJSON(point_url, function(data){
-  console.log(data);
 
-        for(i=0; i<data['sensors'].length; i+=1){
-             dom_name = "#" + data['sensors'][i]['name'] + "_row";
+       for(var key in data['categories']){
+            if(!data['categories'].hasOwnProperty(key))
+                continue;
+            table_name = "#" + key + "_table";
+            if($(table_name).length == 0){
+                   table_string = "<div class='col-xs-12'><strong style='margin:0'>"+key+"</strong></div><div class='col-xs-12'><table class='table table-condensed' id='" + key + "_table'><tbody id='"+key+"_tbody'></tbody></table></div>";
+                   $("#data_div").append(table_string);
+            }
+            for(i=0;i<data['categories'][key].length;i+=1){
+                 sensor_name = data['categories'][key][i]['name'];
+                 sensor = data['categories'][key][i];
+                 dom_name = "#" + sensor['name'] + "_row";
 
-	     // First run
-             if($(dom_name).length == 0) {
-		if((default_name=="" && data['sensors'][i]['name']!='cryostat_vacuum') || data['sensors'][i]['name'] == 'p2') default_name=data['sensors'][i]['name'];
-                else if(default_name_2=="" || data['sensors'][i]['name']=='cryostat_vacuum') default_name_2=data['sensors'][i]['name'];
-
-		rowstring = "<tr id='" + data['sensors'][i]['name'] + "_row'><td>" +
-		"<h5 style='margin:0'>" + data['sensors'][i]['name'] + "</h5>" 
-		+ "</td><td>";
-		if(data['sensors'][i]['name'] in data['key'])
-		    rowstring+=data['key'][data['sensors'][i]['name']];
-               rowstring+="</td><td id='" + 
-		data['sensors'][i]['name'] + "_data'>" + 
-		  data['sensors'][i]['value'] + "</td>" + 
- "<td><button style='margin:0' class='btn btn-info' onClick='plot_history_1(" + '"' + 
-data['sensors'][i]['name'] + '"' + ")'>Plot 1</button>&nbsp;<button style='margin:0' class='btn btn-warning' onClick='plot_history_2(" + '"' + data['sensors'][i]['name'] + '"' + ")'>Plot 2</button></td></tr>";
-$("#data_table").append(rowstring);
+	         // First run
+                 if($(dom_name).length == 0) {
+	
+		        rowstring = "<tr id='" + sensor_name + "_row'><td style='min-width:150px' title='" + "decription of " + sensor_name + " parameter" + "'>" +
+		        "<h5 style='margin:0'>" + sensor_name + "</h5>" 
+           		+ "</td>";  
+			//rowstring+="{desc}";//sensor['description'];
+			rowstring+="<td style='width:120px' id='" + 
+			sensor['name'] + "_data'>" + 
+			sensor['value'] + "</td>" + 
+			"<td style='width:80px'><button style='margin:0' class='btn btn-mini btn-info' onClick='plot_history_1(" + 
+			'"' + sensor['name'] + '"' + ")'>1</button><button style='margin:0' class='btn btn-mini btn-warning' onClick='plot_history_2(" + '"' + sensor['name'] + '"' + ")'>2</button><button style='margin:0' class='btn btn-mini btn-default' onClick='plot_history_3(" + '"' + sensor['name'] + '"' + ")'>3</button><button style='margin:0;' class='btn btn-mini btn-danger' onClick='plot_history_4(" + '"' + sensor['name'] + '"' + ")'>4</button> </td></tr>";
+			$("#" + key + "_tbody").append(rowstring);
 		}
  		// Subsequent updates
 		else{
-		    document.getElementById(data['sensors'][i]['name']+"_data").innerHTML = data['sensors'][i]['value'];
-                    if(data['sensors'][i]['name'] == default_name)
-                        UpdatePlot(data, "chart_div", i)
-                    if(data['sensors'][i]['name'] == default_name_2)
-                        UpdatePlot(data, "chart_div_2", i);
+		    document.getElementById(sensor['name']+"_data").innerHTML = sensor['value'];
+                    if(sensor['name'] == default_name)
+                        UpdatePlot(data, "chart_div", i, key)
+                    if(sensor['name'] == default_name_2)
+                        UpdatePlot(data, "chart_div_2", i, key);
+		    if(sensor['name'] == default_name_3)
+                        UpdatePlot(data, "chart_div_3", i, key);
+	            if(sensor['name'] == default_name_4)
+                        UpdatePlot(data, "chart_div_4", i, key);
                  }
            if(i==0){
-			document.getElementById("update_time").innerHTML = (new Date(data['time']['$date'])).toString()
-}
-        }
+			document.getElementById("update_time").innerHTML = (new Date(data['time']['$date'])).toString().substring(0,25);
+           }
+           }
+       }
     if(typeof callback == 'function'){
 	callback(default_name);
         plot_history_2(default_name_2);
+        plot_history_3(default_name_3);
+        plot_history_4(default_name_4);
 }
 
       });
 	setTimeout(function(){ UpdatePoints()}, 5000);
   };
 
-  function UpdatePlot(data, div, i){
-					   index=($("#"+div).data("highchartsChart"));
-     var  plot = Highcharts.charts[index];
-     if(plot == null || data == null)
-       return;
-     plot.series[0].addPoint([data['time']['$date'], data['sensors'][i]['value'] ], true, true);
+  function UpdatePlot(data, div, sensor_index, cat_name){
+	  $("#"+div).highcharts().series[0].addPoint([data['time']['$date'], data['categories'][cat_name][sensor_index]['value'] ], true, true);
+
   }
   function plot_history_2(name){
         default_name_2 = name;
@@ -100,54 +196,102 @@ function plot_history_1(name){
         default_name = name;
 	plot_history(name, "#chart_div", 0, 2);
 }
+function plot_history_3(name){
+default_name_3 = name;
+plot_history(name, "#chart_div_3", 1, 3);
+}
+function plot_history_4(name){
+default_name_4=name;
+plot_history(name, "#chart_div_4", 5, 4);
+}
   function plot_history(name, chartdiv, plot_color, plot){
 
-					   console.log("HERE");
-         $.getJSON(history_url, function(data){
+	var history_url_get = history_url + "?sensor=" + name + ";events=500";
+         $.getJSON(history_url_get, function(data){
 	     if (name in data){
-//highcharts
-console.log(data[name]);
-options = {
-                chart: {
-                    zoomType: 'x'
-                },
-                title: {
-                    text: name
-                },
-					   xAxis: {
-                    type: 'datetime'
-					           },
-                yAxis: {
-                    title: {
-					                   text: ''
-                    }
-                },
-                credits: {
-                    enabled: false
-                },
-                legend: {
-                    enabled: false
-                },
-tooltip: { enabled: false },
-					 plotOptions: {
-                    area: {
-                        lineColor: Highcharts.getOptions().colors[plot_color],
-                        fillColor: {
-                            linearGradient: {
+                //highcharts
+                var min=1000000000;
+                var max=-1000000000;
+                prev=-100000;
+                min_diff=1000000;
+                for(x=0;x<data[name].length;x+=1){
+                     if( prev!=-100000 && Math.abs(prev-data[name][x][1])<min_diff)
+                         min_diff = Math.abs(prev-data[name][x][1]);
+                     prev = data[name][x][1];
+
+                     if(data[name][x][1] < min)
+                         min = data[name][x][1];
+                     if(data[name][x][1] > max)
+                         max = data[name][x][1];
+                 }
+                if(min>0) min = min-(0.5*min);
+                else min = min+(0.1*min);
+                if(max>0) max = max+(0.1*max);
+                else max=max-(0.1*max);
+                Highcharts.setOptions({
+                            global: {
+                                     useUTC: true,
+                                    timezoneOffset: -60
+                             }
+                 });
+                options = {
+    
+                        exporting: {					   
+                                  scale: 1,
+                                  fallbackToExportServer: false
+                          },
+    
+                          chart: {
+                                  zoomType: 'xy'
+                           },
+                          title: {
+                               text: name
+                              },
+                          xAxis: {
+                                  type: 'datetime',
+			          gridLineWidth: 1,
+                          },
+                         yAxis: {
+                        //    tickInterval: ((max-min)/5).toPrecision(2),
+			tickPixelInterval: 25,
+                               minTickInterval: min_diff,
+                            min: min,
+                              max: max,
+                        title: {
+                              text: ''
+                          }
+                          }, 
+                      credits: {
+                             enabled: false
+                      },
+                     legend: {
+                        enabled: false
+                    },
+    tooltip: { enabled: false },
+    plotOptions: {
+    area: {
+    lineColor: Highcharts.getOptions().colors[plot_color],
+    fillColor: 
+//    Highcharts.getOptions().colors[plot_color],
+  Highcharts.Color(Highcharts.getOptions().colors[plot_color]).setOpacity(.25).get('rgba'),
+//			{       
+  
+                           /*linearGradient: {
                                 x1: 0,
                                 y1: 0,
                                 x2: 0,
-					                   y2: 1
+					                   y2: 2
                             },
 					                       stops: [
                                 [0, Highcharts.getOptions().colors[plot_color]],
                                 [1, Highcharts.Color(Highcharts.getOptions().colors[plot_color]).setOpacity(0).get('rgba')]
-                            ]
-                        },
+                            ],*/
+  //                     },
+                        
                         marker: {
                             enabled: false
                         },
-                        lineWidth: 1,
+                        lineWidth: 2,
                         states: {
                             hover: {
 					   enabled: false,
@@ -167,31 +311,51 @@ tooltip: { enabled: false },
                     data: data[name]
                 }]
             };
-if(plot==1)
+if(plot==1){
 plot_1 = $(chartdiv).highcharts(options);
-else if(plot==2)
+}
+else if(plot==2){
 plot_2 = $(chartdiv).highcharts(options);
+}
+else if(plot==3){
+plot_3 = $(chartdiv).highcharts(options);
+}
+else if(plot==4){
+plot_4 = $(chartdiv).highcharts(options);
+}
 
 
-/*x=[]; y=[];
-ymin=2000000000;
-ymax=-2000000000;
-					   for(i=0;i<data[name].length;i+=1){
-if(data[name][i][1]>ymax) ymax=data[name][i][1];
-if(data[name][i][1]<ymin) ymin=data[name][i][1];
-x.push(new Date(data[name][i][0]));y.push(data[name][i][1]);}
-console.log(x);
-var plot_data = {'x':x, 'y':y, 'type':'bar'};
-var layout={bargap:0.0, margin: {l:40, r:40, t:25, b:40}, yaxis:{range:[ymin-.01*ymin, ymax+.01*ymax]}};
-Plotly.newPlot("chart_div", [plot_data], layout,{'showLink':false, 'displaylogo':false});
-*/
 }
  
-  });
+ });
 
   }
+
 $(document).ready(function(){
+function resize()
+{
+  var height = window.innerHeight;
+  document.getElementById("main_row").style.height = height -40 + "px";
+}
+
+
 	UpdatePoints(plot_history_1);
+	resize();
+window.onresize = function() {
+                resize();
+            };
+
+
+$("#content").resize(function()
+                {
+ $('#chart_div').highcharts().setSize($("#chart_div").width(), 200, false);
+ $('#chart_div_2').highcharts().setSize($("#chart_div_2").width(), 200, false);
+ $('#chart_div_3').highcharts().setSize($("#chart_div_3").width(), 200, false);
+ $('#chart_div_4').highcharts().setSize($("#chart_div_4").width(), 200, false);
+
 });
+
+resize();
+}); 
 </script>
 {% endblock %}

@@ -119,7 +119,7 @@ def run_mode_config(request):
     ret = []
     for det in detectors:
         modes = collection.find({"detector": det})
-
+        first = True
         for mode in modes:
             dic = {}
             if 'name' not in mode.keys() or 'date' not in mode.keys() or 'user' not in mode.keys():
@@ -127,6 +127,9 @@ def run_mode_config(request):
             dic['name']= mode['name']
             dic['date']= mode['date']
             dic['user']=mode['user']
+            dic['det']=det            
+            dic['first']=first
+            first=False
             if 'comment' in mode.keys():
                 dic['comment']=mode['comment']
             else:
