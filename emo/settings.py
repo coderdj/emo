@@ -17,6 +17,7 @@ from django_auth_ldap.config import LDAPSearch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = '/home/dan/emo/'
+FILE_PATH = '/home/dan/emo/equipment/files' #no trailing /
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -30,6 +31,11 @@ with open('/etc/dbpass.txt') as ftwo:
 BUFFER_PW = ""
 with open('/etc/dbpass2.txt') as ftree:
     BUFFER_PW = ftree.read().strip()
+MV_PW=""
+with open('/etc/dbpass3.txt') as ftree:
+    MV_PW = ftree.read().strip()
+
+MV_USER="reader_muon_veto"
 MONGO_USER="web"
 BUFFER_USER = "reader"
 
@@ -41,8 +47,11 @@ LOG_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master
 LOG_DB_NAME = "run"
 RUNS_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
 RUNS_DB_NAME = "run"
-BUFFER_DB_ADDR = "mongodb://" + BUFFER_USER + ":" + BUFFER_PW + "@eb0:27000,eb0:27001,eb1:27000/untriggered?replicaSet=event_builder_0"
+#BUFFER_DB_ADDR = "mongodb://" + BUFFER_USER + ":" + BUFFER_PW + "@eb0:27000,eb0:27001,eb1:27000/untriggered?replicaSet=event_builder_0"
+BUFFER_DB_ADDR = "mongodb://" + BUFFER_USER + ":" + BUFFER_PW + "@eb0:27017/untriggered"
 BUFFER_DB_REPL = "untriggered"
+MV_BUFFER_REPL = "triggered_muon_veto"
+MV_DB_ADDR = "mongodb://" + MV_USER + ":" + MV_PW + "@eb0:27017/" + MV_BUFFER_REPL
 SC_DB_ADDR = "mongodb://" + MONGO_USER + ":" + MONGO_PW + "@master:27017,master:27018/run?replicaSet=run"
 SC_DB_NAME="run"
 
@@ -50,7 +59,7 @@ SC_DB_NAME="run"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['xenon1t-daq.lngs.infn.it', 'wipkip.lngs.infn.it', 'cunn1.lngs.infn.it']
+ALLOWED_HOSTS = ['xenon1t-daq.lngs.infn.it', 'wipkip.lngs.infn.it', 'cunn1.lngs.infn.it', '90.147.112.18']
 #ALLOWED_HOSTS = [ "*" ]
 
 
@@ -72,7 +81,9 @@ INSTALLED_APPS = (
     'config',
     'slow_control',
     'analytical',
-    'access_log'
+    'equipment',
+    'access_log',
+    'crispy_forms'
 )
 
 GOOGLE_ANALYTICS_PROPERTY_ID = 'UA-72309033-1'

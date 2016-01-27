@@ -981,8 +981,12 @@ def getWaveform(request):
 
         if server == "eb0":
             try:
-                client = MongoClient(BUFFER_DB_ADDR)
-                db = client[settings.BUFFER_DB_REPL]
+                if database == "untriggered":
+                    client = MongoClient(settings.BUFFER_DB_ADDR)
+                    db = client[settings.BUFFER_DB_REPL]
+                else:
+                    client = MongoClient(settings.MV_DB_ADDR)
+                    db = client[settings.MV_BUFFER_REPL]
                 retdoc = db[collection].find_one(searchdict)
                 retjson = {}
 
@@ -997,7 +1001,7 @@ def getWaveform(request):
                     retjson = { "adc_value": bins, "time": retdoc['time']}
 
                     client.close()
-                    return HttpResponse(dumps(retjson),
+                return HttpResponse(dumps(retjson),
                                     content_type='application/json')
             except:
                 print("Can't connect to server")
@@ -1038,7 +1042,7 @@ def getDatabase(request):
         server = request.GET['server']
         
         if server == "eb0":
-            retlist = [settings.BUFFER_DB_REPL]
+            retlist = [settings.BUFFER_DB_REPL, settings.MV_BUFFER_REPL]            
             return HttpResponse(dumps(retlist),
                             content_type='application/json')
 
@@ -1066,8 +1070,11 @@ def getCollection(request):
 
         if server == "eb0":
             try:
-                client = MongoClient(BUFFER_DB_ADDR)                
-                db = client[settings.BUFFER_DB_REPL]
+                if database == "untriggered":
+                    client = MongoClient(settings.BUFFER_DB_ADDR)                
+                else:
+                    client = MongoClient(settings.MV_DB_ADDR)
+                db = client[database]
                 coll_list = db.collection_names()
                 retlist = []
                 for name in coll_list:
@@ -1078,6 +1085,7 @@ def getCollection(request):
                                     content_type='application/json')
             except:
                 print("Can't connect to server")
+                logger.error("Can't connect to " + settings.BUFFER_DB_ADDR + " at " + settings.BUFFER_DB_REPL)
                 return HttpResponse(["error"], content_type="application/json")
         try:
             client = MongoClient(server)
@@ -1107,9 +1115,14 @@ def getModules(request):
     
         if server == "eb0":
             try:
-                client = MongoClient(BUFFER_DB_ADDR)
-                db = client[settings.BUFFER_DB_REPL]
-                retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
+                if database == "untriggered":
+                    client = MongoClient(settings.BUFFER_DB_ADDR)
+                    retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
+                else:
+                    client = MongoClient(settings.MV_DB_ADDR)
+                    retlist = client[settings.MV_BUFFER_REPL][collection].distinct("module")
+                #db = client[database]
+                            
                 return HttpResponse(dumps(retlist),
                             content_type='application/json')
             except:
@@ -1141,9 +1154,15 @@ def getChannels(request):
         
         if server == "eb0":
             try:
-                client = MongoClient(BUFFER_DB_ADDR)
-                db = client[settings.BUFFER_DB_REPL]
-                retlist = client[settings.BUFFER_DB_REPL][collection].find({"module":module}).limit(30).distinct("channel")
+                if database == "untriggered":
+                    client = MongoClient(settings.BUFFER_DB_ADDR)
+                    retlist = client[settings.BUFFER_DB_REPL][collection].find(
+                        {"module":module}).limit(30).distinct("channel")
+                else:
+                    client = MongoClient(settings.MV_DB_ADDR)
+                    retlist = client[settings.MV_BUFFER_REPL][collection].find(
+                        {"module":module}).limit(30).distinct("channel")
+                #db = client[database]                
                 return HttpResponse(dumps(retlist),
                                     content_type='application/json')
             except:
@@ -1183,9 +1202,15 @@ def getOccurrences(request):
         logger.error("In getOccurrences")
         if server == "eb0":
             try:
-                client = MongoClient(BUFFER_DB_ADDR)
-                db = client[settings.BUFFER_DB_REPL]
-                retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(50))
+                if database == "untriggered":
+                    client = MongoClient(settings.BUFFER_DB_ADDR)
+                    retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+
+                else:
+                    client = MongoClient(settings.MV_DB_ADDR)
+                    retlist = list(client[settings.MV_BUFFER_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+
+                #db = client[database]                
                 client.close()
                 logger.error(retlist)
                 print(retlist)

@@ -159,7 +159,7 @@ def new_log_entry(request):
                 "time": pytz.utc.localize(datetime.datetime.now()),
                 "run": new_form.cleaned_data['run_name'],
                 "detector": new_form.cleaned_data['detector'],
-                "tags": get_hash_tags(text),
+                "tags": get_hash_tags(new_form.cleaned_data['message']),
             }
             if new_form.cleaned_data['redirect'] != "":
                 redirect_url = new_form.cleaned_data['redirect']

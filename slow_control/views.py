@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from bson.json_util import dumps
 import datetime
+import logging
+logger = logging.getLogger('emo')
 
 # This should later go in the DB itself
 descriptions = {
@@ -24,37 +26,42 @@ d = c[settings.SC_DB_NAME]
 
 @login_required
 def get_sensor_newest(request):
-
-    mongo_collection = d['slow_control']
     
-    newest = mongo_collection.find_one({}, sort= [ ("_id", -1) ])
-    newest['key'] = descriptions
+    detector = 'xenon100'
+    if request.method=="GET" and "detector" in request.GET:
+        detector = request.GET['detector']        
+    mongo_collection = d['slow_control']
 
-    retdict = { "time": newest['time'], 'categories': {}}
-    for sensor in newest['sensors']:
-        if sensor['category'] not in retdict['categories'].keys():
-            retdict['categories'][sensor['category']] = []
+    cur = mongo_collection.find({"detector": detector}, sort= [ ("_id", -1) ], limit=1)
+    if cur.count() >= 1:
+        newest = cur[0]
+        #newest['key'] = descriptions
+        retdict = { "time": newest['time'], 'categories': {}}
+        for sensor in newest['sensors']:
+            if sensor['category'] not in retdict['categories'].keys():
+                retdict['categories'][sensor['category']] = []
+            retdict['categories'][sensor['category']].append(sensor)
 
-        retdict['categories'][sensor['category']].append(sensor)
-        
-
-    return HttpResponse(dumps(retdict), content_type="application/json")
+        return HttpResponse(dumps(retdict), content_type="application/json")
+    return HttpResponse("")
 
 @login_required
 def get_sensor_history(request):
     
     max_points = 500
     req_sensor = "" #all
+    detector='xenon100'
     # include here some GET for filtering sensor/number of points    
     if request.method == "GET":
         if 'sensor' in request.GET:
             req_sensor = request.GET['sensor']
         if 'events' in request.GET:
             max_points = int(request.GET['events'])
-
+        if 'detector' in request.GET:
+            detector = request.GET['detector']
     mongo_collection = d['slow_control']
-    cursor = mongo_collection.find({}, sort= [ ("_id", -1) ], limit=max_points)
-
+    cursor = mongo_collection.find({"detector": detector}, 
+                                   sort= [ ("_id", -1) ], limit=max_points)
     retdoc = {}
     for doc in cursor:
         for i in range(0, len(doc['sensors'])):

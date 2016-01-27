@@ -200,6 +200,14 @@ function FillOutRunInfo(det_name, det_data, status_id){
     }
     document.getElementById(det_name + "_runname");
 }
+
+function GetRateString(rate){
+    if(rate < 1.){
+	rate = rate/1000.;
+	return (rate.toFixed(2) + " kB/s");
+    }
+    return (rate.toFixed(2) + " MB/s");
+}
 function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
   
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
@@ -218,6 +226,8 @@ console.log("flipflop");
 	    // For now hardcode TPC/MV	    
 
 	    // Put node data in this dictionary
+	    tpc_rate = 0.;
+	    muon_veto_rate = 0.;
 	    for( var node_id = 0; node_id < node_data.length; node_id += 1){
 	    
 		var docdate = new Date(node_data[node_id]['createdAt']['$date']);
@@ -234,10 +244,14 @@ console.log("flipflop");
                     "<td>" + node_data[node_id]['datarate']+ "</td>" +
                     "<td>" + update_seconds.toString()+ "</td></tr>";
 
-		if(node_data[node_id]['node']!='reader5') // as in 'reader0x'
+		if(node_data[node_id]['node']!='reader5'){ // as in 'reader0x'
 		    nodeInfo['tpc'].push(html_string);
-		else
+		    tpc_rate+=node_data[node_id]['datarate']
+		}
+		else{
 		    nodeInfo['muon_veto'].push(html_string);
+		    muon_veto_rate+=node_data[node_id]['datarate'];
+		}
 		
 	    }
 	    
@@ -268,13 +282,24 @@ console.log("flipflop");
 		    thedatestring += "+01:00";
 
 		    startdate = new Date( thedatestring  );
-                    if(detector_data['status'][status_id]['state'] == "Running")
-                    timestring = GetTimeString( startdate );
-		    document.getElementById(det_name+"_timestring_div").innerHTML = timestring;
+                    if(detector_data['status'][status_id]['state'] == "Running"){
+			timestring = GetTimeString( startdate );
+			if(det_name == 'tpc')
+			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(tpc_rate);
+			else
+			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(muon_veto_rate);
+		    }
+		    else 
+			document.getElementById(det_name+"_rate_div").innerHTML="";
+		    document.getElementById(det_name+"_timestring_div").innerHTML = timestring;			
+		    
+		    
 
 		    var appstring = "";
-		    for(var index=0;index<nodeInfo[det_name].length;index+=1)
+		    for(var index=0;index<nodeInfo[det_name].length;index+=1){
 			appstring+=nodeInfo[det_name][index];
+			
+		    }
 		    console.log(appstring);
 		    document.getElementById(det_name+"_node_div").innerHTML = appstring;
 		}
@@ -300,7 +325,7 @@ console.log("flipflop");
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
 			GetStateHtml(detector_data, status_id) + "</a><strong id='" + det_name + "_timestring_div' style='font-size:10pt;color:black;'>&nbsp;" 
-			+ timestring + "</strong>" + "<div class='pull-right'><button class='btn btn-default' style='background-color:white' type='button' data-toggle='collapse' data-target='#"+det_name+"_collapse' aria-expanded='false' aria-controls='"+det_name+"_collapse' onClick='ExpanderClick(this)'>Expand</button></div></h2></div><hr>";
+			+ timestring + "</strong>&nbsp;&nbsp;&nbsp;<span id='" + det_name + "_rate_div'></span>" + "<div class='pull-right'><button class='btn btn-default' style='background-color:white' type='button' data-toggle='collapse' data-target='#"+det_name+"_collapse' aria-expanded='false' aria-controls='"+det_name+"_collapse' onClick='ExpanderClick(this)'>Expand</button></div></h2></div><hr>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
 				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Run name:&nbsp;<span id='" + 
@@ -316,7 +341,7 @@ console.log("flipflop");
 		    $('#'+div_id).append(html_str);
 		    if( detector_data['status'][status_id]['state'] == "Running")
                         FillOutRunInfo(det_name, detector_data, status_id);
-		    var appstring = "<div class='col-xs-12 collapse' id='"+det_name+"_collapse' style='padding:0'><table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
+		    var appstring = "<div class='row col-xs-12 collapse' id='"+det_name+"_collapse' style='padding:0'><table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
 /*		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
@@ -335,7 +360,7 @@ console.log("flipflop");
 		    appstring += "</tbody></table></div>"
 		    console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
-		    
+		    UpdateDetectorTextNew(dataUrl, nodesUrl, div_id);
 	    }
 
 	}

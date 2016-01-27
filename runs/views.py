@@ -9,6 +9,11 @@ from django.http import HttpResponsePermanentRedirect
 import datetime
 from bson.json_util import dumps
 from django.conf import settings
+from django.conf import settings
+import logging
+
+# Get an instance of a logger                                                       
+logger = logging.getLogger('emo')
 
 
 @login_required
@@ -123,20 +128,21 @@ def new_comment(request):
     mongo_collection = d['runs']
 
     if request.method == 'POST':
-
+        logger.error(request.POST)
         comment = RunCommentForm(request.POST)
+        logger.error(comment)
         if comment.is_valid():
-
+            logger.error("valid")
             # Get data                                                          
             doc_id = comment.cleaned_data['run_id']
             user = request.user.username
             date = pytz.utc.localize(datetime.datetime.now())
-
+            
             # Now do the update to a comment if there is one                    
             if 'content' in comment.cleaned_data:
                 text = comment.cleaned_data['content']
                 user = request.user.username
-
+                logger.error(text)
                 # If the entry exists append the comment to it                  
                 comment_dict = {
                     "text": text,
@@ -147,5 +153,5 @@ def new_comment(request):
                 mongo_collection.update({"_id": ObjectId(doc_id)}, {"$push": 
                                                                     {"comments": 
                                                                      comment_dict}})
-
+                return HttpResponse(dumps(comment_dict), content_type='application/json')
     return HttpResponsePermanentRedirect('/runs/')

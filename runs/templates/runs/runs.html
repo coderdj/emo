@@ -112,6 +112,7 @@
 
 
 <script>
+ var table;
   function format(d){
   // This function defines the style for an expanded table row
   var ret = '';
@@ -134,7 +135,7 @@
     ret += '<tr><td><strong>Run Mode</strong></td><td>'+d.runmode+'</td></tr>';
     ret += '<tr><td><strong>Starting User</strong></td><td>'+d.user+'</td></tr>';
     ret += '<tr><td><strong>Start Date</strong></td><td>';
-console.log(d.starttimestamp);
+//console.log(d.starttimestamp);
     var start = new Date(d.starttimestamp['$date']);
     
     ret += start.getUTCFullYear() +
@@ -180,7 +181,7 @@ console.log(d.starttimestamp);
     ret+='</div></div></div>';
 
 
-    ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree" style="background-color:#4fa783;border-color:#4fa783;color:#EEEEEE"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseThree' + d._id['$oid'] + '">Comments</a></h4> </div><div id="collapseThree' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body">';
+    ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree" style="background-color:#4fa783;border-color:#4fa783;color:#EEEEEE"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseThree' + d._id['$oid'] + '">Comments</a></h4> </div><div id="collapseThree' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body"><div class="commentdiv">';
 
  // Comments
     if("comments" in d){
@@ -202,11 +203,12 @@ console.log(d.starttimestamp);
     else 
        ret += '<p>No comments yet</p>';
     // Form for new comment
-    ret += "<form action='/runs/newcomment' method='post'>" +
+    ret += "</div><form class='new_comment_form' method='post' onsubmit='return NewComment(this)'>" + 
       "{% csrf_token %}" +
-      '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +
+      '<textarea class="formtextinput" id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +
       '<br>' +     
-      '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="run_id" style="margin-bottom:15px;">New comment</button>';
+	'<input type="hidden" name="run_id" value="' + d._id['$oid'] + '"/>' +
+      '<button class="btn btn-info" type="submit" style="margin-bottom:15px;">New comment</button>';
       
       ret +=  '</form>';
         ret+='</div></div></div>';
@@ -214,13 +216,61 @@ console.log(d.starttimestamp);
 
   return ret;
   }
-  
-  $(document).ready(function(){
+
+		
+//$(".new_comment_form").submit(function(e){
+function NewComment(form){
+
+//	e.preventDefault();
+	console.log("HERE");
+
+//console.log(form);
+//	var form = $this;
+//console.log($(form).serialize());
+
+	// validate
+	form_array = $(form).serializeArray();
+	for(i=0;i<form_array.length;i+=1){
+		if(form_array[i]['name'] == "content" 
+		    && form_array[i]['value'] == "")
+		    return false;
+	}
+	$.ajax({
+            type: "POST",
+            url: "/runs/newcomment",
+            data: $(form).serialize(),
+//            beforeSend: function() {
+                //$('#result').html('<img src="loading.gif" />');
+  //          },
+            success: function(data) {
+		commentdiv = $(form.closest('div')).find('.commentdiv');
+		ret='<div class="bubble"><p><b>'; 
+		ret += data["user"];                                                                           
+		ret += ' </b>&nbsp; wrote on &nbsp; ';
+		var date = new Date(data["date"]['$date']);
+		ret += date.getUTCDate() + "." + (date.getUTCMonth()+1) +
+               "." + date.getUTCFullYear() + " at " +
+		date.getUTCHours() + ":" + date.getUTCMinutes() + ":" +
+		date.getUTCSeconds();
+		ret += '<p>{% autoescape off %}';
+		ret += data["text"];
+		ret += '{% endautoescape %}</p></p></div>';
+		commentdiv.append(ret);
+		    $(".formtextinput").val("");
+
+            }
+
+        });
+return false;
+  };
+
+$(document).ready(function(){
+
 
   // For row selection and list printing
   var selected = [];
   var thedata = {{ runs_list|safe }};
-  var table = $('#runstable').DataTable({
+  table = $('#runstable').DataTable({
 //		"dom": 'T<"clear">lfrtip',
       "dom": 'fBrtip',
 		"data": thedata,
@@ -281,7 +331,7 @@ console.log(d.starttimestamp);
 
       var tr = $(this).closest('tr');
       var row = table.row(tr);
-console.log(event);
+      
 
       if( row.child.isShown() ){
          // The row is open. Close it
@@ -292,11 +342,11 @@ console.log(event);
       else {
          // Open the row
 //		$('div.slider', row.child()).slideDown(200);
+
          row.child( format(row.data()) ).show();
          tr.addClass('shown');
-		
+
       }
-  
   }); // End expand click listener
 
 /*  $('#runstable tbody').on('click', 'tr', function () {
@@ -316,13 +366,13 @@ console.log(event);
 
 $('#download_as_runlist').click( function () {
 
-   console.log(table.rows('.selected').data());
+//   console.log(table.rows('.selected').data());
 
    var runsList = "";
    for(i=0; i<table.rows('.selected').data().length; i+=1){
        runsList+=table.rows('.selected').data()[i]['name']+"\n";
    }
-   console.log(runsList);
+//   console.log(runsList);
 
   var element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' 
@@ -357,10 +407,10 @@ function DownloadList(whichone){
     url += encodeURIComponent(enddate);
     url += "&runmode=";
     url += runmode;
-    console.log(url);
-    console.log("What does it do with %2F for example");
+//    console.log(url);
+//    console.log("What does it do with %2F for example");
     var html = '<iframe src="' + urlstart + url + '" style="display: none;" ></iframe>';
-    console.log(html);
+//    console.log(html);
     $("body").append(html);
 
 };

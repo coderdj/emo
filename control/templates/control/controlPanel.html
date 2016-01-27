@@ -67,7 +67,8 @@
     <img style="width:60px;height:60px;margin-left:40px;" src="{% static "img/ajax-loader.gif" %}">
     <br>
     <br>
-    Asking the DAQ what's up.
+<!--    Asking the DAQ what's up. -->
+    You either have a pretty slow connection or the server is timing out.
   </div>
 </div>
 
@@ -207,8 +208,7 @@
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc"  disabled="disabled">
-		  <input type="hidden" name="baselines_tpc" value="false"/>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc">
 		  </div>
                 </label>
               </div>
@@ -236,8 +236,8 @@
               <div class="col-xs-6"><strong>Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv" disabled="disabled">
-		    <input type="hidden" name="baselines_mv" value="false"/>
+                  <div class="col-xs-6"><input type="checkbox" name="baselines_mv">
+		   <!-- <input type="hidden" name="baselines_mv" value="false"/>-->
 
 		  </div>
                 </label>
@@ -523,6 +523,8 @@ console.log(data[x]);
             }
           html_string += "</tbody></table>"
           document.getElementById( logdiv).innerHTML = html_string;
+	          $(".hashes").linkify(toHashtagUrl);
+
       });
   }        
     function update_graphic(callback){
@@ -539,7 +541,6 @@ console.log(data[x]);
 		data: data[x]["data"],		
               },true);
           }
-      $(".hashes").linkify(toHashtagUrl);
 
        });
 

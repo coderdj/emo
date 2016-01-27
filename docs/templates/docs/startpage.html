@@ -400,5 +400,11 @@ have a problem. However problems (noisy channels basically) should be highlighte
 group should be notified.
 </p>
 
-
+<script>
+var req = new XMLHttpRequest();
+req.open('GET', document.location, false);
+req.send(null);
+var headers = req.getAllResponseHeaders().toLowerCase();
+//alert(headers);
+</script>
 {% endblock %}
