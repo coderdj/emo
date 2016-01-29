@@ -8,11 +8,72 @@
 <script src="{% static "js/fullcalendar.min.js"%}"></script>
   <link href="{% static "css/fullcalendar.min.css"%}" rel="stylesheet" />
 <style>
+.calbox{
+    background-color: white;
+    border-width: 1px;
+    border-color: #D5D5D5; /*#5992c2w;*/
+    border-style: solid;
+    #width:100%;
+    min-height:500px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    /*box-shadow: 10px 10px 5px #888888;*/
+    padding-top:10px;
+}
 .fc-event{
     cursor: pointer;
 }
+.cal_ul {
+    display:inline;
+    list-style: none;
+    padding:0;
+    margin:0;
+}
+
+.cal_li { 
+    padding-left: 1em; 
+    text-indent: -.7em;
+    display:inline;
+}
+
+.combined:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #5992c2; /* or whatever color you prefer */
+}
+.tpc:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #36bc98; /* or whatever color you prefer */
+}
+.muon_veto:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #5a54bd; /* or whatever color you prefer */
+}
+#ttip {
+box-shadow: 10px 10px 5px #888888;
+    z-index: 10;
+    min-width:300px;
+    min-height:100px;
+//    position:relative;
+    display: none;
+    position:fixed;
+    background-color:white;
+    padding:10px;    
+//    visibility: invisible;
+}
+//.tooltip .show{
+//    display:block;
+//    position:fixed;
+//    overflow:hidden;
+//}
 </style>
 <script type="text/javascript">
+function CloseTooltip(){
+$(".ttip").css('display', 'none');//removeClass("show");
+}
+var colors = {"tpc": "#36bc98", "muon_veto": "#5a54bd", "combined": "#5992c2"};
 function componentToHex(c) {
     var hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;
@@ -22,82 +83,163 @@ function rgbToHex(r, g, b) {
 }
 
 $(document).ready(function() {
-   var colors = {};
    var baser = 50;
    var baseg = 200;
    var baseb = 100;
-/*    $('#calendar').fullCalendar(
-        // your event source
-        {
-            url: '/monitor/get_calendar_events', // use the `url` property
-            color: 'yellow',    // an option!
-            textColor: 'black',  // an option!
-error: function() {
-                alert('there was an error while fetching events!');
-            },
-        }
-        // put your options and callbacks here
-    );*/
-
-//    $('#collapseTwo').on('shown.bs.collapse', function () {
         $('#calendar').fullCalendar(
         {
             eventLimit: true,
             events: '/monitor/get_calendar_events', // use the `url` property
             color: 'yellow',    // an option!
             textColor: 'black',  // an option!
-error: function() {
-                alert('there was an error while fetching events!');
+            header: {
+        left: 'prev,next',
+        center: 'title',
+        right: 'month,agendaWeek,agendaDay'
+    },
+            error: function() {
+                   alert('there was an error while fetching events!');
             },
-            eventAfterRender: function(event, element, view){
+            eventRender: function(event, element, view){
 
-                if(!(event.mode in colors)){
+                detector="tpc";
+                if(event.detectors.length>1)
+                   detector="combined";
+                else if(event.detectors[0][0]=='m')
+                   detector="muon_veto";
+                if(!(detector in colors)){
 
                      var ar = Math.floor((Math.random() * 256) + 1);
                      var ag = Math.floor((Math.random() *256) +1);
                      var ab = Math.floor((Math.random() *256) +1);
-                     colors[event.mode] =   rgbToHex( Math.floor((ar+baser)/2),
+                     colors[detector] =   rgbToHex( Math.floor((ar+baser)/2),
                                                       Math.floor((ag+baseg)/2),
-                                                      Math.floor((ab+baseb)/2));
+                                                      Math.floor((ab+baseb)/2));                     
                 }
-                console.log(colors[event.mode]);
-                element.css('background-color', colors[event.mode]);
+
+                element.css('background-color', colors[detector]);
+                event.color = colors[detector];
             },
+            eventLimitClick: 'day',
+
             eventClick: function(calEvent, jsEvent, view) {
-                var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B\
-%22name%22%3A+%22" + calEvent.title + "%22%7D&submit="; 
-                window.location.href=url;
-//          alert('Event: ' + calEvent.title);
-//        alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
-//        alert('View: ' + view.name);
+//detectors: Array[2]
+//end: Moment
+//runname: "daq_test_160113_1932"
+//source: Object
+//start: Moment
+//title: "pulser"
+//user: "grignon"
+                $('#runDetailModal').modal('show');
 
-        // change the border color just for fun
-  //      $(this).css('border-color', 'red');
+                document.getElementById("run_modal_title").innerHTML = "Detail for run " + calEvent.runname;
+                document.getElementById("run_modal_name").innerHTML = calEvent.runname;        
+                detector="tpc";
+                if(calEvent.detectors.length>1)
+                   detector="combined";
+                else if(calEvent.detectors[0][0]=='m')
+                   detector="muon_veto";
 
-    }
-        }
+                document.getElementById("run_modal_detector").innerHTML = detector;
+                document.getElementById("run_modal_user").innerHTML = calEvent.user;
+                document.getElementById("run_modal_source").innerHTML = calEvent.title;
+                document.getElementById("run_modal_link").innerHTML = "<a class='btn btn-info' href='/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + calEvent.runname + "%22%7D&submit='>Find in runs database</a>";
 
-);
-//    });
+                var x = (jsEvent.clientX + 20) + 'px',
+                    y = (jsEvent.clientY + 20) + 'px';
+
+                if((jsEvent.clientX+20)+$("#ttip").width() > $(window).width())
+                   x=$(window).width()-$("#ttip").width() + 'px';
+                if((jsEvent.clientY+20)+$("#ttip").height() > $(window).height())
+                   y=$(window).height()-$("#ttip").height() + 'px';
+                $("#ttip").css('top', y);
+                $("#ttip").css('left', x);
+	        $("#ttip").css('display', 'block');//show();//addClass("show");
+
+                //var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + calEvent.title + "%22%7D&submit="; 
+
+//                window.location.href=url;
+            }
+
+          }); 
+ 
+
+
 });
+
+//    });
+
 </script>
 {% endblock %}
 {% block content %}
-<p class="bg-info" style="width:100%;padding-left:20px">Note: The idea of this page is to take a look and have some idea what data we've been taking under what conditions for the last week or month or whatever. It's not complete but it's also not so important. More of an airport project (as in work on it while waiting at an airport).</p>
 
-<div class="row" style="margin-top:10px;">
+<!--<div class="row" style="margin-top:10px;">
   <div class="col-xs-3 col-sm-3">
     <h3>Run Statistics</h3>    
   </div>
-</div>
-<br>
+</div>-->
 <div class="col-xs-12 emobox">
-  <div class="col-xs-12" style="padding:0"><h4 id="uptime_plot_title"></h4></div>
-  <div class="col-xs-12" style="padding:0;height:150px;" id="uptime_plot"></div>                                                                               
+  <!--<div class="col-xs-12" style="padding:0;margin-bottom:0"><h4 style="margin:0" id="uptime_plot_title"></h4></div>-->
+  <div class="col-xs-12" style="padding:0;height:200px;" id="uptime_plot"></div>
 </div>
-<div class="col-xs-12 emobox">
+<div class="row" style="padding:14px;">
+<div class="calbox col-xs-8" style="min-width:400px;">
+  <ul class="cal_ul" id="calendar-legend" class="pull left">
+  <li class="cal_li combined">Combined</li>
+  <li class="cal_li tpc">TPC</li>
+  <li class="cal_li muon_veto">Muon Veto</li>
+</ul>
 <div id="calendar"></div>     
-</div>                                                                                                                         
+</div>           
+<div class="calbox col-xs-4"><div class="col-xs-12"><h4>Aggregate</h4><div></div>
+</div>
+
+<div class="ttip" id="ttip" style="width:450px;border-width:1px;border-color:#BBBBBB;border-style:solid;">
+  <div class="row" style="width:400px;margin-left:10px;">
+    <button type="button" class="close"
+            onclick="CloseTooltip()" aria-hidden="true">×</button>
+    <h4 class="modal-title" id="run_modal_title">Run detail</h4>
+  </div>
+  <hr style="margin:2px">
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Run name: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="run_modal_name"></span>
+    </div>	  
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Detector: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="run_modal_detector"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>User: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="run_modal_user"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Source: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="run_modal_source"></span>
+    </div>
+  </div>
+  <br>
+  <div class="row">
+    <div class="col-xs-12" id="run_modal_link"></div>
+  </div>
+</div>
+
+
 
 <!--<div class="panel-group" style="width:100%;margin:0;" id="accordion" 
      role="tablist" aria-multiselectable="true">
@@ -183,19 +325,12 @@ function AddToData(time0, time1, updown, start, retdict)
       retdict['y'].push(0.);
     }
     var first_minutes = 60-first.getMinutes();
-console.log(first);
-console.log(first_minutes);
-console.log(first_minutes/60.);
-    console.log(retdict['y'][retdict['y'].length-1]);
 
     retdict['y'][retdict['y'].length-1] += (updown*(first_minutes/60.));
-    console.log(retdict['y'][retdict['y'].length-1]);
+
     var second = new Date(time1);
     var diff = second-first;
     var hours = Math.ceil((((diff)/1000)/3600)-(first_minutes/60.));
-   console.log(hours);
-//    var retdict = {'x':[], 'y':[]};
-//    var retarray = [];
     if(hours > 1)
         hours -=1; // round for partial hours
     for(var x=0; x<hours; x++){
@@ -221,18 +356,79 @@ function ShowPlot(name, div){
     
     // Set plot title
 
-    document.getElementById(div+"_title").innerHTML = name;
-console.log(name);
+//	document.getElementById(div+"_title").innerHTML = name + " fraction";
     if(name == "Uptime" || name=="DM Uptime"){
         var url = uptime_url + "?dm=";
-console.log(url);
         if(name == "DM Uptime")
             url += "true";
         else 
             url += "false";
         $.getJSON(url, function(data){
+	 x_vals_tpc=[];
+         x_vals_mv=[];
+         y_vals_tpc=[];
+         y_vals_mv=[];
 console.log(data);
+         for(i=0;i<data['tpc'].length;i+=1){
+            x_vals_tpc.push(data['tpc'][i]['year'].toString() + "-" + data['tpc'][i]['month'].toString() + "-" + data['tpc'][i]['day']);
+            if(i < data['muon_veto'].length)
+                x_vals_mv.push(data['muon_veto'][i]['year'].toString() + "-" + data['muon_veto'][i]['month'].toString() + "-" + data['muon_veto'][i]['day']);
+            else
+                x_vals_mv.push(x_vals_tpc[i]);
+            t=0.;
+            for(j=0;j<Object.keys(data['tpc'][i]['uptime']).length; j+=1)
+               t+=data['tpc'][i]['uptime'][Object.keys(data['tpc'][i]['uptime'])[j]];
+            y_vals_tpc.push(t);
+            t=0.;
+            if(i<data['muon_veto'].length){
+            for(j=0;j<Object.keys(data['muon_veto'][i]['uptime']).length; j+=1)								    t+=data['muon_veto'][i]['uptime'][Object.keys(data['muon_veto'][i]['uptime'])[j]];					     y_vals_mv.push(t);
+}else{y_vals_mv.push(0.);}
+         }
 
+   
+var trace1 = {
+  x: x_vals_tpc,
+  y: y_vals_tpc,
+  type: 'bar',
+  name: 'TPC uptime',
+  marker: {
+    color: '#36bc98',
+    opacity: 0.7,
+  }
+};
+
+var trace2 = {
+  x: x_vals_mv,
+  y: y_vals_mv,
+  type: 'bar',
+  name: 'Muon veto uptime',
+  marker: {
+    color: '#5a54bd',
+    opacity: 0.5
+  }
+};
+console.log(trace1);
+console.log(trace2);
+var data = [trace1, trace2];
+
+var layout = {
+//  title: 'DAQ uptime',
+  xaxis: {
+    tickangle: -45
+  },
+  barmode: 'group'
+};
+var layout = {bargap:0,margin: {l:40, r:40, t:0, b:40},yaxis: {
+    title: 'Uptime fraction',
+    titlefont: {
+//      family: 'Courier New, monospace',
+      size: 14,
+      color: '#7f7f7f'
+    }
+  }};
+
+Plotly.newPlot(div, data, layout);
+return;
             var plot_data = {'x':[], 'y':[], 'type':'bar', 'xbins': {'size': 186400000.0}};
 
             var prev_end_time = null;          
@@ -246,7 +442,7 @@ console.log(data);
             }
 
             // Make the plot
-            console.log(plot_data);
+
             plotly_data=[plot_data];
 	    var layout = {bargap:0.0, margin: {l:40, r:40, t:25, b:40}};
 		 Plotly.newPlot(div, plotly_data, layout,{'showLink':false, 'displaylogo':false});

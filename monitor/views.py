@@ -15,6 +15,7 @@ from bokeh.io import hplot, vplot, gridplot
 from bokeh._legacy_charts import HeatMap
 import time
 import datetime
+from datetime import date, timedelta
 from django.shortcuts import render
 from django.conf import settings
 from monitor.models import ScopeRequest
@@ -861,13 +862,22 @@ def get_noise_spectra(request):
 def get_uptime(request):
     """
     Gets total uptime calculated from runs DB
-    returns:    'uptime': number of hours
-                'downtime': number of hours
-                'data': [ [start_time, end_time], ...] of all runs in order
+    returns:    
+    {'tpc': [
+       { "month": int, 
+         "day": int,
+         "uptime": {
+           "Cs137": .1,
+           "DarkMatter": .6,
+         }
+       },
+       ...
+    ],
+    "muon_veto": [same],
+    }
     """
-    
-    onlyDM = True
-
+    last_days=30
+    onlyDM=True
     if request.method != 'GET':
         return
     if 'dm' not in request.GET or request.GET['dm'] == False:
@@ -878,40 +888,78 @@ def get_uptime(request):
     runsdb = runs_client[settings.RUNS_DB_NAME]
 
     runs_coll = runsdb['runs']
-
+    
+    d = date.today() - timedelta(days=last_days)
+    dt= datetime.datetime.combine(d, datetime.datetime.min.time())
+    
     query_set=[]
     try:
-        query_set = runs_coll.find().sort("starttimestamp", 1)
+        query_set = runs_coll.find({"endtimestamp": 
+                                    {"$gt": dt}}).sort("starttimestamp", 1)
     except:
-        print("Exception trying to query runs DB")
+        logger.error("Exception trying to query runs DB")
 
-    current_time = 0
-    total_uptime = 0.
-    total_downtime = 0.
-    last_endtime = None
-    time_list = []
-    print("HERE")
-    #print(len(query_set))
+    day_hist_tpc = []
+    day_hist_muon_veto = []
+
     for doc in query_set:
-        if 'starttimestamp' in doc and 'endtimestamp' in doc:
-            if last_endtime is not None:
-                tdiff = doc['starttimestamp'] - last_endtime
-                last_endtime = doc['endtimestamp']
-                
-                total_downtime += (24.*tdiff.days) + float((tdiff.seconds/60.)/60.)
-            last_endtime = doc['endtimestamp']
-            
-            tdiff = doc['endtimestamp'] - doc['starttimestamp']
-            total_uptime += (24.*tdiff.days) + float((tdiff.seconds/60.)/60.)
+        # figure out which bin this belongs in
+        if doc['starttimestamp'].day == doc['endtimestamp'].day:
+            incval = (doc['endtimestamp']-doc['starttimestamp']).seconds/(3600*24)
+            bin_no = (doc['starttimestamp']-datetime.datetime.combine(d,datetime.datetime.min.time())).days
 
+            if 'tpc' in doc['detectors']:
+                while bin_no >= len(day_hist_tpc):
+                    day_hist_tpc.append({})
+                logger.error(bin_no)
+                logger.error(len(day_hist_tpc))
+                if doc['runmode'] in day_hist_tpc[bin_no]:
+                    day_hist_tpc[bin_no][doc['runmode']]+=incval
+                else:
+                    day_hist_tpc[bin_no][doc['runmode']]=incval
+            if 'muon_veto' in doc['detectors']:
+                while bin_no >= len(day_hist_muon_veto):
+                    day_hist_muon_veto.append({})
+                if doc['runmode'] in day_hist_muon_veto[bin_no]:
+                    day_hist_muon_veto[bin_no][doc['runmode']]+=incval
+                else:
+                    day_hist_muon_veto[bin_no][doc['runmode']]=incval
+        else:
+            stime = doc['starttimestamp']
+            while (doc['endtimestamp']-stime).days>=0:
+                midnight = datetime.datetime.combine(datetime.date(stime.year, stime.month, stime.day), datetime.datetime.max.time())
+                if (doc['endtimestamp']-stime).days==0:
+                    midnight=doc['endtimestamp']
+                incval = (midnight-stime).seconds/(3600*24)
+                bin_no = (stime-datetime.datetime.combine(d,datetime.datetime.min.time())).days
+                if 'tpc' in doc['detectors']:
+                    while bin_no >= len(day_hist_tpc):
+                        day_hist_tpc.append({})
+                    if doc['runmode'] in day_hist_tpc[bin_no]:
+                        day_hist_tpc[bin_no][doc['runmode']]+=incval
+                    else:
+                        day_hist_tpc[bin_no][doc['runmode']]=incval
+                if 'muon_veto' in doc['detectors']:
+                    while bin_no >= len(day_hist_muon_veto):
+                        day_hist_muon_veto.append({})
+                    if doc['runmode'] in day_hist_muon_veto[bin_no]:
+                        day_hist_muon_veto[bin_no][doc['runmode']]+=incval
+                    else:
+                        day_hist_muon_veto[bin_no][doc['runmode']]=incval
 
-            time_list.append([doc['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S"), 
-                              doc['endtimestamp'].strftime("%Y-%m-%dT%H:%M:%S")])
+                stime=datetime.datetime.combine(datetime.date(stime.year,stime.month,stime.day+1),datetime.datetime.min.time())
+    ret_doc = {"tpc":[],"muon_veto":[]}
+    for i in range(0, len(day_hist_tpc)):
+        month = (d+timedelta(days=i)).month
+        day = (d+timedelta(days=i)).day
+        year = (d+timedelta(days=i)).year
+        ret_doc['tpc'].append({"day": day, "month": month, "year": year,
+                           "uptime": day_hist_tpc[i]})
+        if i < len(day_hist_muon_veto):
+            ret_doc['muon_veto'].append({"day":day, "month": month, "year": year,
+                                         "uptime": day_hist_muon_veto[i]})
 
-    retdict = { "uptime": total_uptime, "downtime": total_downtime, 
-                "data": time_list }
-    print(retdict)
-    return HttpResponse(dumps(retdict), content_type="application/json")
+    return HttpResponse(dumps(ret_doc), content_type="application/json")
 
 @login_required
 def get_calendar_events(request):
@@ -936,31 +984,30 @@ def get_calendar_events(request):
     end_time = dateutil.parser.parse(request.GET['end'])
     docs =[]
     try:
-        print("STARTEND")
-        print(start_time)
-        print(end_time)
         docs = run_coll.find({
-                "starttimestamp": {"$gt": start_time,
-                                   "$lt": end_time  }
-                })
+            "starttimestamp": {"$gt": start_time,
+                               "$lt": end_time  }
+        })
     except:
         print("Error finding event")
         return HttpResponse({}, content_type="application/json")
     
     # format and return as http response
-    ret = []
+    retdoc = []
+    logger.error("HI")
     for run in docs:
         endtimestamp = run['starttimestamp']
         if "endtimestamp" in run:
             endtimestamp = run["endtimestamp"]
-        ret.append({"title": run['name'],
-                    #"start": run['starttimestamp'].isoformat()})#,
-                    "mode": run['runmode'],
-                    "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S")})
-                    #                    "end": endtimestamp})
-    print(ret)
-    return HttpResponse(dumps(ret), content_type="application/json")
-
+        retdoc.append({"title": run['runmode'],
+                    "runname": run['name'],
+                    "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S"),
+                    "detectors": list(run['detectors'].keys()), 
+                    "user": run['user'],
+                    "end": endtimestamp.strftime("%Y-%m-%dT%H:%M:%S"),
+        })        
+    logger.error(retdoc)
+    return HttpResponse(dumps(retdoc), content_type="application/json")
 
 @login_required
 def getWaveform(request):

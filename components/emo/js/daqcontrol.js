@@ -325,16 +325,16 @@ console.log("flipflop");
 		    html_str += "<div style='display:inline;' id='" + det_name + "_header'><h2>"+display_name
 			+ " DAQ is <a id='" + det_name + "_status'>" + 
 			GetStateHtml(detector_data, status_id) + "</a><strong id='" + det_name + "_timestring_div' style='font-size:10pt;color:black;'>&nbsp;" 
-			+ timestring + "</strong>&nbsp;&nbsp;&nbsp;<span id='" + det_name + "_rate_div'></span>" + "<div class='pull-right'><button class='btn btn-default' style='background-color:white' type='button' data-toggle='collapse' data-target='#"+det_name+"_collapse' aria-expanded='false' aria-controls='"+det_name+"_collapse' onClick='ExpanderClick(this)'>Expand</button></div></h2></div><hr>";
+			+ timestring + "</strong>&nbsp;&nbsp;&nbsp;<span id='" + det_name + "_rate_div'></span>" + "<div class='pull-right'><button class='btn btn-default' style='background-color:white' type='button' data-toggle='collapse' data-target='#"+det_name+"_collapse' aria-expanded='false' aria-controls='"+det_name+"_collapse' onClick='ExpanderClick(this)'>Expand</button></div></h2></div><hr style='margin-top:2px;margin-bottom:2px;'>";
 		    //add a second line for the run information
 		    html_str += ( "<div class='row col-xs-12'>" +
-				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Run name:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em><strong>Run name:&nbsp;</strong><span id='" + 
 				  det_name + "_runname'></span></div>" + 
-				  "<div class='col-xs-6' style='word-wrap:break-word;font-size:10pt;text-overflow:ellipsis;'><em>Started by:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='word-wrap:break-word;font-size:10pt;text-overflow:ellipsis;'><em><strong>Started by:&nbsp;</strong><span id='" + 
 				  det_name + "_startedby'></span></div></div><div class='row col-xs-12'>" +  
-				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em>Mode:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;padding:0;'><em><strong>Mode:&nbsp;</strong><span id='" + 
 				  det_name + "_runmode'></span></div>" +  
-				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em>Start Date:&nbsp;<span id='" + 
+				  "<div class='col-xs-6' style='font-size:10pt;text-overflow:ellipsis;overflow:hidden;'><em><strong>Start Date:&nbsp;</strong><span id='" + 
 				  det_name + "_startdate'></span></div>" +  
 				  "</div>");
 		    html_str += "</div>";

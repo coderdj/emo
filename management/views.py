@@ -1,13 +1,23 @@
 from django.contrib.auth import logout
+from bson.json_util import dumps
 from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from management.models import UserRequest, UserProfile
+from management.models import UserRequest, UserProfile, UserInfo
 import json
 import pytz
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 import datetime
+from django.conf import settings
+from pymongo import MongoClient
+import logging
+
+# Get an instance of a logger                                                                                     
+logger = logging.getLogger('emo')
+
+client = MongoClient(settings.ONLINE_DB_ADDR)
+db = client[ settings.ONLINE_DB_NAME ]
 
 def logout_page(request):
     """
@@ -30,6 +40,7 @@ def profile(request):
     ''' 
     A user can request permissions using this form
     '''
+    profile_update = UserInfo()
     if request.method == 'POST':
         user_request = UserRequest(request.POST)
         if user_request.is_valid():            
@@ -58,9 +69,32 @@ def profile(request):
                     USERDOC.control_permission_date = datetime.datetime(1985, 8, 8, 10, 23)
                 USERDOC.save()
 
-        return HttpResponsePermanentRedirect('/profile')
+            return HttpResponsePermanentRedirect('/profile')
+                
+        # Now see if we rather posted something that looks like a profile update
+        # Probably massively overusing this view function
+        profile_update = UserInfo(request.POST)
+        if profile_update.is_valid():
+            doc = {
+                "username": request.user.username,
+                "last_name": profile_update.cleaned_data['last_name'],
+                "first_name": profile_update.cleaned_data['first_name'],
+                "institute": profile_update.cleaned_data['institute'],
+                "position": profile_update.cleaned_data['position'],
+                "email": profile_update.cleaned_data['email']
+            }
+            extra_fields = ['skype_id', 'github_id', 'cell', 'nickname']
+            for extra in extra_fields:
+                if extra in profile_update.cleaned_data.keys():
+                    doc[extra] = profile_update.cleaned_data[extra]
+            try:
+                db['users'].update({"name": request.user.username}, 
+                                   {"$set": doc}, upsert=True)
+            except Exception as e:
+                logger.error("Insert failed")
+                logger.error(e)
 
-    # If no POST request then check the user's permissions
+    # If no POST request then check the user's permissions and info
     retdict = { 'canstartruns': False }
     thisuser = User.objects.get(username=request.user)
 
@@ -71,4 +105,11 @@ def profile(request):
             retdict['canstartruns'] = True
             retdict['expiration'] = USERDOC.control_permission_date + datetime.timedelta(days=7)
 
+    # Look up user in mongodb
+    user_doc = db['users'].find_one({"username": request.user.username})
+    ret_mdb={"none": "none"}
+    if user_doc is not None:
+        ret_mdb=user_doc
+    retdict['mdb'] = ret_mdb
+    retdict['form'] = profile_update
     return render_to_response("management/profile.html", retdict, context_instance = RequestContext(request))

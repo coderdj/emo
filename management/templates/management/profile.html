@@ -3,57 +3,186 @@
 {% block content %}
 {% load staticfiles %}
 
-<div style="padding:20px;">
-  <h3>User information for {{ user.username }}</h3>
-  <hl>
-    <h4> My permissions </h4>
-    <div style="padding-left:60px">
-      {% if user.is_authenticated %}
-      <li> You <strong>may</strong> post new log messages</li>
-      <li> You <strong>may</strong> view the run history</li>
-      <li> You <strong>may</strong> view the acquisition status and control panels</li>
-      {% if canstartruns %}
-      <li> You <strong>may</strong> start and stop data taking until {{ expiration|date:"D d M Y" }}</li>
-      {% else %}       
-      <li> You <strong>may not</strong> start and stop data taking
-      {% endif %}
-      {% if user.is_superuser %}
-      <li> You <strong>may</strong> create new operations modes</li>
-      {% else %}
-      <li> You <strong>may not</strong> create new operations mode</li>
-      {% endif %}
-      {% if user.is_superuser %}
-      <li> You <strong>may</strong> access the admin interface (if you know how)</li>
-      {% else %}
-      <li> You <strong>may not</strong> access the admin interface</li>
-      {% endif %}
-      {% else %}
-      <li> You may view the homepage and a few other pages, but no content pages. Please log in to access the full site.</li>
-      {% endif %}
-    </div>
-    <br>
-    <div class="bg" style="padding:10px;width:80%;background-color:white;border-color:#AAAAAA;border-width:1px;border-style:solid;">
-      <h5> DAQ Control Authorization Request </h5>
-      <p>
-	<strong>Brief:</strong> Only one user may have "DAQ Controller" status at once. This is to avoid sending conflicting commands
-        to the DAQ from multiple sessions and also to avoid accidental DAQ control. All functions are available to non-controller
-        users except Start/Stop of data acquisition (also certain configuration functions are reserved for admins). If you
-        are the shifter and you need to start and stop runs you may 'steal' the controller status from the current controller via this form.
-      </p>
-      <p>
-	<strong>Note:</strong> All control actions are logged.
-      </p>
-      <p>
-	<strong>Further note:</strong> If you want to relinquish your controller status you can do that here as well. It will expire
-      automatically after one week and must be renewed here.</p>
-      <br>
-      <form action="/profile/" method="post" style="padding-left: 50px">
-	{% csrf_token %}
-      <button class="btn btn-success" type=submit value="auth" name="auth">I am a responsible person, give me the power</button>
-      <button class="btn btn-danger" type=submit value="unauth" name="auth">Remove my shifter permissions</button>
-      </form>
-      <br>
+<div style="padding:15px;padding-bottom:5px">
+    <div class="row">
+      <div class="col-sm-8 col-xs-12" style="padding:10px;background-color:white;border-color:#AAAAAA;border-width:1px;border-style:solid;height:250px;font-size:medium;padding-top:10px">
+	<div class="row">
+	  <div class="col-xs-6"><h3>User information for {{ user.username }}</h3></div>
+	  <div class="pull-right">
+	    <button class="btn btn-info" onclick="UserFormModal()" style="margin-right:30px;">Update info</button>
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-xs-3"><strong>Name:</strong></div>
+	  <div class="col-xs-9">{{ mdb.first_name }} {{ mdb.last_name }}</div>
+	</div>
+	<div class="row">
+          <div class="col-xs-3"><strong>Institute:</strong></div>
+          <div class="col-xs-9">{{ mdb.institute }}</div>
+        </div>
+<div class="row">
+          <div class="col-xs-3"><strong>Position:</strong></div>
+          <div class="col-xs-9">{{ mdb.position }}</div>
+        </div>
+<div class="row">
+          <div class="col-xs-3"><strong>Email:</strong></div>
+          <div class="col-xs-9">{{ mdb.email }}</div>
+        </div>
+<div class="row">
+          <div class="col-xs-3"><strong>Skype ID:</strong></div>
+          <div class="col-xs-9">{{ mdb.skype_id }}</div>
+        </div>
+<div class="row">
+          <div class="col-xs-3"><strong>Github ID</strong></div>
+          <div class="col-xs-9">{{ mdb.github_id }}</div>
+        </div>
+       <div class="row">
+          <div class="col-xs-3"><strong>Phone:</strong></div>
+          <div class="col-xs-9">{{ mdb.cell }}</div>
+        </div>
+<div class="row">
+          <div class="col-xs-3"><strong>Nickname:</strong></div>
+          <div class="col-xs-9">{{ mdb.nickname }}</div>
+        </div>
+
+      </div>
+      <div class="col-sm-4 col-xs-12" style="padding:10px;background-color:white;border-color:#AAAAAA;border-width:1px;border-style:solid;height:250px;">
+	<div class="col-xs-12"><h3>Permissions</h3><br></div>
+	
+	<div style="padding-left:60px">
+	  {% if user.is_authenticated %}
+	  <li> You <strong>may</strong> post new log messages</li>
+	  <li> You <strong>may</strong> view the run history</li>
+	  <li> You <strong>may</strong> view the acquisition status and control panels</li>
+	  {% if canstartruns %}
+	  <li> You <strong>may</strong> start and stop data taking until {{ expiration|date:"D d M Y" }}</li>
+	  {% else %}       
+	  <li> You <strong>may not</strong> start and stop data taking
+	    {% endif %}
+	    {% if user.is_superuser %}
+	  <li> You <strong>may</strong> create new operations modes</li>
+	  {% else %}
+	  <li> You <strong>may not</strong> create new operations mode</li>
+	  {% endif %}
+	  {% if user.is_superuser %}
+	  <li> You <strong>may</strong> access the admin interface (if you know how)</li>
+	  {% else %}
+	  <li> You <strong>may not</strong> access the admin interface</li>
+	  {% endif %}
+	  {% else %}
+	  <li> You may view the homepage and a few other pages, but no content pages. Please log in to access the full site.</li>
+	  {% endif %}
+	</div>
+      </div>
     </div>
 </div>
+
+<div class="bg" style="padding:10px;width:100%;background-color:white;border-color:#AAAAAA;border-width:1px;border-style:solid;">
+  <h3> DAQ Control Authorization Request </h3>
+<br>
+  <p>
+    <strong>Brief:</strong> Only one user may have "DAQ Controller" status at once. This is to avoid sending conflicting commands
+    to the DAQ from multiple sessions and also to avoid accidental DAQ control. All functions are available to non-controller
+    users except Start/Stop of data acquisition (also certain configuration functions are reserved for admins). If you
+    are the shifter and you need to start and stop runs you may 'steal' the controller status from the current controller via this form.
+  </p>
+  <p>
+    <strong>Note:</strong> All control actions are logged.
+  </p>
+  <p>
+    <strong>Further note:</strong> If you want to relinquish your controller status you can do that here as well. It will expire
+    automatically after one week and must be renewed here.</p>
+  <br>
+  <form action="/profile/" method="post" style="padding-left: 50px">
+    {% csrf_token %}
+    <button class="btn btn-success" type=submit value="auth" name="auth">I am a responsible person, give me the power</button>
+    <button class="btn btn-danger" type=submit value="unauth" name="auth">Remove my shifter permissions</button>
+  </form>
+  <br>
+</div>
+
+<div class="modal fade" id="userUpdateModal" style="width:100%">
+  <div class="modal-dialog">
+    <div class="modal-content" style="height:100%">
+      <div class="modal-header">
+        <button type="button" class="close"
+                data-dismiss="modal" aria-hidden="true">×
+        </button>
+        <h4 class="modal-title" id="new_eq_title">Update Profile
+        </h4>
+      </div>
+      <div class="modal-body" style="min-height:200px;overflow-y:auto;height:80%">
+	<form action="/profile/" method="post">
+	  {% csrf_token %}
+	  {{ form.non_field_errors }}
+	  <div class="row">
+	    {{ form.last_name.errors }}
+	    <div class="col-xs-3"><strong>Last name*:</strong></div>	  
+	    <div class="col-xs-9">{{ form.last_name }}</div>
+	  </div>
+	  <div class="row">
+            {{ form.first_name.errors }}
+            <div class="col-xs-3"><strong>First name*:</strong></div>
+            <div class="col-xs-9">{{ form.first_name }}</div>
+          </div>
+	  <div class="row">
+            {{ form.institute.errors }}
+            <div class="col-xs-3"><strong>Institute*:</strong></div>
+            <div class="col-xs-9">{{ form.institute }}</div>
+          </div>
+	  <div class="row">
+            {{ form.position.errors }}
+            <div class="col-xs-3"><strong>Position*:</strong></div>
+            <div class="col-xs-9">{{ form.position }}</div>
+          </div>
+	  <div class="row">
+            {{ form.email.errors }}
+            <div class="col-xs-3"><strong>Email*:</strong></div>
+            <div class="col-xs-9">{{ form.email }}</div>
+          </div>
+	  <div class="row">
+            {{ form.skype_id.errors }}
+            <div class="col-xs-3"><strong>Skype name:</strong></div>
+            <div class="col-xs-9">{{ form.skype_id }}</div>
+          </div>
+	  <div class="row">
+            {{ form.github_id.errors }}
+            <div class="col-xs-3"><strong>Github name:</strong></div>
+            <div class="col-xs-9">{{ form.github_id }}</div>
+          </div>
+	  <div class="row">
+            {{ form.cell.errors }}
+            <div class="col-xs-3"><strong>Cell Phone:</strong></div>
+            <div class="col-xs-9">{{ form.cell }}</div>
+          </div>
+	  <div class="row">
+            {{ form.nickname.errors }}
+            <div class="col-xs-3"><strong>Preferred name:</strong></div>
+            <div class="col-xs-9">{{ form.nickname }}</div>
+          </div>
+	  <p><input class="btn btn-info" type="submit" value="Update" /></p>
+	</form>
+      </div>
+      <hr>
+    </div>
+  </div>
+</div>
+
+<script>
+function UserFormModal(){
+$('#userUpdateModal').modal('show');
+$("#id_last_name").val("{{mdb.last_name}}");
+$("#id_first_name").val("{{mdb.first_name}}");
+$("#id_institute").val("{{mdb.institute}}");
+$("#id_position").val("{{mdb.position}}");
+$("#id_email").val("{{mdb.email}}");
+$("#id_skype_id").val("{{mdb.skype_id}}");
+$("#id_github_id").val("{{mdb.github_id}}");
+$("#id_cell").val("{{mdb.cell}}");
+$("#id_nickname").val("{{mdb.nickname}}");
+
+document.getElementById("id_first_name").innerHTML={{mdb.first_name}};
+}
+</script>
 
 {% endblock %}
