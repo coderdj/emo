@@ -29,8 +29,10 @@ urlpatterns = [
     url(r'^logout', views.logout_page,name='logout'), #must add
     url(r'^profile/$', views.profile, name='profile'),
     url(r'^supermanrequest', views.getStartingUser, name='getstartinguser'),
+    url(r'^get_user_doc/', views.get_user_doc, name='get_user_doc'),
 
     # Documentation
+    url(r'^management/', include('management.urls')),
     url(r'^docs/', include('docs.urls')),
     url(r'^runs/', include('runs.urls')),
     url(r'^control/', include('control.urls')),

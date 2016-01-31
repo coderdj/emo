@@ -405,6 +405,12 @@ var req = new XMLHttpRequest();
 req.open('GET', document.location, false);
 req.send(null);
 var headers = req.getAllResponseHeaders().toLowerCase();
-//alert(headers);
+console.log(headers);
+console.log(navigator);
+//if(navigator['platform'] != "FreeBSD i386" || !is_nav4){
+//alert("Warning, this site only works using Netscape Navigator under WINE with a 32-bit FreeBSD distribution. You will be redirected.");
+//window.location = "http://www.xenon1t.org";
+
+//}
 </script>
 {% endblock %}

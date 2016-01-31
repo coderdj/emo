@@ -7,7 +7,7 @@ from runs.models import run_comment, run_search_form, RunCommentForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
 from django.conf import settings
 from django.conf import settings
 import logging
@@ -15,6 +15,43 @@ import logging
 # Get an instance of a logger                                                       
 logger = logging.getLogger('emo')
 
+@login_required
+def runs_started(request):
+    # Connect to pymongo                                                                                               
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    db = client[ settings.RUNS_DB_NAME ]
+    
+    runs_total = db['runs'].find().count()
+    runs_user = db['runs'].find({"user": request.user.username}).count()
+    return HttpResponse(dumps({"total": runs_total, "mine": runs_user}), content_type="application/json")
+
+@login_required
+def last_run_per_det(request):
+    # Connect to pymongo                                                             
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    db = client[ settings.RUNS_DB_NAME ]
+
+    collection = db[ "runs" ]
+    last_runs_tpc = collection.find({"detectors.tpc": {"$exists": True}}).sort("starttimestamp", -1).limit(1)
+    last_runs_mv = collection.find({"detectors.muon_veto": {"$exists": True}}).sort("starttimestamp", -1).limit(1)
+    
+    retdoc = {"tpc":{}, "muon_veto":{}}
+    if last_runs_tpc.count()!=0:
+        last_run_tpc = last_runs_tpc[0]
+        retdoc["tpc"] = { "name": last_run_tpc['name'],
+                          "source": last_run_tpc['runmode'],
+                          "user": last_run_tpc['user'],
+                          "date": last_run_tpc['starttimestamp']
+                      }
+    if last_runs_mv.count()!=0:
+        last_run_mv = last_runs_mv[0]
+        retdoc["muon_veto"]  = { "name":last_run_mv['name'],
+                                 "source":last_run_mv['runmode'],
+                                 "user": last_run_mv['user'],
+                                 "date": last_run_mv['starttimestamp']
+                             }
+    
+    return HttpResponse(dumps(retdoc), content_type="application/json")
 
 @login_required
 def runs(request):
@@ -36,7 +73,8 @@ def runs(request):
         if filter_form.is_valid():
             #build query from form
             if filter_form.cleaned_data[ 'custom' ] is not "":
-                filter_query = json.loads( filter_form.cleaned_data['custom'] )
+                logger.error(filter_form.cleaned_data['custom'])
+                filter_query = loads( filter_form.cleaned_data['custom'] )
             if filter_form.cleaned_data[ 'startdate' ] is not None:
                 filter_query[ 'starttimestamp' ]= { "$gt" 
                                                     : datetime.datetime.combine

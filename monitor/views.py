@@ -882,6 +882,9 @@ def get_uptime(request):
         return
     if 'dm' not in request.GET or request.GET['dm'] == False:
         onlyDM = False
+    
+    if 'this_month' in request.GET:
+        last_days = date.today().day
 
     # Make DB query
     runs_client = MongoClient(settings.RUNS_DB_ADDR)
@@ -958,7 +961,17 @@ def get_uptime(request):
         if i < len(day_hist_muon_veto):
             ret_doc['muon_veto'].append({"day":day, "month": month, "year": year,
                                          "uptime": day_hist_muon_veto[i]})
-
+    
+    if 'this_month' in request.GET:
+        total = {}
+        for entry in ret_doc['tpc']:
+            for det in entry['uptime'].keys():
+                if det not in total:
+                    total[det] = 0.
+                total[det] += entry['uptime'][det]
+        for det in total.keys():
+            total[det]/=last_days
+        ret_doc = total
     return HttpResponse(dumps(ret_doc), content_type="application/json")
 
 @login_required

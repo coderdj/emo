@@ -115,6 +115,7 @@
 	<form action="/profile/" method="post">
 	  {% csrf_token %}
 	  {{ form.non_field_errors }}
+	  <input type="hidden" id="id_username" value="{{user.get_username}}" name="username"/>
 	  <div class="row">
 	    {{ form.last_name.errors }}
 	    <div class="col-xs-3"><strong>Last name*:</strong></div>	  

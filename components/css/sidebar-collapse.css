@@ -140,6 +140,18 @@ color: #4fa783;
 color: #5a54bd;
 }
 
+.sidebar-links div.link-orange > a {
+//      border-color: #d0d237;
+border-color: #f9a100;
+
+}
+
+.sidebar-links div.link-orange > a i.fa {
+//      color: #f9a100;
+color: #f9a100;
+}
+
+
 .sidebar-links div.link-green > a {
 //	border-color: #86be2e;
 border-color: #a642b4;

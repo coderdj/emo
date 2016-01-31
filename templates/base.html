@@ -26,61 +26,55 @@
 <meta name="msapplication-TileImage" content="{% static 'favicons/ms-icon-144x144.png' %}">
 
 <meta name="theme-color" content="#ffffff">
-    <meta charset="utf-8">  
-    <title>XENON1T Data Acquisition</title>     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <meta name="description" content="XENON1T Data Acquisition">    
-    <meta name="author" content="Daniel Coderre" >
-    
-    <!-- Declare pace and get it going. Note removed
-         for not because it doesn't need to track every
-         POST request to the backend. Put on individual
-         pages where it makes sense
-    -->
-    <!-- <script src="{% static "js/pace.min.js"%}"></script>
-    <link href="{% static "css/pace.css"%}" rel="stylesheet" /> -->
-    <!--<script type="text/javascript">Pace.start();</script>-->
-    
-    <!-- Declare here any global styles all classes need -->
-    <link href="{% static "bootstrap-3.3.5-dist/css/bootstrap.min.css" %}" rel="stylesheet">
-	 <link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
-	 <link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
-	 <link href="{% static "emo/css/emo_runslist.css" %}" rel="stylesheet">
-	 <link href="{%  static "font-awesome-4.4.0/css/font-awesome.min.css" %}" rel="stylesheet">
-	 <link href="{% static "css/animate.css" %}" rel="stylesheet">
-    <!-- Declare here any global javascript -->
-    <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+<meta charset="utf-8">  
+<title>XENON1T Data Acquisition</title>     
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<meta name="description" content="XENON1T Data Acquisition">    
+<meta name="author" content="Daniel Coderre" >
 
-    <script src="{% static "Highcharts-4.2.1/js/highcharts.js" %}"></script>
-    <script src="{% static "Highcharts-4.2.1/js/modules/exporting.js" %}"></script>
-    <script src="{% static "Highcharts-4.2.1/js/modules/offline-exporting.js" %}"></script>
+<!-- Declare pace and get it going. Note removed
+     for now because it doesn't need to track every
+     POST request to the backend. Put on individual
+     pages where it makes sense
+  -->
+<!-- <script src="{% static "js/pace.min.js"%}"></script>
+     <link href="{% static "css/pace.css"%}" rel="stylesheet" /> -->
+<!--<script type="text/javascript">Pace.start();</script>-->
 
-    <script src="{% static "js/jquery.linkify.min.js" %}"></script>
-    <script src="{% static "bootstrap-3.3.5-dist/js/bootstrap.min.js" %}"></script>
-     <script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
-    <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
-	<script src="{% static "google-code-prettify/prettify.js" %}"></script>
-	<script src="{% static "emo/js/emo_js_helper.js" %}"></script>
-	<script type="text/javascript">  var global_can_start_runs = false;</script>
+<!-- Declare here any global styles all classes need -->
+<link href="{% static "bootstrap-3.3.5-dist/css/bootstrap.min.css" %}" rel="stylesheet">
+<link href="{% static "emo/css/emo_navbar.css" %}" rel="stylesheet">
+<link href="{% static "css/devoops.css" %}" rel="stylesheet"> 
+<link href="{% static "emo/css/emo_runslist.css" %}" rel="stylesheet">
+<link href="{%  static "font-awesome-4.4.0/css/font-awesome.min.css" %}" rel="stylesheet">
+<link href="{% static "css/animate.css" %}" rel="stylesheet">
+<!-- Declare here any global javascript -->
+<script src="{% static "jquery/js/jquery.min.js" %}"></script>
 
-	<!--<script type="text/javascript" src="{% static "emo/js/sideBAR.js" %}"></script>-->
-	    <!--<link href="{%  static "css/sideBAR.css" %}" rel="stylesheet">-->
-	    <link href="{%  static "emo/css/emo_base.css" %}" rel="stylesheet">
-	    <link href="{% static "css/sidebar-collapse.css" %}" rel="stylesheet">
-	    
-    <link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
-    <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
+<script src="{% static "Highcharts-4.2.1/js/highcharts.js" %}"></script>
+<script src="{% static "Highcharts-4.2.1/js/modules/exporting.js" %}"></script>
+<script src="{% static "Highcharts-4.2.1/js/modules/offline-exporting.js" %}"></script>
+
+<script src="{% static "js/jquery.linkify.min.js" %}"></script>
+<script src="{% static "bootstrap-3.3.5-dist/js/bootstrap.min.js" %}"></script>
+<script src="{% static "bootstrap/js/bootstrap-dialog.min.js" %}"></script>
+<link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
+<script src="{% static "google-code-prettify/prettify.js" %}"></script>
+<script src="{% static "emo/js/emo_js_helper.js" %}"></script>
+<script type="text/javascript">  var global_can_start_runs = false;</script>
+
+<!--<script type="text/javascript" src="{% static "emo/js/sideBAR.js" %}"></script>-->
+<!--<link href="{%  static "css/sideBAR.css" %}" rel="stylesheet">-->
+<link href="{%  static "emo/css/emo_base.css" %}" rel="stylesheet">
+<link href="{% static "css/sidebar-collapse.css" %}" rel="stylesheet">
+
+<link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
+<script src="{% static "js/jquery.sidebar.min.js" %}"></script>
 
 
 <style>
-
-.caldiv{
-   height: 50vh;
-}
-
- .gitter-chat-embed {
-top: 40px;
-
+.gitter-chat-embed {
+  top: 40px;
 }
 </style>
 {% if user.is_authenticated %}
@@ -108,9 +102,9 @@ $(function(){
     margin-left: -30px;
     margin-right: -30px;
     box-shadow: 0 6px 60px 0 #131313;
-border-width: 1px;
-border-style: solid;
-border-color: #666666;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #666666;
  //   margin-top: 0px;
   }
 .hero-unit h1 {
@@ -155,357 +149,213 @@ margin-left:-30px;margin-right:-30px;
 {% block head %}
 {% endblock %}
 {% google_analytics %}
-  </head>
+</head>
 
-  <body>
-   	
-   	<!-- Make the navigation bar -->	
-   		<header class="emo-navbar navbar navbar-fixed-top emo-navbar">   	
-   			<div class="navbar-header" style="height:40px">
-   				<button type="button" class="navbar-toggle"
-               				data-toggle="collapse" data-target=".navbar-collapse" style="margin:0">      				  <span class="glyphicon glyphicon-menu-down"></span>                                           
-    
-     	   	  </button>
-     	   	  
-   				<a class="navbar-brand toggle-sidebar" style="cursor:pointer;">
-   				XENON1T Data Acquisition 
-   				</a>
-   			</div>
-   		
-									
-				
-   				
-   			<div class="collapse navbar-collapse" style="overflow:hidden">
-          		{% block login_toggle %}
-          		{% include "login_toggle.html" %}
-          		{% endblock %}
-			   		{% if user.is_authenticated %}
-			<ul class="navbar-right">
-			  <ul class="nav navbar-nav">
-  			    <li class="dropdown">
-    			      <a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
-       				 href="#">Connected <span id="contact"></span></a>
-    			      <ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
-				More info here
-			      </ul>
-  			    </li>
-			  </ul>
-			  <ul class="nav navbar-nav">
-  			    <li class="dropdown">
-    			      <a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
-       				 href="#"> DAQ Status <span id="status"></span></a>
-    			      <ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
-						More info here
-			      </ul>
-  			    </li>
-			  </ul>
-			  <ul class="nav navbar-nav">
-  			    <li class="dropdown">
-    			      <a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
-       				 href="#"> Open Alerts <span id="alerts"></span></a>
-    			      <ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
-				More info here
-			      </ul>
-  			    </li>
-			</ul></ul>
-			{% endif %}
-			</div>
-		</header>
-   		
-   		<!-- If user is not logged in just show them a pretty picture -->
-   		{% if user.is_authenticated %}
-		<!-- Sidebar -->
-		<div id="main" class="container-fluid">
-		  <!-- begin comment sideBAR <div class="row">
-     		  <div id="sidebar-left" class="col-xs-2 col-sm-2" style="overflow:hidden">
-        		<ul class="nav main-menu">
-
-				<li>
-					<a href="/control/reader" class="ajax-link">
-						<span class="hidden-xs">Control Panel</span>
-					</a>
-				</li>
-				<li class="dropdown">
-					<a href="#" class="dropdown-toggle">
-						<span class="hidden-xs">Diagnostics</span>
-					</a>
-					<ul class="dropdown-menu">
-						<li><a class="ajax-link" href="/monitor/waveforms">Live Waveforms</a></li>
-						<li><a class="ajax-link" href="/monitor/pax_display">Live pax Displays</a></li>
-						<li><a class="ajax-link" href="/monitor/diagnostics">Data Monitoring</a></li>
-						<li><a class="ajax-link" href="/monitor/runstats">Run Parameters</a></li>
-						<li><a class="ajax-link" href="/monitor/noise">Noise Spectra</a></li>
-						<li><a class="ajax-link" href="/monitor/scope">Live Scope</a></li>
-						<li><a class="ajax-link" href="/monitor/eventdisplay">Event Display</a></li>
-					</ul>
-				</li>
-				<li>
-					<a class="ajax-link" href="/runs">
-						 <span class="hidden-xs">Runs Database</span>
-					</a>
-					
-				</li>
-				<li>
-					 <a class="ajax-link" href="/log">
-						 <span class="hidden-xs">Logbook</span>
-					</a>
-				</li>
-				<li class="dropdown">
-					<a href="#" class="dropdown-toggle">
-						 <span class="hidden-xs">Super User</span>
-					</a>
-					<ul class="dropdown-menu">
-						<li><a class="ajax-link" href="/config/">Run Configuration</a></li>
-						<li><a class="ajax-link" href="http://130.92.139.92:5000/dashboards/46/daq2?interactive=true&from=-1h">Hardware Monitor</a></li>  
-						<li><a class="ajax-link" href="https://mms.mongodb.com">MMS (external link)</a></li>
-					</ul>
-				</li>
-				<li class="dropdown">
-					<a href="#" class="dropdown-toggle">
-						 <span class="hidden-xs">About/Help</span>
-					</a>
-					<ul class="dropdown-menu">
-						<li><a class="ajax-link" href="/docs">Documentation</a></li>
-						<li><a class="ajax-link" href="/docs/contact">Contact</a></li>
-						<li><a class="ajax-link" href="/docs/about">About</a></li>
-					</ul>
-				</li>
-				
-				</ul>		 
-			</div>	
-		  END COMMENT sideBAR  -->
-<!--		<nav class='sidebar sidebar-menu-collapsed'> <a href='#' id='justify-icon'>
-		    <span class='glyphicon glyphicon-align-justify'></span>
-		  </a>
-		  
-		  <ul class='level1'>
-		    <li> 
-		      <a class="expandable" href='/' title='Home'>
-			<span class='glyphicon glyphicon-home collapsed-element'></span>
-			<span class='expanded-element'>Home</span>
-		      </a>
-		    </li>
-		    <li> <a class='expandable' href='#' title='DAQ'>
-                        <span class="glyphicon glyphicon-hdd collapsed-element"></span>
-                        <span class='expanded-element'>DAQ</span>
-                      </a>                    
-		      
-                      <ul class='level2'>
-			<li> <a href='/control/reader' title='Control'>Control</a></li>
-			<li> <a href='/config' title='Configuration'>Configuration</a></li>
-			<li> <a href='/log' title='Logbook'>Logbook</a></li>
-                      </ul>
-		    </li>
-		    <li> <a class='expandable' href='/runs' title='Runs'>
-			<span class='glyphicon glyphicon-folder-open collapsed-element'></span>
-			<span class='expanded-element'>Runs</span>
-		      </a>
-		      
-		    </li>		    
-
-		    <li> <a class='expandable' href='#' title='Monitoring'>
-			<span class='glyphicon glyphicon-eye-open collapsed-element'></span>
-			<span class='expanded-element'>Monitoring</span>
-		      </a>
-		      <ul class='level2'>
-                        <li> <a href='/monitor/waveforms' title='Event Display'>Event Display</a>
-			  
-			</li>
-                        <li> <a href='/monitor/diagnostics' title='Data Monitor'>Data Monitor</a>
-			  
-                        </li>
-                        <li> <a href='/monitor/runstats' title='Run Parameters'>Run Parameters</a>
-
-                        </li>
-			<li><a class="ajax-link" href="/monitor/noise">Noise Spectra</a></li>            
-			<li><a class="ajax-link" href="/monitor/scope">Live Scope</a></li>               
-			<li><a class="ajax-link" href="/monitor/eventdisplay">Event Display</a></li>  
-                      </ul>
-		      
-		    </li>
-		    <li> <a class='expandable' href='#' title='Account'>
-			<span class='glyphicon glyphicon-user collapsed-element'></span>
-			<span class='expanded-element'>Account</span>
-		      </a>
-		      
-		    </li>
-		  </ul> <a href='#' id='logout-icon' title='Logout'>
-		    <span class='glyphicon glyphicon-off'></span>
-		  </a>
-		  
-		</nav>-->
-<div class="sidebar-left-collapse sidebar left" style="padding-top:5px" id="main_nav_sidebar">
+<body>
   
-  <a href="/" class="company-logo"></a>
-  <hr style="margin-left:25px;margin-right:40px;">
-  <div class="sidebar-links" style="position-relative">
-    
-    <div class="link-blue">
-      
-      <a href="#">
-	<i class="fa fa-hdd-o"></i>DAQ
+  <!-- Make the navigation bar -->	
+  <header class="emo-navbar navbar navbar-fixed-top emo-navbar">   	
+    <div class="navbar-header" style="height:40px">
+      <button type="button" class="navbar-toggle"
+              data-toggle="collapse" data-target=".navbar-collapse" 
+	      style="margin:0">      
+	<span class="glyphicon glyphicon-menu-down"></span>  
+      </button>
+      <a class="navbar-brand toggle-sidebar" style="cursor:pointer;">
+   	XENON1T Data Acquisition 
       </a>
-      
-      <ul class="sub-links">
-	<li><a href="/control/reader">DAQ Control</a></li>
-	<li><a href="/config">Run Modes</a></li>
-	<li><a href="/log">DAQ Logbook</a></li>
-	<li><a href="/equipment">DAQ Equipment</a></li>
-      </ul>
-      
-    </div>
-    
-    <div class="link-red">
-      
-      <a href="#">
-	<i class="fa fa-eye"></i>Monitor
-      </a>
-      
-      <ul class="sub-links">
-	<li><a href="/monitor/noise">Noise Spectra</a></li>
-	<li><a href="/monitor/waveforms">Live Waveforms</a></li>
-	<li><a href="/monitor/diagnostics">Online Monitor</a></li>
-	<li><a href="/monitor/scope">Data Browser</a></li>
-	<li><a href="/slow_control">XE100 Slow Control</a></li>
-	<!--<li><a href="/monitor/eventdisplay">Event Display</a></li>-->
-      </ul>
-      
-    </div>
-    
-    <div class="link-yellow">
-
-      <a href="#">
-	<i class="fa fa-folder-open"></i>Runs      </a>
-      
-      <ul class="sub-links">
-	<li><a href="/runs">Runs List</a></li>
-	<li><a href="/monitor/runstats">Runs Info</a></li>
+    </div>			
+    <div class="collapse navbar-collapse" style="overflow:hidden">
+      {% block login_toggle %}
+      {% include "login_toggle.html" %}
+      {% endblock %}
+      {% if user.is_authenticated %}
+      <ul class="navbar-right">
+	<ul class="nav navbar-nav">
+  	  <li class="dropdown">
+    	    <a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
+       	       href="#">Connected <span id="contact"></span></a>
+    	    <ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
+	      More info here
+	    </ul>
+  	  </li>
 	</ul>
-      
+	<ul class="nav navbar-nav">
+  	  <li class="dropdown">
+    	    <a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
+       	       href="#"> DAQ Status <span id="status"></span></a>
+    	    <ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
+	      More info here
+	    </ul>
+  	  </li>
+	</ul>
+	<ul class="nav navbar-nav">
+  	  <li class="dropdown">
+    	    <a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
+       	       href="#"> Open Alerts <span id="alerts"></span></a>
+    	    <ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
+	      More info here
+	    </ul>
+  	  </li>
+      </ul></ul>
+      {% endif %}
     </div>
+  </header>
+  
+  <!-- If user is not logged in just show them a pretty picture -->
+  {% if user.is_authenticated %}
+  <!-- Sidebar -->
+  <div id="main" class="container-fluid">
     
-    <div class="link-green">
+    <div class="sidebar-left-collapse sidebar left" style="padding-top:5px" id="main_nav_sidebar">
       
-      <a href="#">
-	<i class="fa fa-info"></i>Help/Links
-      </a>
-      
-      <ul class="sub-links">
-	<li><a href="/docs">Docs</a></li>
-	<li><a href="/docs/contact">Contact</a></li>
-	<li><a href="/docs/about">About</a></li>	
-	<li><a href="https://cloud.mongodb.com">Mongo Cloud (ext)</a></li>
-	<li><a href="https://www.github.com/coderdj/emo">Github (ext)</a></li>
-      </ul>
-      
-    </div>
-    
-  </div>
-  <button class="btn btn-default js-gitter-toggle-chat-button" style="position:absolute;margin-left:17px;width:130px;bottom:15px;background-color:#36bc98;color:white;font-family: sans-serif;font-size: 10px;letter-spacing: 1px;text-transform: uppercase;text-align: center;text-decoration: none;padding-top:8px;padding-bottom:20px;font-weight:normal;" id="open_chat">Toggle Chat</button>
-</div>
-<div id="content" class="container-fluid emo-sidebar-show"><!-- col-sm-offset-2">-->
-  {% block content %}
-  <!-- SNOW -->
-  <script src="{% static "js/snowfall.jquery.js" %}"></script>
-  <script>
-    $(document).ready(function(){
-    setTimeout( 
-    function(){
-    $('#hero_unit').snowfall({flakeCount : 50, maxSpeed : 5});
-    },
-    1000);
-    
-    });</script>
-
-    <style>
-    .body{
-    background-color: #4fa783;
-    }
-    #content{
-    #background-color: #a642b4;
-    }
-  </style>
-  <div class="hero-unit fill" id="hero_unit" style="min-height:160px;">
-    <div class="row">
-      <div class="col-md-12 col-lg-9" id="title_text">
-	<br>
-	<h1>Welcome to the DAQ</h1>
-	<h2>You are logged in as {{ user.get_username }}</h2>
-	<br>
-	<p>
-	  <a href="/control" class="btn btn-primary btn-large" style="background-color:#5992c2">
-	    Take me to the control panel...
+      <a href="/" class="company-logo"></a>
+      <hr style="margin-left:25px;margin-right:40px;">
+      <div class="sidebar-links" style="position-relative">
+	
+	<div class="link-blue">
+	  
+	  <a href="#">
+	    <i class="fa fa-hdd-o"></i>DAQ
 	  </a>
-	</p>
+	  
+	  <ul class="sub-links">
+	    <li><a href="/control/reader">DAQ Control</a></li>
+	    <li><a href="/config">Run Modes</a></li>
+	    <li><a href="/log">DAQ Logbook</a></li>
+	    <li><a href="/equipment">DAQ Equipment</a></li>
+	  </ul>
+	  
+	</div>
+	
+	<div class="link-red">
+	  
+	  <a href="#">
+	    <i class="fa fa-eye"></i>Monitor
+      </a>
+	  
+	  <ul class="sub-links">
+	    <li><a href="/monitor/noise">Noise Spectra</a></li>
+	    <li><a href="/monitor/waveforms">Live Waveforms</a></li>
+	    <li><a href="/monitor/diagnostics">Online Monitor</a></li>
+	    <li><a href="/monitor/scope">Data Browser</a></li>
+	    <li><a href="/slow_control">XE100 Slow Control</a></li>
+	    <!--<li><a href="/monitor/eventdisplay">Event Display</a></li>-->
+	  </ul>
+	  
+	</div>
+	
+	<div class="link-yellow">
+	  
+	  <a href="#">
+	    <i class="fa fa-folder-open"></i>Runs      </a>
+	  
+	  <ul class="sub-links">
+	    <li><a href="/runs">Runs List</a></li>
+	    <li><a href="/monitor/runstats">Runs Info</a></li>
+	  </ul>
+	  
+	</div>
+	<div class="link-orange">
+	  <a href="#">
+            <i class="fa fa-cog"></i>Management</a>
+          <ul class="sub-links">
+            <li><a href="/management">User list</a></li>
+          </ul>
+
+	  </div>
+
+	<div class="link-green">
+	  
+	  <a href="#">
+	    <i class="fa fa-info"></i>Help/Links
+	  </a>
+	  
+	  <ul class="sub-links">
+	    <li><a href="/docs">Docs</a></li>
+	    <li><a href="/docs/contact">Contact</a></li>
+	    <li><a href="/docs/about">About</a></li>	
+	    <li><a href="https://cloud.mongodb.com">Mongo Cloud (ext)</a></li>
+	    <li><a href="https://www.github.com/coderdj/emo">Github (ext)</a></li>
+	  </ul>
+	  
+	</div>
+	
       </div>
+      <button class="btn btn-default js-gitter-toggle-chat-button" style="position:absolute;margin-left:17px;width:130px;bottom:15px;background-color:#36bc98;color:white;font-family: sans-serif;font-size: 10px;letter-spacing: 1px;text-transform: uppercase;text-align: center;text-decoration: none;padding-top:8px;padding-bottom:20px;font-weight:normal;" id="open_chat">Toggle Chat</button>
+    </div>
+    <div id="content" class="container-fluid emo-sidebar-show"><!-- col-sm-offset-2">-->
+      {% block content %}
+      <!-- SNOW -->
+            {% include "homepage.html" %}
+<!--
+
+      <script src="{% static "js/snowfall.jquery.js" %}"></script>
+      <script>
+	$(document).ready(function(){
+	setTimeout( 
+	function(){
+	$('#hero_unit').snowfall({flakeCount : 50, maxSpeed : 5});
+	},
+	1000);
+	
+	});</script>
+      
+      <style>
+	.body{
+	background-color: #4fa783;
+	}
+	#content{
+	#background-color: #a642b4;
+	}
+      </style>
+      <div class="hero-unit fill" id="hero_unit" style="min-height:160px;">
+	<div class="row">
+	  <div class="col-md-12 col-lg-9" id="title_text">
+	    <br>
+	    <h1>Welcome to the DAQ</h1>
+	    <h2>You are logged in as {{ user.get_username }}</h2>
+	    <br>
+	    <p>
+	      <a href="/control" class="btn btn-primary btn-large" style="background-color:#5992c2">
+		Take me to the control panel...
+	      </a>
+	    </p>
+	  </div>
       <div class="hidden-md col-lg-3" style="max-height:100px">
       </div>
-    </div>
-  </div>
-  <!-- ANNOUNCEMENT -->
+	</div>
+      </div>-->
+      <!-- ANNOUNCEMENT -->
 <!--  <p class="bg-danger" stype="width:100%;padding-left:20px;" id="front_note">
     <strong>Maintenance Notice 6.1.16:</strong> We're doing some tests to our databases over the next few days. Therefore the DAQ is offline at the moment. If you need it for something contact us and we can bring it up for you.
   </p>-->
   <!--<p class="bg-info" style="width:100%;padding-left:20px" id="front_note">
     <strong>Welcome!</strong> In these early days of the experiment please coordinate with the DAQ group if you want to run acquisition, either by email or using the gitter chat embedded here. As always, please file issues at the GitHub. Happy Holidays, happy DAQ-ing! - DAQ Team
   </p>-->
-  <br>
 
 <!--
 <div id="caldiv" class="col-xs-12">
 </div>
 -->
-<!--  <div class="row" id="front_links">
-    <div class="social-buttons">
-	<div class="col-sm-3 col-xs-6" style="min-width:200px;">
-	  <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
-             href="http://www.github.com/coderdj/emo">
-            <i class="fa fa-github" style="font-size:14pt"></i> Website GitHub
-	  </a>
-	</div>
-	<div class="col-sm-3 col-xs-6" style="min-width:200px;">
-	  <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
-             href="http://www.github.com/XENON1T">
-            <i class="fa fa-github" style="font-size:14pt"></i> XENON1T GitHub
-	  </a>
-	</div>
-	
-	<div class="col-sm-3 col-xs-6" style="min-width:200px;">
-	  <a class="btn btn-block btn-default btn-social btn-lg btn-github"
-             style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
-             href="http://www.xenon1t.org">
-            xenon1t.org
-      </a>
-    </div>
-    <div class="col-sm-3 col-xs-6" style="min-width:200px;">
-      <a class="btn btn-block btn-default btn-social btn-lg btn-github"
-         style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
-         href="https://xecluster.lngs.infn.it/dokuwiki/doku.php">
-        XENON1T dokuwiki
-      </a>
-    </div>
-</div>
-</div>-->
-<!--  <img src="{% static "img/alps2.png" %}" alt="Bern" style="width:120%;margin-left:-40px;margin-right:-40px;">-->
 <!-- This page specific scripts -->
 <script type="text/javascript">
-   $(function(){
-   $('#title_text').addClass('animated bounceInRight');
-   $('#front_note').addClass('animated bounceInLeft');
-   
-   var browser = get_browser_info();
-   if(browser.name == "IE" && browser.version < 11)
-	alert("You are using an old version of Internet Explorer. Some site elements may not function properly. Consider upgrading to at least version 11 (or Edge)!");
-
-   console.log(browser.name);
-   console.log(browser.version);
- });
+  $(function(){
+  $('#title_text').addClass('animated bounceInRight');
+  $('#front_note').addClass('animated bounceInLeft');
+  
+  var browser = get_browser_info();
+  if(browser.name == "IE" && browser.version < 11)
+      alert("You are using an old version of Internet Explorer. Some site elements may not function properly. Consider upgrading to at least version 11 (or Edge)!");
+  console.log(browser.name);
+  console.log(browser.version);
+});
 </script>
 
-  {% endblock %}
-</div>
-	</div>
-   {% else %}
+{% endblock %}
+    </div>
+  </div>
+  {% else %}
 {% block content2 %}
 <div class="hero-unit fill" style="margin-top:30px">
   <br>
