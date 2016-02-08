@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 import datetime
 from django.conf import settings
 from pymongo import MongoClient
+import operator
 import logging
 
 # Get an instance of a logger                                                                                     
@@ -20,9 +21,141 @@ logger = logging.getLogger('emo')
 client = MongoClient(settings.ONLINE_DB_ADDR)
 db = client[ settings.ONLINE_DB_NAME ]
 
+dayno = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+          "Friday": 4, "Saturday": 5, "Sunday": 6}
+
+def GetShiftResponsibility(start):
+    # Assuming we start handing out shifts at "start", how many shifts does 
+    # Each institute have to do? Assume we count membership at institutes
+    # on 1.1. of each year.
+
+    year = start.year
+    users = db['users'].find({ 'start_date':{"$gt":datetime.datetime(year=year,
+                                                                     month=1, 
+                                                                     day=1)}})
+    inst_count = {}
+    total = 0
+    for user in users:
+        if user['institute'] not in isnt_count.keys():
+            inst_count[user['institute']]=0
+        if ( user['position'] == "PI" or 
+             user['position'] =="Postdoc" or 
+             user['position'] == "PhD student" ):
+            inst_count[user['institute']] +=1
+            total += 1
+    
+    inst_frac = {}
+    total_shifts = (52-start.isocalendar()[1])*2
+    for institute in inst_count.keys():
+        inst_frac[institute] = {
+            "whole": int(inst_count[institute]/total),
+            "frac": (inst_count[institute]%total)/total,
+        }
+        
+    # Assign shifts
+    assigned = 0
+    assigned_shift={}
+    for institute in inst_frac:
+        assigned += inst_frac[institute]['whole']
+        assigned_shift[institute] = whole
+
+    # Might not come to whole number
+    sorted_inst = sorted(x.keys(), key=operator.itemgetter(1))
+    i=0
+    while assigned < total_shifts and i < len(sorted_inst):
+        assigned_shift[sorted_inst[i]] +=1
+        assigned+=1
+    
+    retdoc = {"shifts": assigned_shift,
+              "start": start,
+              "total": total_shifts }              
+    return retdoc
+
+def GetShiftStats(year):
+    
+    # SHIFT DOC
+    # institute
+    # start
+    # end
+    # user
+    # type : shift, responsible, training
+
+    # Make sure it works on January first too
+    jan_first = datetime.datetime(year=year, month=1, day=1)
+    next_jan = datetime.datetime(year=year+1, month=1, day=1)
+        
+    cursor = db['shifts'].find({"start": {"$gte": jan_first, 
+                                          "$lt": next_jan},
+                                "type": { "$in": ["shift", "responsible"] }})
+    ret_doc = {}
+    for doc in cursor:
+        if doc['institute'] not in ret_doc.keys():
+            ret_doc[doc['institute']] = 0
+        ret_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
+    return ret_doc
+
+def last_weekday(d, weekday):
+    days_behind = d.weekday() - weekday
+    return d - datetime.timedelta(days_ahead)
+
+def UpdateShiftPlan():
+    # Note: we allow the system to update shifts up to
+    # auto_assign_weeks in advance even if that rolls over into
+    # next year
+    shift_doc = db['shifts'].find_one({"type": "rules"})
+    if shift_doc is None:
+        return
+
+    worry_end = (datetime.datetime.now() + 
+                 datetime.timedelta(days=7*shift_doc['auto_assign_weeks']))
+    
+    # Not starting, can quit
+    if worry_end < doc['start_date']:
+        return
+    first_date = (doc['start_date'] - 
+                  datetime.timedelta(days=last_weekday(doc['start_date'], 
+                                                       dayno[doc['shift_reset']])))
+    
+    shift_resp = GetShiftResponsibility(doc['start_date'])
+    return
+
+@login_required
+def generate_shifts(request):
+
+    shift_def = ShiftDefinition()
+    if request.method == "POST":
+        shift_def = ShiftDefinition(request.POST)
+        if shift_def.is_valid():
+            
+            # Get values from form
+            doc = {
+                'start_date': datetime.datetime.combine(
+                    shift_def.cleaned_data['start_date'],
+                    datetime.datetime.min.time),
+                'auto_assign_weeks': shift_def.cleaned_data['auto_assign_weeks'],
+                'shift_reset': shift_def.cleand_data['shift_reset'],
+                'auto_assign_start': datetime.datetime.combine(
+                    shift_def.cleaned_data['auto_assign_start'],
+                    datetime.datetime.min.time),
+                'user': request.user.username,
+                'created': datetime.datetime.now(),                
+            }
+            
+            try:
+                db['shifts'].update({"type": "rules"}, {"$set": doc}, upsert=True)
+            except Exception as e:
+                logger.error("Insert failed")
+                logger.error(e)
+            
+            UpdateShiftPlan()
+    return HttpResponse({"form": shift_def}, content_type="application/json")
+
 @login_required
 def shift_management(request):
-    return HttpResponsePermanentRedirect("/management")
+    retdict = {}
+    return render_to_response("management/shift_responsibility.html", retdict, 
+                              content_type="application/json")
+
 
 @login_required
 def get_user_list(request):
@@ -160,8 +293,13 @@ def profile(request):
                 if extra in profile_update.cleaned_data.keys():
                     doc[extra] = profile_update.cleaned_data[extra]
             try:
-                db['users'].update({"name": request.user.username}, 
+                db['users'].update({"username": doc['username']},
                                    {"$set": doc}, upsert=True)
+
+                #db['users'].update({"last_name": doc['last_name'],
+                #                    "first_name": doc['first_name'],
+                #                    "institute": doc['institute']}, 
+                #                   {"$set": doc}, upsert=True)
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)

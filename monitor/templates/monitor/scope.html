@@ -33,6 +33,7 @@
 	    <select name="serverList" id="serverList" onchange="getData(this, 'server');">
 	      <option value="none">Choose a server</option>
 	      <option value="eb0">Event builder</option>
+	      <option value="eb2">Ersatz event builder</option>
 	      <option value="172.17.15.71">Test PC</option>
 	    </select>
 	    <span id="server_confirm"><i style="color:red;" class="fa fa-exclamation-circle"></i></span>
@@ -175,7 +176,7 @@
       y_max = chart.yAxisRange()[1];
     if(data['adc_value'][0].length == 2){
         chart.updateOptions({isZoomedIgnoreProgrammaticZoom: true, "labels": ["bin (10ns)","channel a"],
-     "file": data['adc_value'], });
+     "file": data['adc_value'], "title": title_str});
     }
     else{
         chart.updateOptions({"labels":["bin (10ns)","channel a", "channel b"],

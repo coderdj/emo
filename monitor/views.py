@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING, DESCENDING
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util, objectid
@@ -28,6 +28,7 @@ import logging
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+#logger = logging.getLogger("emo")
 
 # Connect to pymongo
 client = MongoClient(settings.MONITOR_DB_ADDR)
@@ -884,7 +885,7 @@ def get_uptime(request):
         onlyDM = False
     
     if 'this_month' in request.GET:
-        last_days = date.today().day
+        last_days = date.today().day - 1
 
     # Make DB query
     runs_client = MongoClient(settings.RUNS_DB_ADDR)
@@ -897,8 +898,8 @@ def get_uptime(request):
     
     query_set=[]
     try:
-        query_set = runs_coll.find({"endtimestamp": 
-                                    {"$gt": dt}}).sort("starttimestamp", 1)
+        query_set = runs_coll.find({"starttimestamp": 
+                                    {"$gt": dt}}).sort("starttimestamp", ASCENDING)
     except:
         logger.error("Exception trying to query runs DB")
 
@@ -907,10 +908,15 @@ def get_uptime(request):
 
     for doc in query_set:
         # figure out which bin this belongs in
-        if doc['starttimestamp'].day == doc['endtimestamp'].day:
-            incval = (doc['endtimestamp']-doc['starttimestamp']).seconds/(3600*24)
+        endtime = datetime.datetime.now()
+        if "endtimestamp" in doc.keys():
+            endtime = doc['endtimestamp']
+
+        if doc['starttimestamp'].day == endtime.day:
+            incval = (endtime-doc['starttimestamp']).seconds/(3600*24)
             bin_no = (doc['starttimestamp']-datetime.datetime.combine(d,datetime.datetime.min.time())).days
 
+            logger.error(bin_no)
             if 'tpc' in doc['detectors']:
                 while bin_no >= len(day_hist_tpc):
                     day_hist_tpc.append({})
@@ -929,10 +935,10 @@ def get_uptime(request):
                     day_hist_muon_veto[bin_no][doc['runmode']]=incval
         else:
             stime = doc['starttimestamp']
-            while (doc['endtimestamp']-stime).days>=0:
+            while (endtime-stime).days>=0:
                 midnight = datetime.datetime.combine(datetime.date(stime.year, stime.month, stime.day), datetime.datetime.max.time())
-                if (doc['endtimestamp']-stime).days==0:
-                    midnight=doc['endtimestamp']
+                if (endtime-stime).days==0:
+                    midnight=endtime
                 incval = (midnight-stime).seconds/(3600*24)
                 bin_no = (stime-datetime.datetime.combine(d,datetime.datetime.min.time())).days
                 if 'tpc' in doc['detectors']:
@@ -949,8 +955,8 @@ def get_uptime(request):
                         day_hist_muon_veto[bin_no][doc['runmode']]+=incval
                     else:
                         day_hist_muon_veto[bin_no][doc['runmode']]=incval
-
-                stime=datetime.datetime.combine(datetime.date(stime.year,stime.month,stime.day+1),datetime.datetime.min.time())
+                
+                stime=stime + timedelta(days=1)
     ret_doc = {"tpc":[],"muon_veto":[]}
     for i in range(0, len(day_hist_tpc)):
         month = (d+timedelta(days=i)).month
@@ -1039,11 +1045,14 @@ def getWaveform(request):
             searchdict["channel"] = int(request.GET['channel'])  
   
 
-        if server == "eb0":
+        if server == "eb0" or server=="eb2":
             try:
-                if database == "untriggered":
+                if database == "untriggered" and server=='eb0':
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     db = client[settings.BUFFER_DB_REPL]
+                elif database=="untriggered" and server=="eb2":
+                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    db=client["untriggered"]
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
                     db = client[settings.MV_BUFFER_REPL]
@@ -1101,8 +1110,10 @@ def getDatabase(request):
     if request.method == 'GET' and 'server' in request.GET:
         server = request.GET['server']
         
-        if server == "eb0":
-            retlist = [settings.BUFFER_DB_REPL, settings.MV_BUFFER_REPL]            
+        if server == "eb0" or server=="eb2":
+            retlist = [settings.BUFFER_DB_REPL]
+            if server=='eb0':
+                retlist.append(settings.MV_BUFFER_REPL)
             return HttpResponse(dumps(retlist),
                             content_type='application/json')
 
@@ -1128,7 +1139,22 @@ def getCollection(request):
         server = request.GET['server']
         database = request.GET['database']
 
-        if server == "eb0":
+        if server == "eb2":
+            try:
+                if database=="untriggered":
+                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    db=client[database]
+                    coll_list = db.collection_names()
+                    retlist = []
+                    for name in coll_list:
+                        if client[database][name].count() > 0:
+                            retlist.append(name)
+                    retlist.sort()
+                    client.close()
+                    return HttpResponse(dumps(retlist), content_type='application/json')
+            except:
+                print("Can't connect to eb2")
+        elif server == "eb0":
             try:
                 if database == "untriggered":
                     client = MongoClient(settings.BUFFER_DB_ADDR)                
@@ -1140,6 +1166,7 @@ def getCollection(request):
                 for name in coll_list:
                     if client[database][name].count() > 0:
                         retlist.append(name)
+                retlist.sort()
                 client.close()
                 return HttpResponse(dumps(retlist),
                                     content_type='application/json')
@@ -1173,11 +1200,14 @@ def getModules(request):
         database = request.GET['database']
         collection = request.GET['collection']
     
-        if server == "eb0":
+        if server == "eb0" or server=="eb2":
             try:
-                if database == "untriggered":
+                if database == "untriggered" and server=="eb0":
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
+                elif database=="untriggered" and server=="eb2":
+                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    retlist = client[settings.BUFFER_DB_REPL][collection].distinct
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
                     retlist = client[settings.MV_BUFFER_REPL][collection].distinct("module")
@@ -1212,12 +1242,16 @@ def getChannels(request):
         collection = request.GET['collection']
         module = int(request.GET['module'])
         
-        if server == "eb0":
+        if server == "eb0" or server=="eb2":
             try:
-                if database == "untriggered":
+                if database == "untriggered" and server=="eb0":
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = client[settings.BUFFER_DB_REPL][collection].find(
                         {"module":module}).limit(30).distinct("channel")
+                elif database == "untriggered" and server=="eb2":
+                    client= MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    retlist = client["untriggered"][collection].find({"module":module}).limit(30).distinct("channel")
+
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
                     retlist = client[settings.MV_BUFFER_REPL][collection].find(
@@ -1260,11 +1294,14 @@ def getOccurrences(request):
 
         print("In get occurrences")
         logger.error("In getOccurrences")
-        if server == "eb0":
+        if server == "eb0" or server=="eb2":
             try:
-                if database == "untriggered":
+                if database == "untriggered" and server=="eb0":
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+                elif database=="untriggered" and server=="eb2":
+                    client = MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    retlist = list(client["untriggered"][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
 
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)

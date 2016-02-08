@@ -24,11 +24,11 @@ weekdays = ( ("Monday", "Monday"),
              ("Sunday", "Sunday") )
 
 class ShiftDefinition(forms.Form):
-    start_date = forms.DateTimeField(label="Start date")
-    end_date = forms.DateTimeField(label="End date")
+    start_date = forms.DateField(label="Start date", initial=datetime.date.today)    
     auto_assign_weeks = forms.IntegerField(label="Auto assign weeks")
     shift_reset = forms.ChoiceField(choices=weekdays, required=True, 
                                     label="Shift start/end")    
+    auto_assign_start = forms.DateField(label="Auto assignment from")
 
 class UserInfo(forms.Form):
     username = forms.CharField(required=True, max_length=250)
