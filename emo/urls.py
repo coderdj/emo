@@ -18,10 +18,13 @@ from django.contrib import admin
 #from django.contrib.auth.views import login
 from django.views.generic.base import TemplateView
 from management import views
+from django.contrib.auth.decorators import login_required
+
 
 urlpatterns = [
  
     url(r'^$', TemplateView.as_view( template_name='base.html')),
+    url(r'^game', login_required(TemplateView.as_view( template_name='game.html'))),
     url(r'^admin/', include(admin.site.urls)),
     #url(r'^accounts/login',login(template_name="login.html"),name="login"),
 #    url(r'^accounts/login/$', 'django.contrib.auth.views.login',

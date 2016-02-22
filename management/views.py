@@ -12,7 +12,9 @@ from django.contrib.auth.models import User
 import datetime
 from django.conf import settings
 from pymongo import MongoClient
+import pymongo
 import operator
+import math
 import logging
 
 # Get an instance of a logger                                                                                     
@@ -24,32 +26,68 @@ db = client[ settings.ONLINE_DB_NAME ]
 dayno = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
           "Friday": 4, "Saturday": 5, "Sunday": 6}
 
-def GetShiftResponsibility(start):
+@login_required
+def GetHs(request):
+    users = db['users'].find({"g_id": {"$exists": True}}).sort("g_id",pymongo.DESCENDING).limit(5)
+    ret=[]
+    for usr in users:
+        if usr['username'] != 'tunnell':
+            ret.append({"name": usr['username'], "g_id": usr['g_id']})
+        else:
+            ret.append({"name": usr['username'], "g_id": 0})
+    return HttpResponse(json.dumps({"list": ret}), content_type="application/json")
+
+@login_required
+def SetHs(request):
+    if request.method!="GET" or 'g_id' not in request.GET:
+        return HttpResponse(json.dumps({"good": False}), content_type="application/json")
+    doc = db['users'].find({"username": request.user.username})
+    try:
+        if int(request.GET['g_id']) > int(doc[0]['g_id']): 
+            db['users'].update({"username": request.user.username}, 
+                               {"$set":{"g_id": int(request.GET['g_id'])}}, 
+                               upsert=False)
+    except:
+        db['users'].update({"username": request.user.username},
+                           {"$set":{"g_id": int(request.GET['g_id'])}},
+                           upsert=False)    
+
+    return HttpResponse(json.dumps({"good": True, "g_id": request.GET['g_id']}), content_type="application/json")
+
+def GetShiftResponsibility(cdef, start):
     # Assuming we start handing out shifts at "start", how many shifts does 
     # Each institute have to do? Assume we count membership at institutes
     # on 1.1. of each year.
-
-    year = start.year
-    users = db['users'].find({ 'start_date':{"$gt":datetime.datetime(year=year,
-                                                                     month=1, 
-                                                                     day=1)}})
+    
+    users = db['users'].find({ 'start_date':
+                               {"$lt":datetime.datetime(year=cdef.year,
+                                                        month=cdef.month, 
+                                                        day=cdef.day)}})
     inst_count = {}
     total = 0
+    total_all = users.count()
     for user in users:
-        if user['institute'] not in isnt_count.keys():
+        
+        # Don't count people who left
+        if 'end_date' in user and user['end_date']<cdef:
+            continue
+        
+        if user['institute'] not in inst_count.keys():
             inst_count[user['institute']]=0
         if ( user['position'] == "PI" or 
              user['position'] =="Postdoc" or 
+             user['position'] == "Staff" or
              user['position'] == "PhD student" ):
             inst_count[user['institute']] +=1
             total += 1
     
     inst_frac = {}
-    total_shifts = (52-start.isocalendar()[1])*2
+    total_shifts = (52-start.isocalendar()[1])*3
     for institute in inst_count.keys():
         inst_frac[institute] = {
-            "whole": int(inst_count[institute]/total),
-            "frac": (inst_count[institute]%total)/total,
+            "whole": math.floor((inst_count[institute]/total)*total_shifts),
+            "frac": ((total_shifts*(inst_count[institute])/total)) - 
+            float(math.floor(total_shifts*(inst_count[institute]/total))),
         }
         
     # Assign shifts
@@ -57,21 +95,30 @@ def GetShiftResponsibility(start):
     assigned_shift={}
     for institute in inst_frac:
         assigned += inst_frac[institute]['whole']
-        assigned_shift[institute] = whole
+        assigned_shift[institute]={'shifts': inst_frac[institute]['whole'],
+                                   "people": inst_count[institute],
+                                   "frac": inst_frac[institute]['whole']+
+                                   inst_frac[institute]['frac']}
 
     # Might not come to whole number
-    sorted_inst = sorted(x.keys(), key=operator.itemgetter(1))
+    sorted_inst = sorted(inst_frac.keys(), key=operator.itemgetter(1))
     i=0
     while assigned < total_shifts and i < len(sorted_inst):
-        assigned_shift[sorted_inst[i]] +=1
+        assigned_shift[sorted_inst[i]]['shifts'] +=1
         assigned+=1
-    
+        i+=1
+    ret_assigned=[]
+    #for x in sorted_inst:
+    #    ret_assigned.append({"institute": x, "shifts": assigned_shift[x]})
     retdoc = {"shifts": assigned_shift,
+              "frac": inst_frac,
               "start": start,
-              "total": total_shifts }              
+              "total": total_shifts,
+              "user_count": total_all,
+              "institutes": inst_count}              
     return retdoc
 
-def GetShiftStats(year):
+def GetShiftStats(request):
     
     # SHIFT DOC
     # institute
@@ -80,81 +127,83 @@ def GetShiftStats(year):
     # user
     # type : shift, responsible, training
 
-    # Make sure it works on January first too
-    jan_first = datetime.datetime(year=year, month=1, day=1)
-    next_jan = datetime.datetime(year=year+1, month=1, day=1)
+    if request.method == "POST" and "year" in request.POST:
+        # Make sure it works on January first too
+        year = request.POST['year']
+        jan_first = datetime.datetime(year=year, month=1, day=1)
+        next_jan = datetime.datetime(year=year+1, month=1, day=1)
         
-    cursor = db['shifts'].find({"start": {"$gte": jan_first, 
-                                          "$lt": next_jan},
-                                "type": { "$in": ["shift", "responsible"] }})
-    ret_doc = {}
-    for doc in cursor:
-        if doc['institute'] not in ret_doc.keys():
-            ret_doc[doc['institute']] = 0
-        ret_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
-    return ret_doc
+        rules = db['shift_rules'].find_one({"year": year})
+        if rules is not None:
+            
+            cursor = db['shifts'].find({"start": {"$gte": jan_first, 
+                                                  "$lt": next_jan},
+                                        "type": { "$in": ["shift", "responsible"] }})
+            done_doc = {}
+            for doc in cursor:
+                if doc['institute'] not in ret_doc.keys():
+                    ret_doc[doc['institute']] = 0
+                    ret_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
+            need_doc = GetShiftResponsibility(rules)
+            ret_doc = {"responsible": need_doc, "done": ret_doc}
+            return ret_doc
+    return
 
 def last_weekday(d, weekday):
     days_behind = d.weekday() - weekday
     return d - datetime.timedelta(days_ahead)
 
-def UpdateShiftPlan():
-    # Note: we allow the system to update shifts up to
-    # auto_assign_weeks in advance even if that rolls over into
-    # next year
-    shift_doc = db['shifts'].find_one({"type": "rules"})
-    if shift_doc is None:
-        return
-
-    worry_end = (datetime.datetime.now() + 
-                 datetime.timedelta(days=7*shift_doc['auto_assign_weeks']))
-    
-    # Not starting, can quit
-    if worry_end < doc['start_date']:
-        return
-    first_date = (doc['start_date'] - 
-                  datetime.timedelta(days=last_weekday(doc['start_date'], 
-                                                       dayno[doc['shift_reset']])))
-    
-    shift_resp = GetShiftResponsibility(doc['start_date'])
-    return
 
 @login_required
-def generate_shifts(request):
+def shift_rules(request):
 
     shift_def = ShiftDefinition()
-    if request.method == "POST":
-        shift_def = ShiftDefinition(request.POST)
-        if shift_def.is_valid():
+    shift_resp = {}
+    year = datetime.datetime.now().year
+    if request.method=="GET" and "year" in request.GET:
+        year = request.GET['year']
+    shift_doc = db['shift_rules'].find({"year": str(year)}).limit(1)
+    #shift_doc = db['shift_rules'].find()
+    if shift_doc.count() != 0:        
+        shift_resp = GetShiftResponsibility(shift_doc[0]['collab_def_date'],
+                                            shift_doc[0]['start_date'])
+
+    if request.method=="POST": 
+        new_shift_def = ShiftDefinition(request.POST)
+        if new_shift_def.is_valid():
             
-            # Get values from form
             doc = {
                 'start_date': datetime.datetime.combine(
-                    shift_def.cleaned_data['start_date'],
-                    datetime.datetime.min.time),
-                'auto_assign_weeks': shift_def.cleaned_data['auto_assign_weeks'],
-                'shift_reset': shift_def.cleand_data['shift_reset'],
+                    new_shift_def.cleaned_data['start_date'],
+                    datetime.datetime.min.time()),
+                'auto_assign_weeks': new_shift_def.cleaned_data['auto_assign_weeks'],
+                'collab_def_date': datetime.datetime.combine(
+                    new_shift_def.cleaned_data['collab_def_data'],
+                    datetime.datetime.min.time()),
+                'shift_reset': new_shift_def.cleaned_data['shift_reset'],
                 'auto_assign_start': datetime.datetime.combine(
-                    shift_def.cleaned_data['auto_assign_start'],
-                    datetime.datetime.min.time),
+                    new_shift_def.cleaned_data['auto_assign_start'],
+                    datetime.datetime.min.time()),
                 'user': request.user.username,
-                'created': datetime.datetime.now(),                
+                'created': datetime.datetime.now(),
+                "year": new_shift_def.cleaned_data['year']
             }
-            
             try:
-                db['shifts'].update({"type": "rules"}, {"$set": doc}, upsert=True)
+                db['shift_rules'].update({"year": doc['year']}, 
+                                         {"$set": doc}, upsert=True)
+                #shift_resp=doc
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)
+                shift_resp={"ERR":e}
+            # create new def
+            shift_def = new_shift_def
+        else:
+            shift_resp={"ERR": "NOT_VALID"}
             
-            UpdateShiftPlan()
-    return HttpResponse({"form": shift_def}, content_type="application/json")
-
-@login_required
-def shift_management(request):
-    retdict = {}
-    return render_to_response("management/shift_responsibility.html", retdict, 
-                              content_type="application/json")
+    retdict = {"form": shift_def, "resp": shift_resp}
+    #retdict={}
+    return render(request, "management/shift_rules.html", retdict)
 
 
 @login_required

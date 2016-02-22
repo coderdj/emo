@@ -14,6 +14,8 @@ class run_search_form( forms.Form ):
         super( run_search_form, self).__init__(*args, **kwargs)
         self.fields['mode'] = forms.ChoiceField( choices=list, required=False )
 
+    detectors = [ ("TPC", "tpc"), ("Muon Veto", "muon_veto")]
+    detector = forms.ChoiceField(choices=detectors, required=False, label="Detector")
     startdate = forms.DateField(required = False, label = "Start Date", widget=forms.DateInput)
     enddate   = forms.DateField(required = False, label = "End Date", widget=forms.DateInput)
     GoodRuns  = forms.BooleanField(label = "Only good runs", required=False)

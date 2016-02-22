@@ -123,6 +123,7 @@ def strip_doc(doc):
         }
         ret["all_hits"].append(minhit)
 
+    
     for pulse in doc['pulses']:
         minpulse = {
             "baseline": pulse['baseline'],
@@ -132,7 +133,7 @@ def strip_doc(doc):
             "raw_data": pulse["raw_data"]
         }
         ret["pulses"].append(minpulse)
-
+    
     return ret
 @login_required
 def get_event_for_display(request):
@@ -187,6 +188,7 @@ def get_event_for_display(request):
     #timestring = time.strftime("%Y/%m/%d, %H:%M:%S", time.gmtime(trigger_time_ns / 10 ** 9))
     #print(timestring)
     ret = strip_doc(doc)
+    ret['event_number']=event_number;
     #ret = {"event_date": timestring, "run_name":doc['dataset_name'], "event_number":doc['event_number'],
     #       'sum_waveforms':doc['sum_waveforms'], "peaks": doc['peaks'], "pulses": doc['pulses']}
     #ret = {"hits_script": hits_js, "hits_div": hits_div, "waveform_script": waveform_js,
@@ -1147,12 +1149,13 @@ def getCollection(request):
                     coll_list = db.collection_names()
                     retlist = []
                     for name in coll_list:
-                        if client[database][name].count() > 0:
+                        if db[name].count() > 0:
                             retlist.append(name)
                     retlist.sort()
                     client.close()
                     return HttpResponse(dumps(retlist), content_type='application/json')
-            except:
+            except Exception as e:
+                return HttpResponse(dumps([str(e)]), content_type="application/json")
                 print("Can't connect to eb2")
         elif server == "eb0":
             try:
@@ -1207,7 +1210,7 @@ def getModules(request):
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 elif database=="untriggered" and server=="eb2":
                     client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
-                    retlist = client[settings.BUFFER_DB_REPL][collection].distinct
+                    retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
                     retlist = client[settings.MV_BUFFER_REPL][collection].distinct("module")
@@ -1298,7 +1301,7 @@ def getOccurrences(request):
             try:
                 if database == "untriggered" and server=="eb0":
                     client = MongoClient(settings.BUFFER_DB_ADDR)
-                    retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+                    retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",-1).limit(500))
                 elif database=="untriggered" and server=="eb2":
                     client = MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
                     retlist = list(client["untriggered"][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))

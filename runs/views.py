@@ -20,9 +20,9 @@ def runs_started(request):
     # Connect to pymongo                                                                                               
     client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
-    
-    runs_total = db['runs'].find().count()
-    runs_user = db['runs'].find({"user": request.user.username}).count()
+    coll = settings.RUNS_DB_COLLECTION
+    runs_total = db[coll].find().count()
+    runs_user = db[coll].find({"user": request.user.username}).count()
     return HttpResponse(dumps({"total": runs_total, "mine": runs_user}), content_type="application/json")
 
 @login_required
@@ -31,24 +31,24 @@ def last_run_per_det(request):
     client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
 
-    collection = db[ "runs" ]
-    last_runs_tpc = collection.find({"detectors.tpc": {"$exists": True}}).sort("starttimestamp", -1).limit(1)
-    last_runs_mv = collection.find({"detectors.muon_veto": {"$exists": True}}).sort("starttimestamp", -1).limit(1)
+    collection = db[ settings.RUNS_DB_COLLECTION ]
+    last_runs_tpc = collection.find({"detector":"tpc"}).sort("start", -1).limit(1)
+    last_runs_mv = collection.find({"detectors":"muon_veto"}).sort("start", -1).limit(1)
     
     retdoc = {"tpc":{}, "muon_veto":{}}
     if last_runs_tpc.count()!=0:
         last_run_tpc = last_runs_tpc[0]
         retdoc["tpc"] = { "name": last_run_tpc['name'],
-                          "source": last_run_tpc['runmode'],
+                          "source": last_run_tpc['source']['type'],
                           "user": last_run_tpc['user'],
-                          "date": last_run_tpc['starttimestamp']
+                          "date": last_run_tpc['start']
                       }
     if last_runs_mv.count()!=0:
         last_run_mv = last_runs_mv[0]
         retdoc["muon_veto"]  = { "name":last_run_mv['name'],
-                                 "source":last_run_mv['runmode'],
+                                 "source":last_run_mv['source']['type'],
                                  "user": last_run_mv['user'],
-                                 "date": last_run_mv['starttimestamp']
+                                 "date": last_run_mv['start']
                              }
     
     return HttpResponse(dumps(retdoc), content_type="application/json")
@@ -56,16 +56,17 @@ def last_run_per_det(request):
 @login_required
 def runs(request):
 
-    filter_query = {}
+    filter_query = {"detector": "tpc"}
 
     # Connect to pymongo
     client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
 
-    collection = db[ "runs" ]
-    fields = collection.distinct( "runmode" )
+    collection = db[ settings.RUNS_DB_COLLECTION ]
+    fields = collection.distinct( "source.type" )
     fields.insert( 0, "All" )
     fieldslist = zip (fields, fields)
+    
 
     if request.method == 'GET':
         filter_form = run_search_form( fieldslist, request.GET )
@@ -75,35 +76,38 @@ def runs(request):
             if filter_form.cleaned_data[ 'custom' ] is not "":
                 logger.error(filter_form.cleaned_data['custom'])
                 filter_query = loads( filter_form.cleaned_data['custom'] )
+            if "detector" in filter_form.cleaned_data and filter_form.cleaned_data['detector'] !="":
+                filter_query['detector']=filter_form.cleaned_data['detector']
             if filter_form.cleaned_data[ 'startdate' ] is not None:
-                filter_query[ 'starttimestamp' ]= { "$gt" 
-                                                    : datetime.datetime.combine
-                                                    (filter_form.cleaned_data
-                                                     ['startdate'],
-                                                     datetime.datetime.min.time() )}
+                filter_query[ 'start' ]= { "$gt" 
+                                           : datetime.datetime.combine
+                                           (filter_form.cleaned_data
+                                            ['startdate'],
+                                            datetime.datetime.min.time() )}
             if filter_form.cleaned_data[ 'enddate' ] is not None:
-                if 'starttimestamp' in filter_query.keys():
+                if 'start' in filter_query.keys():
                     filter_query['starttimestamp']['$lt'] = (
                         datetime.datetime.combine(
                             filter_form.cleaned_data['enddate'],
                             datetime.datetime.max.time() )
                         )
                 else:
-                    filter_query[ 'starttimestamp' ]= { "$lt" : 
-                                                        datetime.datetime.combine(
-                            filter_form.cleaned_data
-                            ['enddate'],
-                            datetime.datetime.max.time
-                            () )}
-                if ( filter_form.cleaned_data[ 'mode' ] is not "" and 
-                     filter_form.cleaned_data['mode'] != 'All' ) :
-                    filter_query['runmode'] = filter_form.cleaned_data['mode']
+                    filter_query[ 'start' ]= { "$lt" : 
+                                               datetime.datetime.combine(
+                                                   filter_form.cleaned_data
+                                                   ['enddate'],
+                                                   datetime.datetime.max.time
+                                                   () )}
+            if ( filter_form.cleaned_data[ 'mode' ] is not "" and 
+                 filter_form.cleaned_data['mode'] != 'All' ) :
+                filter_query['source.type'] = filter_form.cleaned_data['mode']
     else:
         filter_form = run_search_form( fieldslist )
-
-    retset = collection.find( filter_query ).sort( "starttimestamp", -1 )
+    
+    retset = collection.find( filter_query ).sort( "start", -1 )
     return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
-                                               "form" : filter_form } )
+                                               "form" : filter_form,
+                                               "query": filter_query} )
 
 """
 @login_required
@@ -163,7 +167,7 @@ def new_comment(request):
     c = MongoClient(settings.RUNS_DB_ADDR)
     d = c[settings.RUNS_DB_NAME]
 
-    mongo_collection = d['runs']
+    mongo_collection = d[settings.RUNS_DB_COLLECTION]
 
     if request.method == 'POST':
         logger.error(request.POST)

@@ -52,7 +52,7 @@
       <img alt="" src="http://www.google.com/images/srpr/logo4w.png" />
     </span>
       
-<p class="bg-info" style="width:100%;padding-left:20px">I put a bit of XENON100 data in here as an example. To begin choose the dataset and hit 'newest'. - Dan</p>
+<!--<p class="bg-info" style="width:100%;padding-left:20px">I put a bit of XENON100 data in here as an example. To begin choose the dataset and hit 'newest'. - Dan</p>-->
 
     <div class="row" style="margin:10px;margin-bottom:0px;min-height:360px;">
       <div class="col-xs-9 col-sm-9 emobox_flat" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
@@ -473,7 +473,7 @@
          the_url += event_number.toString();
          document.getElementById("Loading").style.display = 'block';
          $.getJSON(the_url, function(data){
-
+console.log(data);
              draw_waveform_local(data, function(){
                 document.getElementById("Loading").style.display = 'none';
 			      });

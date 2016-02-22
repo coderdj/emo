@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load staticfiles %}
-{% block content %}
+{% block head %}
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
 <script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
@@ -12,7 +12,8 @@
 <script src="{% static "DataTables-1.10.9/extensions/Buttons/js/buttons.bootstrap.min.js"%}"></script>
 <script src="{% static "DataTables-1.10.9/extensions/Buttons/js/buttons.print.min.js"%}"></script>
 <link href="{% static "DataTables-1.10.9/extensions/Buttons/css/buttons.bootstrap.css"%}" rel="stylesheet" />
-
+<script src="{% static "js/jquery.json-view.js" %}"></script>
+<link href="{% static "css/jquery.json-view.css" %}" rel="stylesheet"/>
 
 <!--<script src="{% static "DataTables-1.10.7/extensions/TableTools/js/dataTables.tableTools.min.js"%}"></script>
 <link href="{% static "DataTables-1.10.7/extensions/TableTools/css/dataTables.tableTools.min.css"%}" rel="stylesheet"/>
@@ -36,6 +37,11 @@
 </script>
 
 <style type="text/css">
+.string { color: green; }
+.number { color: darkorange; }
+.boolean { color: blue; }
+.null { color: magenta; }
+.key { color: red; }
     #id_startdate, #id_enddate, #id_mode, #id_custom{
         height: 20px;
         width: 70%;
@@ -51,14 +57,16 @@
 
 
 </style>
-
+{% endblock %} 
+{% block content %}
 <div class="col-xs-12 emo-search-bar" style="margin-bottom:15px;">
     <form method="GET" action="/runs/">
         <div class="row">
             <div class="col-xs-1" style="line-height:40px;"><strong>Filter:</strong></div>
             <div class="col-xs-2">From: {{form.startdate}} </div>
             <div class="col-xs-2">To:&nbsp;   {{form.enddate}} </div>
-            <div class="col-xs-2">Mode: {{ form.mode }}</div>
+            <div class="col-xs-2">Source: {{ form.mode }}</div>
+	    <div class="col-xs-2">Detector: {{ form.detector }}</div>
             <div class="col-xs-3">Query: {{ form.custom }} </div>
             <div class="col-xs-2">
                 <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
@@ -67,7 +75,7 @@
     </form>
 </div>
 
-<div class="row" style="margin-bottom:8px;margin-left:5px;">
+<!--<div class="row" style="margin-bottom:8px;margin-left:5px;">
   <div class="col-xs-12">
     <span><strong>Click rows to select runs. Control-click to select multiple.</strong></span>
   </div>
@@ -79,36 +87,73 @@
     <button class="btn btn-info" id='download_as_raw'>Raw Paths</button>
     <button class="btn btn-info" id='download_as_processed'>Processed Paths</button>
   </div>
-  <!--<div class="col-xs-6">
-    <span><strong>Inspect selected: </strong></span>&nbsp;
-    <button class="btn btn-info" id='send_to_runstats'>Run statistics</button>
-    <button class="btn btn-info" id='send_to_monitor'>Online monitor</button>
-    <button class="btn btn-info" id='send_to_waveforms'>Waveforms (first selection)</button>
-  </div>-->
 </div>
-    
-<table class="table table-striped table-bordered" id="runstable">
-  <thead>
-    <tr>
-      <th>Detail</th>
-      <th>Run name</th>
-      <th>Date</th>
-      <th>Mode</th>
-      <th>Comments</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="width:10px" class="runs-expand"></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td style="pull-right"> 
-	<span class="glyphicon glyphicon-comment">&nbsp</span>
-      </td>
-    </tr>
-  </tbody> 
-</table>
+-->
+<div class="row">
+  <div class="col-sm-6 col-xs-12">
+    <table class="table table-striped table-bordered" id="runstable">
+      <thead>
+	<tr>
+	  <th>Detail</th>
+	  <th>Number</th>	  
+	  <th>Date</th>
+	  <th>Source</th>
+	  <th>Trigger</th>
+	  <th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td style="width:10px" class="runs-expand"></td>
+	  <td style="width:30px"></td>
+	  <td></td>
+	  <td></td>
+	  <td></td>
+	  <td style="pull-right"> 
+	    <span class="glyphicon glyphicon-comment">&nbsp</span>
+	  </td>
+	</tr>
+      </tbody> 
+    </table>
+  </div>
+  <div class="col-sm-6 col-xs-12">
+    <div class="emobox" style="padding:10px;">
+      <div>
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs" role="tablist">
+	  <li role="presentation" class="active"><a href="#detail" aria-controls="detail" role="tab" data-toggle="tab">Info</a></li>
+	  <li role="presentation"><a href="#json" aria-controls="json" role="tab" data-toggle="tab">JSON</a></li>
+	</ul>
+	
+	<!-- Tab panes -->
+	<div class="tab-content">
+	  <div role="tabpanel" class="tab-pane active" id="detail">
+	    <h4 style="margin-bottom:2px" id="run_detail_head">Run detail: click a <img src="{%static "img/details_open.png" %}"/> to view</h4>
+	    <hr style="margin-top:0px;margin-bottom:4px;">
+	    <table>
+	      <tbody>
+		<tr><td style="min-width:40px;padding-left:5px;"><strong>Run name</strong></td><td style="padding-left:5px" id="detail_name"></td>
+		<td style="min-width:40px;padding-left:15px;"><strong>Detector</strong></td><td style="padding-left:5px" id="detail_detector"></td></tr>
+		<tr><td style="min-width:40px;padding-left:5px;"><strong>Source type</strong></td><td style="padding-left:5px" id="detail_source"></td>
+		<td style="min-width:40px;padding-left:15px;"><strong>Starting User</strong></td><td style="padding-left:5px" id="detail_user"></td></tr>
+		<tr><td style="min-width:40px;padding-left:5px;"><strong>Start Date</strong></td><td style="padding-left:5px" id="detail_sdate"></td>
+                <td style="min-width:40px;padding-left:15px;"><strong>End Date</strong></td><td style="padding-left:5px" id="detail_edate"></td></tr>
+	      </tbody>
+	    </table>
+	    <h4 style="margin-bottom:2px">Locations</h4>
+            <hr style="margin-top:0px;margin-bottom:4px;">
+	    <div id="detail_locations"></div>
+	    <h4 style="margin-bottom:2px">Comments</h4>
+	    <hr style="margin-top:0px;margin-bottom:4px;">
+	    <div id="detail_comments"></div>
+	  </div>
+	  <div role="tabpanel" class="tab-pane" id="json" style="height:70vh;overflow-y:scroll;">...</div>
+	</div>
+
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -116,27 +161,17 @@
   function format(d){
   // This function defines the style for an expanded table row
   var ret = '';
-  ret += "<div class='row'><div class='col-xs-12 col-sm-6'><table style='width:100%;margin-bottom:10px;'><tbody>";
+  ret += "<div class='row' style='background-color:white'><div class='col-xs-12 col-sm-6'><table style='width:100%;margin-bottom:10px;'><tbody>";
 
 
 
     ret += '<tr><td><strong>Run name</strong></td><td>'+d.name+'</td></tr>';
-    ret += '<tr><td><strong>Detectors</strong></td><td>';
-    var count = 0;
-    for(var key in d.detectors){
-      count += 1;
-      if (d.detectors.hasOwnProperty(key)) {
-	      ret += key;
-       }
-       if(count!=d.detectors.length) ret+=', ';
-    }
-    ret += '</td></tr>';
-    ret += '<tr><td><strong>Data Period</strong></td><td>period 0</td></tr>';
-    ret += '<tr><td><strong>Run Mode</strong></td><td>'+d.runmode+'</td></tr>';
+    ret += '<tr><td><strong>Detector</strong></td><td>'+d.detector+'</td></td>';
+    ret += '<tr><td><strong>Source type</strong></td><td>'+d.source.type+'</td></tr>';
     ret += '<tr><td><strong>Starting User</strong></td><td>'+d.user+'</td></tr>';
     ret += '<tr><td><strong>Start Date</strong></td><td>';
-//console.log(d.starttimestamp);
-    var start = new Date(d.starttimestamp['$date']);
+//console.log(d.start);
+    var start = new Date(d.start['$date']);
     
     ret += start.getUTCFullYear() +
             "/"+ (start.getUTCMonth()+1) +"/"+ start.getUTCDate() + " " +
@@ -145,7 +180,7 @@
     ret += '</td></tr>';   
     ret += '<tr><td><strong>End Date</strong></td><td>';
     if('endtimestamp' in d){
-       var end = new Date(d.endtimestamp['$date']);
+       var end = new Date(d.end['$date']);
 
     ret += end.getUTCFullYear() +
             "/"+ (end.getUTCMonth()+1) +"/"+ end.getUTCDate() + " " +
@@ -156,13 +191,6 @@
     ret+='</td></tr>';
     ret+='</tbody></table></div>';
     ret+= '<div class="col-xs-12 col-sm-6"><table style="width:100%;margin-bottom:10px;"><tbody>';
-    ret += '<tr><td>Valid triggers</td><td>NA</td></tr>';
-    ret += '<tr><td>Good run?</td><td>Sure</td></tr>';
-    ret += '<tr><td>Raw data location</td><td>xecluster:/path/to/raw</td></tr>';
-    ret += '<tr><td></td><td>xestorage:/another/path</td></tr>';
-    ret += '<tr><td>Processed data locations</td><td>xecluster:/path/to/processed</td></tr>';
-    
-    ret += '<tr><td></td><td>xe_analysis_facility:/another/path</td></tr>';
     ret+='</tbody></table></div></div>';
 
 
@@ -175,18 +203,18 @@
 
     ret+='</div></div></div>';
 
-      ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingTwo" style="background-color:#4fa783;border-color:#4fa783;color:#EEEEEE"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseTwo' + d._id['$oid'] + '">JSON</a></h4> </div><div id="collapseTwo' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">  <div class="panel-body">';
+     /* ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingTwo" style="background-color:#4fa783;border-color:#4fa783;color:#EEEEEE"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseTwo' + d._id['$oid'] + '">JSON</a></h4> </div><div id="collapseTwo' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">  <div class="panel-body">';
     // JSON
-	 ret+='<pre class="prettyprint" style="width:100%;max-height:400px;overflow-y:scroll;">' + JSON.stringify(d, null, '\t') + "</pre>";
+	ret+='<pre class="prettyprint" style="width:100%;max-height:400px;">' + JSON.stringify(d, null, '\t') + "</pre>";
     ret+='</div></div></div>';
-
+*/
 
     ret +='<div class="panel panel-default" style="margin-bottom:5px;">   <div class="panel-heading" role="tab" id="headingThree" style="background-color:#4fa783;border-color:#4fa783;color:#EEEEEE"> <h4 class="panel-title"> <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree' + d._id['$oid'] + '" aria-expanded="false"   aria-controls="collapseThree' + d._id['$oid'] + '">Comments</a></h4> </div><div id="collapseThree' + d._id['$oid'] + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">  <div class="panel-body"><div class="commentdiv">';
 
  // Comments
     if("comments" in d){
     for(i=0;i<d.comments.length;i+=1){
-	ret += '<div class="bubble"><p><b>';
+	ret += '<div class="emobox" style="padding:10px"><p><b>';
         ret += d.comments[i]["user"];
         ret += ' </b>&nbsp; wrote on &nbsp; ';
         var date = new Date(d.comments[i]["date"]['$date']);
@@ -224,10 +252,6 @@ function NewComment(form){
 //	e.preventDefault();
 	console.log("HERE");
 
-//console.log(form);
-//	var form = $this;
-//console.log($(form).serialize());
-
 	// validate
 	form_array = $(form).serializeArray();
 	for(i=0;i<form_array.length;i+=1){
@@ -239,12 +263,9 @@ function NewComment(form){
             type: "POST",
             url: "/runs/newcomment",
             data: $(form).serialize(),
-//            beforeSend: function() {
-                //$('#result').html('<img src="loading.gif" />');
-  //          },
             success: function(data) {
 		commentdiv = $(form.closest('div')).find('.commentdiv');
-		ret='<div class="bubble"><p><b>'; 
+		ret='<div class="emobox" style="padding:10px;"><p><b>'; 
 		ret += data["user"];                                                                           
 		ret += ' </b>&nbsp; wrote on &nbsp; ';
 		var date = new Date(data["date"]['$date']);
@@ -263,6 +284,26 @@ function NewComment(form){
         });
 return false;
   };
+
+// From http://stackoverflow.com/questions/4810841/how-can-i-pretty-print-json-using-javascript
+function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
 
 $(document).ready(function(){
 
@@ -283,10 +324,14 @@ $(document).ready(function(){
          "width":     '20px'
       },
       {
-         "data":    "name"
-      },
+         "data": "number",
+		    "width": '30px'
+      },		   
+//      {
+//         "data":    "name"
+//      },
       {
-         "data":    "starttimestamp",
+         "data":    "start",
          "width":   "15%",
          "render":  function(data){
                       var m = new Date(data['$date']);
@@ -300,7 +345,14 @@ $(document).ready(function(){
                      }
        },
        {
-          "data":    "runmode",
+          "data":    "source.type",
+       },
+       {
+          "data": "reader.self_trigger",
+          "render": function(data){
+                  if(data) return "Self";
+                  return "External";
+          }
        },
        {
           "data":    "comments",
@@ -311,17 +363,17 @@ $(document).ready(function(){
                      }
         }
      ],
-	"buttons": ['csv','pdf','selectAll','selectNone'],
+	"buttons": ['csv','pdf'],//'selectAll','selectNone'],
 		"aLengthMenu": [
         [ 50, 100, 200, 500, -1],
         [ 50, 100, 200, 500, "All"]
 	],
      "order":     [[ 2, "desc" ]],
      "iDisplayLength": 100,
-		"select": {
-		"style": 'os',
-		"selector": ':not(:first-child)',
-		},
+//		"select": {
+//		"style": 'os',
+//		"selector": ':not(:first-child)',
+//		},
 
     }); // end table declaration
       
@@ -331,39 +383,100 @@ $(document).ready(function(){
 
       var tr = $(this).closest('tr');
       var row = table.row(tr);
-      
 
-      if( row.child.isShown() ){
-         // The row is open. Close it
-    row.child.hide();
-    tr.removeClass('shown');
+//       if ( $(this).hasClass('selected') ) {
+  //          $(this).removeClass('selected');
+    //    }
+      //  else {
+            table.$('tr.selected').removeClass('selected');
+            tr.addClass('selected');
+//        }
 
+      console.log(row.data());
+      data = row.data();
+      document.getElementById("run_detail_head").innerHTML = "Detail for run " + data.number.toString();
+      document.getElementById("detail_name").innerHTML=data.name;
+      document.getElementById("detail_detector").innerHTML=data.detector;
+      document.getElementById("detail_source").innerHTML=data.source.type;
+      document.getElementById("detail_user").innerHTML=data.user;
+
+      // dates
+     var start = new Date(data.start['$date']);
+     dstring = start.getUTCFullYear() +
+            "/"+ (start.getUTCMonth()+1) +"/"+ start.getUTCDate() + " " +
+            start.getUTCHours() + ":" + start.getUTCMinutes() + ":" +
+            start.getUTCSeconds();
+     document.getElementById("detail_sdate").innerHTML=dstring;
+      if('end' in data){
+       var end = new Date(data.end['$date']);
+
+      document.getElementById("detail_edate").innerHTML= end.getUTCFullYear() +
+            "/"+ (end.getUTCMonth()+1) +"/"+ end.getUTCDate() + " " +
+            end.getUTCHours() + ":" + end.getUTCMinutes() + ":" +
+		        end.getUTCSeconds();
       }
-      else {
-         // Open the row
-//		$('div.slider', row.child()).slideDown(200);
+      else
+         document.getElementById("detail_edate").innerHTML="None";
 
-         row.child( format(row.data()) ).show();
-         tr.addClass('shown');
+      ret = "<div class='commentdiv'>";
+      if("comments" in data){
+          for(i=0;i<data.comments.length;i+=1){
+        ret += '<div class="emobox" style="padding:10px"><p><b>';                  
+        ret += data.comments[i]["user"];                             
+        ret += ' </b>&nbsp; wrote on &nbsp; ';
+        var date = new Date(data.comments[i]["date"]['$date']);
+        ret += date.getUTCDate() + "." + (date.getUTCMonth()+1) +
+               "." + date.getUTCFullYear() + " at " +
+            date.getUTCHours() + ":" + date.getUTCMinutes() + ":" +
+            date.getUTCSeconds();
+		ret += '<p>{% autoescape off %}';
+		ret += data.comments[i]["text"];
+        ret += '{% endautoescape %}</p></p></div></div>';
+    }
+    }
+    else
+       ret += '<p>No comments yet</p></div>';
 
-      }
+//    document.getElementById("detail_comments").innerHTML=ret;
+
+    // New Comment form
+    ret += "<form class='new_comment_form' method='post' onsubmit='return NewComment(this)'>" +
+       "{% csrf_token %}" +
+      '<textarea class="formtextinput" id="' + data._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +
+      '<br>' +
+        '<input type="hidden" name="run_id" value="' + data._id['$oid'] + '"/>' +
+      '<button class="btn btn-info" type="submit" style="margin-bottom:15px;">New comment</button>';
+
+      ret +=  '</form>';
+  
+    
+    document.getElementById("detail_comments").innerHTML=ret;
+document.getElementById("json").innerHTML="";
+		      $("#json").jsonView(data,  { collapsed: true });
+
+//    document.getElementById("json").innerHTML = '<pre class="prettyprint" style="width:100%;max-height:80vh;overflow-y:scroll">' + syntaxHighlight(JSON.stringify(data, null, '\t')) + "</pre>";
+
+     ret = "<table>";
+     if(data['data'].length>=1){
+        ret+="<div class='row'><div class='col-xs-12'><h5><strong>Reader</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Collection: </strong>   "+data['data'][0].collection + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][0]['status'])+"'>"+data['data'][0]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][0]['location']+"</div></div>";
+     }
+
+     for(var x=1;x<data['data'].length;x+=1){
+         ret+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
+
+
+     }
+   document.getElementById("detail_locations").innerHTML=ret;
   }); // End expand click listener
 
-/*  $('#runstable tbody').on('click', 'tr', function () {
-  
-        var id = this.id;
-        var index = $.inArray(id, selected);
-
-        if ( index === -1 ) {
-            selected.push( id );
-        } else {
-            selected.splice( index, 1 );
-        }
- 
-        $(this).toggleClass('selected');
-    } );
-*/
-
+function GetColor(string){
+if (string=="transferred")
+return "#36bc98";
+if(string=="tranferring")
+return "#f9a100";
+else
+return "#ec2c35";
+}
 $('#download_as_runlist').click( function () {
 
 //   console.log(table.rows('.selected').data());

@@ -203,7 +203,7 @@ function FillOutRunInfo(det_name, det_data, status_id){
 
 function GetRateString(rate){
     if(rate < 1.){
-	rate = rate/1000.;
+	rate = rate*1000.;
 	return (rate.toFixed(2) + " kB/s");
     }
     return (rate.toFixed(2) + " MB/s");

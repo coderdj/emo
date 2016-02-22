@@ -22,13 +22,29 @@ weekdays = ( ("Monday", "Monday"),
              ("Friday", "Friday"),
              ("Saturday", "Saturday"),
              ("Sunday", "Sunday") )
+years = (( "2016", "2016"),
+         ( "2017", "2017"),
+         ( "2018", "2018"),
+         ( "2019", "2019"),
+         ( "2020", "2020"),
+         ( "2021", "2021"),
+         ( "2022", "2022"),
+         ( "2023", "2023"),
+         ( "2024", "2024"),
+         ( "2025", "2025"),
+         ( "2026", "2026"))
 
 class ShiftDefinition(forms.Form):
-    start_date = forms.DateField(label="Start date", initial=datetime.date.today)    
-    auto_assign_weeks = forms.IntegerField(label="Auto assign weeks")
+    year = forms.ChoiceField(choices=years, required=True, label="Year valid", 
+                             help_text="Only one rules definition allowed per year")
+    start_date = forms.DateField(label="Start date", initial=datetime.date.today,
+                                 help_text="When the shift definition goes into effect.")   
+    collab_def_data = forms.DateField(label="Collaboration count date", 
+                                      initial=datetime.date.today, help_text="When the collaboration list is read to determine this period's responsibility")
+    auto_assign_weeks = forms.IntegerField(label="Auto assign weeks", help_text="How many weeks ahead the program should auto-assign in case of unclaimed shifts.")
     shift_reset = forms.ChoiceField(choices=weekdays, required=True, 
-                                    label="Shift start/end")    
-    auto_assign_start = forms.DateField(label="Auto assignment from")
+                                    label="Shift start/end", help_text="The day of the week shifts start/end")    
+    auto_assign_start = forms.DateField(label="Auto assignment from", help_text="The date that shift autoassignments start. Can be the same as the start date.")    
 
 class UserInfo(forms.Form):
     username = forms.CharField(required=True, max_length=250)
