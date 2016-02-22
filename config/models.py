@@ -8,7 +8,7 @@ logger = logging.getLogger('emo')
 
 # Create your models here.
 class ModeSubmissionForm(forms.Form):
-    bulk = forms.CharField(max_length=100000, initial='{\n\n\t"your_options": "go_here"\n\n}',
+    bulk = forms.CharField(max_length=100000, initial='{"your_options": "go_here"}',
                            error_messages = {'badjson': 'Bad JSON formatting. Try running it through a parser.',
                                             'no_name': 'You must include a unique name field in your run mode.',
                                             'no_det': 'You must include a detector field in your run mode.',

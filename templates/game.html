@@ -1,0 +1,170 @@
+{% load url from future %}
+{% load staticfiles %}
+{% load google_analytics %}
+{% load clicky %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>   
+    <title>XeBlasterMaster</title>
+    <meta name="viewport" contend="width=devie-width, initial-scale=1.0">
+    <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+    <script src="{% static "jquery-ui-1.11.1/jquery-ui.min.js" %}"></script>
+    <script src="{% static "js/three.min.js" %}"></script>
+    <script src="{% static "js/threex.fullscreen.js" %}"></script>
+    <script src="{% static "js/OrbitControls.js" %}"></script>
+    <script src="{% static "emo/js/game.js" %}"></script>
+    <script src="{% static "emo/js/orb.js" %}"></script>
+    <audio id="theme_song" autobuffer style="display:none;" src="{% static "emo/tcobra.m4a" %} "></audio>
+    <audio id="fire_0" autobuffer style="display:none;" src="{% static "audio/s2_short.mp3" %} "></audio>
+<audio id="dest_0" autobuffer style="display:none;" src="{% static "audio/s1_long.mp3" %} "></audio>
+<audio id="zipper" autobuffer style="display:none;" src="{% static "audio/zipper.mp3" %} "></audio>
+  <!--  <script>
+      document.SPRITE_MAP = new THREE.TextureLoader().load( "{% static "img/particle_1.png" %}" );
+      </script>-->
+
+  </head>
+  <body>
+    <div class="container" style="width:800px;height:600px;z-index:-1;" id="game_div"></div>
+
+    <div id="menu" style="text-align:center;z-index:10;position:relative;">    
+      <div id="yourdiv" style="display: inline-block;margin-top:-200px;background-color:white;padding:10px;">
+	<h4 id="last_score"></h4>
+	<h2>XeBlaster</h2>
+	<h4>Protect your detector from impurities! Don't let them pollute your signal!</h4>	
+	<p>Move: wasd, Fire: enter</p>
+	<p>
+	  <strong>High Scores</strong>
+	  <ul id="hslist" style="list-style-type:none">
+	  </ul>
+	</p>
+	<button class="btn btn-info" onclick="StartGame()">Start!</button>
+      </div>
+    </div>
+    <div style="position:fixed;bottom:0;left:30;">
+      <h2 style="color:white">Score: <span id="score">0</span></h2>
+    </div>
+    <div style="position:fixed;bottom:0;right:0;padding-right:50px;">
+      <h2 style="color:white">Impurities: <span id="impurities">0</span></h2>
+    </div>
+    <script>
+      var Url="/management/get_hs";
+      function UpdateHighScores(){
+           // High scores
+console.log(Url);
+         $.getJSON(Url, function(data) {
+console.log("Scores");
+console.log(data);
+                document.getElementById("hslist").innerHTML="";
+      var hshtml="";
+      console.log(data['list']);
+      for(x=0;x<data['list'].length;x+=1){
+                  hshtml+="<li><strong>" + data['list'][x]['name'] + "</strong>&nbsp;" +
+                  data['list'][x]['g_id'].toString() + "</li>";
+                  }
+                  document.getElementById("hslist").innerHTML=hshtml;
+
+           });
+      }
+      function SetHighScore(){
+         var seturl="/management/set_hs?g_id=" + document.score.toString();
+         console.log(seturl);
+         $.getJSON(seturl, function(data) {
+            console.log(data['good']);
+            UpdateHighScores();
+         });
+      }
+      function YouLose(){
+	document.getElementById(document.game_end).currentTime=0;
+      document.getElementById(document.game_end).volume=1;
+      document.getElementById(document.game_end).play();
+
+         SetHighScore();			   
+		document.getElementById(document.music).pause();
+         document.run_animation=false;
+         document.getElementById("last_score").innerHTML = "Your last score: " + document.score.toString();
+      reset;
+         $("#menu").show();
+      };
+      function StartGame(){
+      reset();
+
+      document.getElementById(document.music).currentTime=0;
+      document.getElementById(document.music).volume=.3;
+      document.getElementById(document.music).play();
+      
+
+      $("#menu").hide();
+      document.run_animation=true;
+      draw_simple_cylinder(scene,camera,renderer,animate);
+	fire();
+      };
+
+      $(document).ready(function(){
+
+      // High scores
+	UpdateHighScores();
+document.sound=true;
+          document.online=true;
+
+      document.autofire=false;
+      document.run_animation=false;
+      document.fire_0="fire_0";
+      document.music="theme_song";
+      document.dest_0="dest_0";
+      document.game_end="zipper";
+      document.player=null;
+      document.background_stars=[];
+      document.WIMPs = [];
+      document.en_bullets=[];
+      document.bullets=[];
+      document.photons=[];
+			    document.left_bound = -(window.innerWidth/2)-100;
+			    document.right_bound = (window.innerWidth/2)+100;
+          new_scene("game_div");
+        reset();
+  //          draw_simple_cylinder(scene,camera,renderer,animate);
+
+      });
+      console.log(window.innerWidth);
+    </script>
+
+<script type="x-shader/x-vertex" id="vertexshader">
+
+  attribute float size;
+  attribute vec3 customColor;
+
+  varying vec3 vColor;
+
+  void main() {
+
+  vColor = customColor;
+
+  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+  gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
+  gl_Position = projectionMatrix * mvPosition;
+
+  }
+
+  </script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+
+  uniform vec3 color;
+  uniform sampler2D texture;
+
+  varying vec3 vColor;
+
+  void main() {
+
+  gl_FragColor = vec4( color * vColor, 1.0 );
+
+  gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+
+  }
+
+  </script>
+  </body>
+</html>

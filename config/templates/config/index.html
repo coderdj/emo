@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% block head %}
+    <script src="{% static "js/jsoneditor.min.js" %}"></script>
+    <link href="{% static "css/jsoneditor.min.css" %}" rel="stylesheet">
+
 <style>
   .mode-table{  
   height: 30vh;
@@ -36,11 +39,12 @@
   <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
 </div>
 
-<form method="POST" action="/config/">
+<form method="POST" action="/config/" id="options_form">
   <div class="col-xs-12" id="run_json_div" style="margin-top:10px">
     <div class="emo-det-header" style="color:black;background-color:#F5F5F5;padding-top:3px;padding-bottom:3px;padding-left:2px;">Showing mode: <strong><span id="mode_name">'new'</span></strong></div>
             {% csrf_token %}
-          <textarea class="mode-window" id="json_text" name="bulk">{{ form.bulk.value }}</textarea>
+    <textarea class="hidden mode-window" id="json_text" name="bulk"></textarea>
+	  <div id="jsoneditor" style="height:400px"></div>
         </div>
         <div class="col-xs-6" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
         <div class="col-xs-3" style="margin-top:10px;">
@@ -198,22 +202,48 @@
         var run_mode_list_url = "/config/fetch_mode_list";
         var run_mode_url = '/config/fetch_run_mode';
         var json_code_mirror = null;
+        var editor = null;
+
+	// Form override function
+	$("#options_form").submit(function(e) {
+	    var self = this;
+            e.preventDefault();
+	    document.getElementById("json_text").innerHTML = JSON.stringify(editor.get(),null,2);
+            self.submit();
+            
+          });
         $(function(){
-             json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
+	var container = document.getElementById("jsoneditor");
+        var options = {};
+	editor = new JSONEditor(container, options);
+
+/*             json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
                 value: "run_doc: {\n}",
                 mode:  "python",
                 lineNumbers: true
             });
-
+*/
+        json_string = JSON.stringify({{ form.bulk.value | safe }}, null, 2);
+	LoadCode(json_string);
 
 
       });
+function LoadCode(json_string){
+
+        // set json
+        var json = JSON.parse(json_string);
+        document.getElementById("mode_name").innerHTML = json['name'];
+
+        editor.set(json);
+
+}
     function FillMode(name){
             $.getJSON( run_mode_url + "?name=" + name, function(data) {
-	        document.getElementById("mode_name").innerHTML = name;
-                if(json_code_mirror != null){
+//	        document.getElementById("mode_name").innerHTML = name;
+	LoadCode(JSON.stringify(data, null, 2));
+/*                if(json_code_mirror != null){
                     json_code_mirror.getDoc().setValue(JSON.stringify(data, null, 2));
-                }
+                }*/
             });
         };
         function RemoveMode(name) {

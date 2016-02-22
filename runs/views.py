@@ -16,6 +16,20 @@ import logging
 logger = logging.getLogger('emo')
 
 @login_required
+def get_run(request):
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    if (request.method == "GET" and "detector" in request.GET and
+        "name" in request.GET):
+        db = client[settings.RUNS_DB_NAME]
+        coll = db[settings.RUNS_DB_COLLECTION]
+        search = {"detector": request.GET['detector'], "name": request.GET['name']}
+        doc = coll.find_one(search)
+        
+        if doc is not None:
+            return HttpResponse(dumps(doc), content_type="application/json")
+    return HttpResponse({}, content_type="application/json")
+        
+@login_required
 def runs_started(request):
     # Connect to pymongo                                                                                               
     client = MongoClient(settings.RUNS_DB_ADDR)

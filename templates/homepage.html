@@ -1,0 +1,267 @@
+<style>
+.calbox{
+background-color: white;
+border-width: 1px;
+border-color: #D5D5D5; /*#5992c2w;*/
+border-style: solid;
+#width:100%;
+min-height:500px;
+margin-top: 5px;
+margin-bottom: 5px;
+/*box-shadow: 10px 10px 5px #888888;*/
+padding-top:10px;
+}
+.lrow{
+padding-top:14px;
+padding-bottom:10px;
+min-height:50px;
+border-bottom: solid;
+border-color: #AAAAAA;
+border-width:1px;
+
+}
+.withbutton{
+width: calc(100% - 150px);
+}
+</style>
+<h3 style="margin-top:10px">Welcome back <span id="username_span">{{ user.username }}</span></h3>
+{% if user.username == "tunnelll" %}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?list=FLaIRNaoirM9sfcsl5fiUwgA;autoplay=1" frameborder="0" allowfullscreen></iframe>
+
+{% else %}
+<div class="row" style="margin:10px;">
+    <div class="calbox col-xs-12 col-sm-8" style="padding-top:0;">
+      <div class="row lrow" style="padding-left:10px;padding-top:4px;color:#EEEEEE;background-color:#5992c2;font-weight:bold;font-size:x-large;">
+      <h4>Experiment Overview    
+	<span class="pull-right" style="padding-right:5px">Current DAQ Controller: <span id="superman"></span></span>
+      </h4>                                         
+    </div>
+
+      <h5 style="padding-left:0px;margin-bottom:0;margin-left:-15px;"><strong>Most recent data sets</strong></h5>
+      <div class="row lrow" style="border-width:0">
+	<div class="col-sm-2 col-xs-12" style="background-color:#36bc98;color:#EEEEEE;"><strong>TPC</strong></div>
+	<div class="col-sm-8 col-xs-12" id="tpc_run_string"></div>	
+	<div class="col-sm-2 col-xs-12" id="tpc_run_link"></div>
+      </div>
+      <div class="row lrow">
+	<div class="col-sm-2 col-xs-12" style="background-color:#5a54bd;color:#EEEEEE"><strong>Muon Veto</strong></div>
+	<div class="col-sm-8 col-xs-12" id="mv_run_string"></div>
+	<div class="col-sm-2 col-xs-12" id="mv_run_link"></div>
+      </div>
+      <h5 style="padding-left:0px;margin-bottom:0;margin-left:-15px;"><strong>Current shifters</strong></h5>
+      <div class="row" style="margin-top:10px;">
+        <div class="col-xs-12 col-sm-3" style="background-color:#5992c2;color:#EEEEEE"><strong>Responsible</strong></div>
+        <div class="col-sm-3 col-xs-12" id="resp_name"></div>
+	<div class="col-sm-3 col-xs-12"><i class="fa fa-envelope"></i>&nbsp;<span id="resp_email"></span></div>
+	
+	<div class="col-sm-3 col-xs-12"><i class="fa fa-phone"></i>&nbsp;<span id="resp_phone"></span></div>
+      </div>
+      <div class="row">
+	<div class="col-sm-3 col-sm-offset-3 col-xs-12"><i class="fa fa-skype"></i>&nbsp;<span id="resp_skype"></span></div>
+	<div class="col-sm-3 col-xs-12"><i class="fa fa-github"></i>&nbsp;<span id="resp_github"></span></div>	
+      </div>      
+      <div class="row" style="margin-top:10px;">
+        <div class="col-sm-3 col-xs-12" style="background-color:#5992c2;color:#EEEEEE"><strong>Shifter</strong></div>
+          <div class="col-sm-3 col-xs-12" id="shifter_name">Another guy</div>
+          <div class="col-sm-3 col-xs-12"><i class="fa fa-envelope"></i>&nbsp;<span id="shifter_email">At LNGS</span></div>	  
+          <div class="col-sm-3 col-xs-12"><i class="fa fa-phone"></i>&nbsp;<span id="shifter_phone">in the cold</span></div>
+      </div>      
+      <div class="row">
+        <div class="col-sm-3 col-sm-offset-3 col-xs-12"><i class="fa fa-skype"></i>&nbsp;<span id="shifter_skype">eating pasta</span></div>
+        <div class="col-sm-3 col-xs-12"><i class="fa fa-github"></i>&nbsp;<span id="shifter_github">and getting no sun</span></div>	  
+      </div>
+      <div class="row">
+	<hr style="width:100%;border-color:#AAAAAA">
+      </div>
+      <div class="row">
+	<h4 style="padding-left:10px">Recent Log Entries</h4>	
+      </div>
+      <div class="row">
+	<div class="col-xs-12" id="message_wrapper">
+	  <form id="new_log_entry" action="/log/new_log_entry" method='post'>{% csrf_token %}
+	    <p style="margin-bottom:0">
+              <input type='text' id='new_comment_text' name='message' class='form-control withbutton'  placeholder='Make a log entry...' style="display:inline-block;"></input>
+              <input class='btn btn-info btn-lg' style="display:inline-block;width:120px;margin-bottom:0" type=submit value='New log entry'/>
+	    </p>
+	    <input type="hidden" name="redirect" value="none"/>
+	  </form>
+	  
+	  <div class="col-xs-12" id="message_panel" style="height:200px;margin-top:5px;overflow-y:scroll;margin-bottom:5px;">
+	    <div class="fadeout"></div>
+	  </div>
+	</div>
+      </div>      
+    </div>
+    <div class="calbox col-xs-12 col-sm-4" style="padding-top:0;min-height:250px;">
+      <div style="position:relative;top:0;left:0;"><strong>TPC DAQ uptime this month</strong></div>
+      <div class="row" style="height:250px" id="plot_div"></div>
+      <div class="row lrow" style="padding-left:10px;padding-top:4px;color:#EEEEEE;background-color:#5992c2;font-weight:bold;font-size:x-large;">
+      <h4>My Activity</h4>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>Next shift:</strong></div>
+      <div class="col-xs-6" id="next_shift_div">None scheduled</div>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>Shift days (year):</strong></div>
+      <div class="col-xs-6" id="shifts_year_div">0</div>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>Shift days (all time):</strong></div>
+      <div class="col-xs-6" id="shifts_ever_div">0</div>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>My Affiliation:</strong></div>
+      <div class="col-xs-6" id="inst_name_div"><a href="/profile">Set in profile</a></div>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>Institute shifts (done/total):</strong></div>
+      <div class="col-xs-6" id="inst_shift_div">0</div>
+    </div>
+    <div class="row lrow">
+      <div class="col-xs-6"><strong>Runs started:</strong></div>
+      <div class="col-xs-6" id="runs_started_div"></div>
+    </div>
+    <!--<div class="row lrow">
+      <div class="col-xs-6"><strong>Last visit (CET):</strong></div>
+      <div class="col-xs-6" id="last_login_div">{{ user.last_login }}</div>
+    </div>-->
+    </div>    
+
+</div>
+
+<script>
+  var userURL="/get_user_doc";
+  var runURL = "/runs/last_run_per_det";
+  var supermanURL = "/supermanrequest";
+  var logURL = "/log/get_dispatcher_log";
+  var startedURL = "/runs/runs_started";
+  var uptimeURL = "/monitor/runstats_uptime/?this_month=true";
+
+  function toHashtagUrl(hashtag) {
+return "#";
+//  return "http://myservice.com?q=" + hashtag;
+}
+
+  function DrawLogWindow( logdiv, Url ) {
+  $.getJSON(Url, function(data){
+  var html_string = "<table class='table table-striped table-condensed borderless'><tbody>";
+      for ( x=0; x<data.length; x+=1 ){				
+	html_string += "<tr><td style='width:200px'>" + (new Date(data[x]['time']['$date'])).toISOString().slice(0,16) + "</td>" +
+                                "<td style='width:200px'><strong>" + data[x]['sender'] + "</strong></td>" +
+                                "<td class='hashes'>" + data[x]['message'] + "</td></tr>";
+				}
+				html_string += "</tbody></table>"
+				document.getElementById( logdiv).innerHTML = html_string;
+				$(".hashes").linkify(toHashtagUrl);
+				
+				});
+  }
+
+  $( function() {
+	$.getJSON(startedURL, function(data){
+				console.log("RUNS");
+				console.log(data);
+   document.getElementById("runs_started_div").innerHTML = data['mine'] + " (out of "+ data['total'] + " total)";
+  });
+        $.getJSON(uptimeURL, function(data){
+				tot=1.;
+				series=[];				
+				for(var key in data){
+				series.push({"name": key, "y": data[key]});
+				tot=tot-data[key];
+				}
+				if(tot>0.) series.push({"name":"Idle", "y": tot});
+	console.log(series);
+		$('#plot_div').highcharts({
+	credits: {enabled: false},
+
+				chart: {type: 'pie', height:250,spacingTop: 0,
+            spacingLeft: 2,
+	   spacingRight: 2,
+            spacingBottom: 2,
+},exporting: { enabled: false },
+				title: {text: ''},
+				plotOptions: {
+				   series: {animation:false,
+             				dataLabels: {
+	                                  enabled: true,
+                  			format: '{point.name}: {point.y:.1f}'
+		         		}
+			           }
+				},
+                                tooltip: {
+                                    headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+                                    pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}</b> of total<br/>'
+                                 },
+                                series: [{ name:'Uptime', data:series,}]});
+				console.log("UPTIME");
+				console.log(data);
+});
+
+      $.getJSON(userURL, function(data){
+console.log("HI");
+          if("nickname" in data['user'])
+              document.getElementById("username_span").innerHTML = data['user']['nickname'];
+              document.getElementById("inst_name_div").innerHTML = data['user']['institute'];
+      });
+        $.getJSON(runURL, function(data){
+           document.getElementById("tpc_run_string").innerHTML = "<strong>" + data['tpc']['user'] + "</strong> started a <strong>" + data['tpc']['source'] + " </strong>run on " + (new Date(data['tpc']['date']['$date'])).toDateString() + " at " + (new Date(data['tpc']['date']['$date'])).toTimeString();
+  document.getElementById("mv_run_string").innerHTML = "<strong>" + data['muon_veto']['user'] + "</strong> started a <strong>" + data['muon_veto']['source'] + " </strong>run on " + (new Date(data['muon_veto']['date']['$date'])).toDateString() + " at " + (new Date(data['muon_veto']['date']['$date'])).toTimeString();
+         var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + data['tpc']['name'] + "%22%7D&submit=";
+
+         document.getElementById("tpc_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#36bc98;color:#EEEEEE;' href='" + url + "'>See in runs DB</a>";
+         url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + data['muon_veto']['name'] + "%22%7D&submit=";
+
+  document.getElementById("mv_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#5a54bd;color:#EEEEEE' href='" +url + "'>See in runs DB</a>";
+
+  console.log(data);
+});
+
+  $.getJSON(supermanURL, function(data){
+   document.getElementById("superman").innerHTML = data['starting_user'];
+  });
+  
+  // Shifter section. Right now we choose two poor guys and hardcode them
+  var shifters = ["coderre", "tunnell"];
+  var url = userURL + "/?user_name=" + shifters[0];
+  $.getJSON(url, function(data){
+     
+     document.getElementById("resp_name").innerHTML = data['user']['first_name'] + " " + data['user']['last_name'];
+     document.getElementById("resp_email").innerHTML = data['user']['email'];
+     document.getElementById("resp_phone").innerHTML = data['user']['cell'];
+     document.getElementById("resp_skype").innerHTML = data['user']['skype_id'];
+     document.getElementById("resp_github").innerHTML = data['user']['github_id'];
+  });  
+var url = userURL + "/?user_name=" + shifters[1];
+  $.getJSON(url, function(data){
+     document.getElementById("shifter_name").innerHTML = data['user']['first_name'] + "\
+ " + data['user']['last_name'];
+     document.getElementById("shifter_email").innerHTML = data['user']['email'];
+     document.getElementById("shifter_phone").innerHTML = data['user']['cell'];
+     document.getElementById("shifter_skype").innerHTML = data['user']['skype_id'];
+     document.getElementById("shifter_github").innerHTML = data['user']['github_id'];
+  });
+
+var frm = $('#new_log_entry');
+     frm.submit(function(){
+        if(document.getElementById("new_comment_text").value == "")
+                return false;
+        $.ajax({
+            type: frm.attr('method'),
+            url: frm.attr('action'),
+            data: frm.serialize(),
+           success: function(data)
+           {
+               DrawLogWindow("message_panel", logURL);
+           }
+         });
+        document.getElementById("new_comment_text").value="";
+        return false;
+     });
+      DrawLogWindow( "message_panel", logURL );
+
+ });
+</script>
+
+{% endif %}
