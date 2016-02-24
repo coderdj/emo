@@ -6,22 +6,21 @@
 
 <style>
   .mode-table{  
-  height: 30vh;
   min-height: 300px;
-  width: calc(100%-30px);
-  overflow-y: scroll;
+//  overflow-y: scroll;
   margin-top: -2px;
 }
 .top-table{
-  width: calc(100%-30px);
   margin: 0;
 }
 .mode-window{
-  height: 50vh !important;
-  //max-height: 60vh;
   min-height: 400px !important;
-  width:calc(100% - 30px);
   overflow-y: scroll;
+}
+div.jsoneditor-tree,
+div.jsoneditor textarea.jsoneditor-text {
+  background-color: #ffffff;
+ 
 }
 </style>
 {% endblock %}
@@ -34,86 +33,91 @@
   height: 50vh;
 }</style>
 
-<div class="col-xs-12" style="margin-top:10px;display:inline;">
-  <h3 style="display:inline">DAQ Run Modes</h3>
-  <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
-</div>
-
-<form method="POST" action="/config/" id="options_form">
-  <div class="col-xs-12" id="run_json_div" style="margin-top:10px">
-    <div class="emo-det-header" style="color:black;background-color:#F5F5F5;padding-top:3px;padding-bottom:3px;padding-left:2px;">Showing mode: <strong><span id="mode_name">'new'</span></strong></div>
-            {% csrf_token %}
-    <textarea class="hidden mode-window" id="json_text" name="bulk"></textarea>
-	  <div id="jsoneditor" style="height:400px"></div>
-        </div>
-        <div class="col-xs-6" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
-        <div class="col-xs-3" style="margin-top:10px;">
-            <i>Note: only valid JSON is accepted</i>
-        </div>
-        <div class="col-xs-3" style="margin-top:10px;">
-            {% if request.user.is_superuser %}
-	    <div class="col-xs-6">
-	      {{ form.overwrite }} &nbsp;overwrite&nbsp;
-	    </div>
-	    <div class="col-xs-6">
-              <button type="submit" class="btn btn-info">Submit</button>
-	    </div>
-            {%  endif %}
-        </div>
-    </form>
-
-
-
-<div class="col-xs-12" style="margin-top:10px;">
-  <table class="table table-bordered table-condensed top-table" style="background-color:white;">
-    <thead>
-      <tr class="emo-node-header" style="color:#DDDDDD;background-color:#5992c2;border-color:#AAAAAA;height:50px;line-height:40px;">
-        <!--<th style="width:300px"> Name</th>
-        <th style="width:200px"> Created </th>
-        <th style="width:100px">Created by</th>
-        <th style="width:400px"> Comment </th>
-        <th style="width:200px"></th>-->
-	<th style="border:0;padding-top:0px;padding-bottom:15px;font-size:12pt;">Available run modes:</th>
-      </tr>
-    </thead>
-  </table>
-  <div class="mode-table" style="margin-top:0px">
-    <table class="table table-bordered table-condensed" style="background-color:white;margin-left:-1px;margin-top:0;">
-      
-      <tbody>
-        {% for mode in runmodes %}
-	{% if mode.first == True %}
-	<tr class="emo-det-header" style="background-color:#F5F5F5;color:black;">
-	  <td style="border:0;">
-	    <strong>Detector: {{ mode.det }}</strong>
-	  </td>
-	  <td style="border:0;">
-          </td>
-	  <td style="border:0;">
-          </td>
-	  <td style="border:0;">
-          </td>
-	  <td style="border:0;">
-          </td>
-
-	</tr>
-	{% endif %}
-        <tr>
-          <td style="padding:1px;">{{ mode.name }}</td>
-          <td style="padding:1px;"> {{ mode.date }} </td>
-          <td style="padding:1px;">{{ mode.user }}</td>
-          <td style="padding:1px;"> {{ mode.comment }} </td>
-          <td style="padding:1px;width:200px;"> <input class="btn btn-info btn-mini" type="button" style="margin:0px;margin-left:10px" value="Fetch"                                                     onclick="FillMode('{{ mode.name }}')" />
-            {% if request.user.is_superuser %}
-            <input class="btn btn-danger btn-mini" data-toggle="modal" type="button" href="#delete_mode_modal"
-                   style="margin:0px;margin-left:10px;" value="Remove" onclick="RemoveMode('{{ mode.name }}')"/>
-            {% endif %} 
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<div class="row" id="main_row">
+  <div class="col-xs-12" style="margin-top:10px;display:inline;">
+    <h3 style="display:inline">DAQ Run Modes</h3>
+    <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
   </div>
+
+<div class="row" style="height:100%;">
+  <div class="col-xs-12 col-sm-6" style="height:100%;padding-right:0;">
+    <form method="POST" action="/config/" id="options_form" style="height:100%">
+      <div class="col-xs-12" id="run_json_div" style="margin-top:10px;height:100%">
+	<div class="emo-det-header" style="color:black;background-color:#F5F5F5;padding-top:3px;padding-bottom:3px;padding-left:2px;">Showing mode: <strong><span id="mode_name">'new'</span></strong></div>
+        {% csrf_token %}
+	<textarea class="hidden mode-window" id="json_text" name="bulk"></textarea>
+	<div id="jsoneditor" style="height:90%"></div>
+      </div>
+      <div class="col-xs-12" style="color:red;">{% autoescape on %}{{ form.errors.bulk }}{% endautoescape %}</div>
+      <div class="col-xs-6" style="margin-top:10px;">
+        <i>Note: only valid JSON is accepted</i>
+      </div>
+      <div class="col-xs-6" style="margin-top:10px;">
+        {% if request.user.is_superuser %}
+	<div class="col-xs-6">
+	  {{ form.overwrite }} &nbsp;overwrite&nbsp;
+	</div>
+	<div class="col-xs-6">
+          <button type="submit" class="btn btn-info">Submit</button>
+	</div>
+        {%  endif %}
+      </div>
+    </form>
+  </div>
+
+
+  <div class="col-xs-12 col-sm-6" style="margin-top:10px;height:100%;">
+    <table class="table table-bordered table-condensed top-table" style="background-color:white;">
+      <thead>
+	<tr class="emo-node-header" style="color:#DDDDDD;background-color:#5992c2;border-color:#AAAAAA;height:50px;line-height:40px;">
+          <!--<th style="width:300px"> Name</th>
+              <th style="width:200px"> Created </th>
+        <th style="width:100px">Created by</th>
+          <th style="width:400px"> Comment </th>
+          <th style="width:200px"></th>-->
+	  <th style="border:0;padding-top:0px;padding-bottom:15px;font-size:12pt;">Available run modes:</th>
+	</tr>
+      </thead>
+    </table>
+    <div class="mode-table" style="margin-top:0px;overflow-y:scroll" id="modes_table">
+      <table class="table table-bordered table-condensed" style="background-color:white;margin-left:-1px;margin-top:0;">
+	
+	<tbody>
+          {% for mode in runmodes %}
+	  {% if mode.first == True %}
+	  <tr class="emo-det-header" style="background-color:#F5F5F5;color:black;">
+	    <td style="border:0;">
+	    <strong>Detector: {{ mode.det }}</strong>
+	    </td>
+	    <!--<td style="border:0;">
+            </td>
+	    <td style="border:0;">
+            </td>
+	    <td style="border:0;">
+          </td>-->
+	    <td style="border:0;">
+            </td>
+	    
+	  </tr>
+	  {% endif %}
+          <tr>
+            <td style="padding:1px;">{{ mode.name }}</td>
+            <!--<td style="padding:1px;"> {{ mode.date }} </td>-->
+            <!--<td style="padding:1px;">{{ mode.user }}</td>-->
+            <!--<td style="padding:1px;"> {{ mode.comment }} </td>-->
+            <td style="padding:1px;width:200px;"> <input class="btn btn-info btn-mini" type="button" style="margin:0px;margin-left:10px" value="Fetch"                                                     onclick="FillMode('{{ mode.name }}')" />
+              {% if request.user.is_superuser %}
+              <input class="btn btn-danger btn-mini" data-toggle="modal" type="button" href="#delete_mode_modal"
+                     style="margin:0px;margin-left:10px;" value="Remove" onclick="RemoveMode('{{ mode.name }}')"/>
+              {% endif %} 
+            </td>
+          </tr>
+          {% endfor %}
+	</tbody>
+      </table>
+    </div>
+  </div>
+</div>
 </div>
 <!--    <div class="col-xs-12" style="margin-top:20px">
         <h4>Options reference:</h4>
@@ -204,6 +208,15 @@
         var json_code_mirror = null;
         var editor = null;
 
+function Resize(){
+    var height = window.innerHeight;
+  document.getElementById("main_row").style.height = height -140 + "px";
+  document.getElementById("modes_table").style.height = height -170 + "px";
+  document.getElementById("jsoneditor").style.height = height -170 + "px";
+
+}
+
+
 	// Form override function
 	$("#options_form").submit(function(e) {
 	    var self = this;
@@ -213,8 +226,18 @@
             
           });
         $(function(){
+	Resize();
 	var container = document.getElementById("jsoneditor");
-        var options = {};
+    	var options = {
+    mode: 'tree',
+    modes: ['code', 'form', 'text', 'tree', 'view'], // allowed modes
+    onError: function (err) {
+      alert(err.toString());
+    },
+    onModeChange: function (newMode, oldMode) {
+      console.log('Mode switched from', oldMode, 'to', newMode);
+    }
+  };
 	editor = new JSONEditor(container, options);
 
 /*             json_code_mirror = CodeMirror.fromTextArea(document.getElementById("json_text"),{
@@ -233,7 +256,7 @@ function LoadCode(json_string){
         // set json
         var json = JSON.parse(json_string);
         document.getElementById("mode_name").innerHTML = json['name'];
-
+			
         editor.set(json);
 
 }
