@@ -468,7 +468,7 @@ def get_runs_list(get_request):
     client = MongoClient(settings.RUNS_DB_ADDR)
     db = client[ settings.RUNS_DB_NAME ]
 
-    collection = db['runs']
+    collection = db[settings.RUNS_DB_COLLECTION]
     
     run_list = []
     query = {}
@@ -893,15 +893,15 @@ def get_uptime(request):
     runs_client = MongoClient(settings.RUNS_DB_ADDR)
     runsdb = runs_client[settings.RUNS_DB_NAME]
 
-    runs_coll = runsdb['runs']
+    runs_coll = runsdb[settings.RUNS_DB_COLLECTION]
     
     d = date.today() - timedelta(days=last_days)
     dt= datetime.datetime.combine(d, datetime.datetime.min.time())
     
     query_set=[]
     try:
-        query_set = runs_coll.find({"starttimestamp": 
-                                    {"$gt": dt}}).sort("starttimestamp", ASCENDING)
+        query_set = runs_coll.find({"start": 
+                                    {"$gt": dt}}).sort("start", ASCENDING)
     except:
         logger.error("Exception trying to query runs DB")
 
@@ -911,52 +911,52 @@ def get_uptime(request):
     for doc in query_set:
         # figure out which bin this belongs in
         endtime = datetime.datetime.now()
-        if "endtimestamp" in doc.keys():
-            endtime = doc['endtimestamp']
+        if "end" in doc.keys():
+            endtime = doc['end']
 
-        if doc['starttimestamp'].day == endtime.day:
-            incval = (endtime-doc['starttimestamp']).seconds/(3600*24)
-            bin_no = (doc['starttimestamp']-datetime.datetime.combine(d,datetime.datetime.min.time())).days
+        if doc['start'].day == endtime.day:
+            incval = (endtime-doc['start']).seconds/(3600*24)
+            bin_no = (doc['start']-datetime.datetime.combine(d,datetime.datetime.min.time())).days
 
             logger.error(bin_no)
-            if 'tpc' in doc['detectors']:
+            if doc['detector'] == 'tpc':
                 while bin_no >= len(day_hist_tpc):
                     day_hist_tpc.append({})
                 logger.error(bin_no)
                 logger.error(len(day_hist_tpc))
                 if doc['runmode'] in day_hist_tpc[bin_no]:
-                    day_hist_tpc[bin_no][doc['runmode']]+=incval
+                    day_hist_tpc[bin_no][doc['source']['type']]+=incval
                 else:
-                    day_hist_tpc[bin_no][doc['runmode']]=incval
-            if 'muon_veto' in doc['detectors']:
+                    day_hist_tpc[bin_no][doc['souce']['type']]=incval
+            if doc['detector'] == 'muon_veto':
                 while bin_no >= len(day_hist_muon_veto):
                     day_hist_muon_veto.append({})
-                if doc['runmode'] in day_hist_muon_veto[bin_no]:
-                    day_hist_muon_veto[bin_no][doc['runmode']]+=incval
+                if doc['source']['type'] in day_hist_muon_veto[bin_no]:
+                    day_hist_muon_veto[bin_no][doc['source']['type']]+=incval
                 else:
-                    day_hist_muon_veto[bin_no][doc['runmode']]=incval
+                    day_hist_muon_veto[bin_no][doc['source']['type']]=incval
         else:
-            stime = doc['starttimestamp']
+            stime = doc['start']
             while (endtime-stime).days>=0:
                 midnight = datetime.datetime.combine(datetime.date(stime.year, stime.month, stime.day), datetime.datetime.max.time())
                 if (endtime-stime).days==0:
                     midnight=endtime
                 incval = (midnight-stime).seconds/(3600*24)
                 bin_no = (stime-datetime.datetime.combine(d,datetime.datetime.min.time())).days
-                if 'tpc' in doc['detectors']:
+                if doc['detector'] == 'tpc':
                     while bin_no >= len(day_hist_tpc):
                         day_hist_tpc.append({})
                     if doc['runmode'] in day_hist_tpc[bin_no]:
-                        day_hist_tpc[bin_no][doc['runmode']]+=incval
+                        day_hist_tpc[bin_no][doc['source']['type']]+=incval
                     else:
-                        day_hist_tpc[bin_no][doc['runmode']]=incval
-                if 'muon_veto' in doc['detectors']:
+                        day_hist_tpc[bin_no][doc['source']['type']]=incval
+                if doc['detector'] == 'muon_veto':
                     while bin_no >= len(day_hist_muon_veto):
                         day_hist_muon_veto.append({})
-                    if doc['runmode'] in day_hist_muon_veto[bin_no]:
-                        day_hist_muon_veto[bin_no][doc['runmode']]+=incval
+                    if doc['source']['type'] in day_hist_muon_veto[bin_no]:
+                        day_hist_muon_veto[bin_no][doc['source']['type']]+=incval
                     else:
-                        day_hist_muon_veto[bin_no][doc['runmode']]=incval
+                        day_hist_muon_veto[bin_no][doc['source']['type']]=incval
                 
                 stime=stime + timedelta(days=1)
     ret_doc = {"tpc":[],"muon_veto":[]}
@@ -1144,7 +1144,7 @@ def getCollection(request):
         if server == "eb2":
             try:
                 if database=="untriggered":
-                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    client=MongoClient("mongodb://daq:luxstinks@eb2:27001/admin")
                     db=client[database]
                     coll_list = db.collection_names()
                     retlist = []

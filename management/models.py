@@ -37,6 +37,8 @@ years = (( "2016", "2016"),
 class ShiftDefinition(forms.Form):
     year = forms.ChoiceField(choices=years, required=True, label="Year valid", 
                              help_text="Only one rules definition allowed per year")
+    shifts_per_week = forms.IntegerField(required=True, label="Shifts per week", 
+                                         help_text="Number of people that must be on site each week")
     start_date = forms.DateField(label="Start date", initial=datetime.date.today,
                                  help_text="When the shift definition goes into effect.")   
     collab_def_data = forms.DateField(label="Collaboration count date", 

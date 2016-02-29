@@ -54,7 +54,7 @@ def SetHs(request):
 
     return HttpResponse(json.dumps({"good": True, "g_id": request.GET['g_id']}), content_type="application/json")
 
-def GetShiftResponsibility(cdef, start):
+def GetShiftResponsibility(cdef, start, shifts_per_week):
     # Assuming we start handing out shifts at "start", how many shifts does 
     # Each institute have to do? Assume we count membership at institutes
     # on 1.1. of each year.
@@ -82,7 +82,7 @@ def GetShiftResponsibility(cdef, start):
             total += 1
     
     inst_frac = {}
-    total_shifts = (52-start.isocalendar()[1])*3
+    total_shifts = (52-start.isocalendar()[1])*shifts_per_week
     for institute in inst_count.keys():
         inst_frac[institute] = {
             "whole": math.floor((inst_count[institute]/total)*total_shifts),
@@ -112,7 +112,8 @@ def GetShiftResponsibility(cdef, start):
     #    ret_assigned.append({"institute": x, "shifts": assigned_shift[x]})
     retdoc = {"shifts": assigned_shift,
               "frac": inst_frac,
-              "start": start,
+              "start": datetime.datetime.combine(start,
+                                                 datetime.datetime.min.time()),
               "total": total_shifts,
               "user_count": total_all,
               "institutes": inst_count}              
@@ -144,7 +145,8 @@ def GetShiftStats(request):
                 if doc['institute'] not in ret_doc.keys():
                     ret_doc[doc['institute']] = 0
                     ret_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
-            need_doc = GetShiftResponsibility(rules)
+            #need_doc = GetShiftResponsibility(rules)
+            need_doc = rulse['shifts']
             ret_doc = {"responsible": need_doc, "done": ret_doc}
             return ret_doc
     return
@@ -165,8 +167,8 @@ def shift_rules(request):
     shift_doc = db['shift_rules'].find({"year": str(year)}).limit(1)
     #shift_doc = db['shift_rules'].find()
     if shift_doc.count() != 0:        
-        shift_resp = GetShiftResponsibility(shift_doc[0]['collab_def_date'],
-                                            shift_doc[0]['start_date'])
+        shift_resp = shift_doc[0]['shifts']#GetShiftResponsibility(shift_doc[0]['collab_def_date'],
+    #shift_doc[0]['start_date'])
 
     if request.method=="POST": 
         new_shift_def = ShiftDefinition(request.POST)
@@ -186,12 +188,17 @@ def shift_rules(request):
                     datetime.datetime.min.time()),
                 'user': request.user.username,
                 'created': datetime.datetime.now(),
-                "year": new_shift_def.cleaned_data['year']
+                "year": new_shift_def.cleaned_data['year'],
+                'shifts_per_week': new_shift_def.cleaned_data['shifts_per_week'],
+                'shifts': GetShiftResponsibility(
+                    new_shift_def.cleaned_data['collab_def_data'], 
+                    new_shift_def.cleaned_data['start_date'],
+                    new_shift_def.cleaned_data['shifts_per_week'])
             }
             try:
                 db['shift_rules'].update({"year": doc['year']}, 
                                          {"$set": doc}, upsert=True)
-                #shift_resp=doc
+                shift_resp=doc['shifts']
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)

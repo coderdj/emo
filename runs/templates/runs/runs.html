@@ -63,14 +63,14 @@
 <div class="emo-search-bar">
   <form method="GET" action="/runs/">
     <div class="row">
-      <div class="col-xs-2" style="line-height:40px;padding-left:50px;"><strong>Filter:</strong></div>
+      <div class="col-xs-2" style="line-height:40px;padding-left:50px;"><strong>Search:</strong></div>
       <div class="col-xs-3">From: {{form.startdate}} </div>
       <div class="col-xs-3">To:&nbsp;   {{form.enddate}} </div>
       <div class="col-xs-3">Source: {{ form.mode }}</div>
       <div class="col-xs-3" style="line-height:40px">Detector: {{ form.detector }}</div>
       <div class="col-xs-3">Query: {{ form.custom }} </div>
       <div class="col-xs-3">
-        <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Filter</button>
+        <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Search</button>
       </div>
     </div>
   </form>
@@ -91,7 +91,7 @@
 </div>
 -->
 <div class="row" id="main_row">
-  <div class="col-sm-6 col-xs-12" style="padding:5px;height:100%;">
+  <div class="col-sm-6 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
     <table class="table table-bordered" id="runstable" style="background-color:white">
       <thead>
 	<tr>
@@ -223,7 +223,9 @@ $(document).ready(function(){
 		    
  
   "autoWidth": false,
-
+"language": {
+    "search": "Quick filter:"
+  },
 //      "dom": 'fBrtip',
 		"data": thedata,
 		"columns": [
@@ -305,6 +307,8 @@ $(document).ready(function(){
          console.log(RUNURL);
          if(RUNURL!=""){
               $.getJSON(RUNURL, function(data){
+		    if(cache_data == {})
+		    cache_data = data;
  		    console.log(data);
                     document.getElementById("run_detail_head").innerHTML = "Detail for run " + data.number.toString();
                     document.getElementById("detail_name").innerHTML=data.name;
@@ -361,25 +365,28 @@ $(document).ready(function(){
       ret +=  '</form>';
   
     
-    document.getElementById("detail_comments").innerHTML=ret;
+//    document.getElementById("detail_comments").innerHTML=ret;
 
-    //check if json changed
-    if(!_.isEqual(cache_data, data)){
-		cache_data=data;
-		document.getElementById("json").innerHTML="";
-		      $("#json").jsonView(data,  { collapsed: true });
-    }
-     ret = "<table>";
+
+     ret2 = "<table>";
      if(data['data'].length>=1){
-        ret+="<div class='row'><div class='col-xs-12'><h5><strong>Reader</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Collection: </strong>   "+data['data'][0].collection + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][0]['status'])+"'>"+data['data'][0]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][0]['location']+"</div></div>";
+        ret2+="<div class='row'><div class='col-xs-12'><h5><strong>Reader</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Collection: </strong>   "+data['data'][0].collection + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][0]['status'])+"'>"+data['data'][0]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][0]['location']+"</div></div>";
      }
 
      for(var x=1;x<data['data'].length;x+=1){
-         ret+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
+         ret2+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
 
 
      }
-   document.getElementById("detail_locations").innerHTML=ret;
+     if(!_.isEqual(cache_data, data)){
+          cache_data=data;
+             document.getElementById("json").innerHTML="";
+                      $("#json").jsonView(data,  { collapsed: true });
+    
+    document.getElementById("detail_comments").innerHTML=ret;
+
+   document.getElementById("detail_locations").innerHTML=ret2;
+}
    }); // end getjson
    }
     if(docallback==1)
