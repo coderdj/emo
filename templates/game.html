@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>   
-    <title>XeBlasterMaster</title>
+    <title>XeBlaster</title>
     <meta name="viewport" contend="width=devie-width, initial-scale=1.0">
     <script src="{% static "jquery/js/jquery.min.js" %}"></script>
     <script src="{% static "jquery-ui-1.11.1/jquery-ui.min.js" %}"></script>
@@ -19,6 +19,12 @@
     <audio id="fire_0" autobuffer style="display:none;" src="{% static "audio/s2_short.mp3" %} "></audio>
 <audio id="dest_0" autobuffer style="display:none;" src="{% static "audio/s1_long.mp3" %} "></audio>
 <audio id="zipper" autobuffer style="display:none;" src="{% static "audio/zipper.mp3" %} "></audio>
+<audio id="enemy_hit" autobuffer style="display:none;" src="{% static "audio/enemy_hit.mp3" %}"></audio>
+<audio id="power_up" autobuffer style="display:none;" src="{% static "audio/power_up.mp3" %}"></audio>
+<audio id="power_up_2" autobuffer style="display:none;" src="{% static "audio/power_up_2.mp3" %}"></audio>
+<audio id="expl" autobuffer style="display:none;" src="{% static "audio/expl.mp3" %}"></audio>
+
+
   <!--  <script>
       document.SPRITE_MAP = new THREE.TextureLoader().load( "{% static "img/particle_1.png" %}" );
       </script>-->
@@ -32,7 +38,7 @@
 	<h4 id="last_score"></h4>
 	<h2>XeBlaster</h2>
 	<h4>Protect your detector from impurities! Don't let them pollute your signal!</h4>	
-	<p>Move: wasd, Fire: enter</p>
+	<p>Move: wasd, Fire: enter, Camera: j</p>
 	<p>
 	  <strong>High Scores</strong>
 	  <ul id="hslist" style="list-style-type:none">
@@ -44,6 +50,9 @@
     <div style="position:fixed;bottom:0;left:30;">
       <h2 style="color:white">Score: <span id="score">0</span></h2>
     </div>
+    <div style="position:fixed;bottom:30px;right:0;padding-right:50px">
+      <h2 style="color:white">Missles: <span id="missles">0</span></h2>
+      </div>
     <div style="position:fixed;bottom:0;right:0;padding-right:50px;">
       <h2 style="color:white">Impurities: <span id="impurities">0</span></h2>
     </div>
@@ -96,7 +105,8 @@ console.log(data);
 
       $("#menu").hide();
       document.run_animation=true;
-      draw_simple_cylinder(scene,camera,renderer,animate);
+      enemy_geo = "{% static 'emo/nuc.json' %}";
+      draw_simple_cylinder(scene,document.camera,renderer,animate, enemy_geo);
 	fire();
       };
 
@@ -110,20 +120,32 @@ document.sound=true;
       document.autofire=false;
       document.run_animation=false;
       document.fire_0="fire_0";
+      document.expl="expl";
+      document.power_up_2="power_up_2";
       document.music="theme_song";
+
+document.getElementById(document.music).addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+}, false);
+
       document.dest_0="dest_0";
       document.game_end="zipper";
+      document.enemy_hit="enemy_hit";
+		  document.power_up = "power_up";
       document.player=null;
       document.background_stars=[];
       document.WIMPs = [];
       document.en_bullets=[];
       document.bullets=[];
       document.photons=[];
+		  document.planes = [];
+
 			    document.left_bound = -(window.innerWidth/2)-100;
 			    document.right_bound = (window.innerWidth/2)+100;
           new_scene("game_div");
         reset();
-  //          draw_simple_cylinder(scene,camera,renderer,animate);
+  //          draw_simple_cylinder(scene,document.camera,renderer,animate);
 
       });
       console.log(window.innerWidth);

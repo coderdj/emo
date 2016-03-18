@@ -19,10 +19,14 @@ logger = logging.getLogger('emo')
 def get_run(request):
     client = MongoClient(settings.RUNS_DB_ADDR)
     if (request.method == "GET" and "detector" in request.GET and
-        "name" in request.GET):
+        ("name" in request.GET or "number" in request.GET)):
         db = client[settings.RUNS_DB_NAME]
-        coll = db[settings.RUNS_DB_COLLECTION]
-        search = {"detector": request.GET['detector'], "name": request.GET['name']}
+        coll = db[settings.RUNS_DB_COLLECTION]        
+        search = {"detector": request.GET['detector']}
+        if "name" in request.GET:
+            search["name"] = request.GET['name']
+        if "number" in request.GET:
+            search["number"] = int(request.GET['number'])
         doc = coll.find_one(search)
         
         if doc is not None:
@@ -88,9 +92,10 @@ def runs(request):
         if filter_form.is_valid():
             #build query from form
             if filter_form.cleaned_data[ 'custom' ] is not "":
-                logger.error(filter_form.cleaned_data['custom'])
+                #logger.error(filter_form.cleaned_data['custom'])
                 filter_query = loads( filter_form.cleaned_data['custom'] )
-            if "detector" in filter_form.cleaned_data and filter_form.cleaned_data['detector'] !="":
+            if ("detector" in filter_form.cleaned_data 
+                and filter_form.cleaned_data['detector'] !=""):
                 filter_query['detector']=filter_form.cleaned_data['detector']
             if filter_form.cleaned_data[ 'startdate' ] is not None:
                 filter_query[ 'start' ]= { "$gt" 
@@ -117,7 +122,7 @@ def runs(request):
                 filter_query['source.type'] = filter_form.cleaned_data['mode']
     else:
         filter_form = run_search_form( fieldslist )
-    
+    #logger.error(filter_query)
     retset = collection.find( filter_query ).sort( "start", -1 )
     return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
                                                "form" : filter_form,

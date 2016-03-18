@@ -1053,7 +1053,7 @@ def getWaveform(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     db = client[settings.BUFFER_DB_REPL]
                 elif database=="untriggered" and server=="eb2":
-                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
                     db=client["untriggered"]
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
@@ -1144,7 +1144,7 @@ def getCollection(request):
         if server == "eb2":
             try:
                 if database=="untriggered":
-                    client=MongoClient("mongodb://daq:luxstinks@eb2:27001/admin")
+                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
                     db=client[database]
                     coll_list = db.collection_names()
                     retlist = []
@@ -1209,7 +1209,7 @@ def getModules(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 elif database=="untriggered" and server=="eb2":
-                    client=MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
@@ -1252,7 +1252,7 @@ def getChannels(request):
                     retlist = client[settings.BUFFER_DB_REPL][collection].find(
                         {"module":module}).limit(30).distinct("channel")
                 elif database == "untriggered" and server=="eb2":
-                    client= MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    client= MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
                     retlist = client["untriggered"][collection].find({"module":module}).limit(30).distinct("channel")
 
                 else:
@@ -1303,7 +1303,7 @@ def getOccurrences(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",-1).limit(500))
                 elif database=="untriggered" and server=="eb2":
-                    client = MongoClient("mongodb://reader:luxstinks@eb2:27001/untriggered")
+                    client = MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
                     retlist = list(client["untriggered"][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
 
                 else:

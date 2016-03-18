@@ -10,6 +10,10 @@ from log.models import LogEntryForm, LogSearchForm, LogCommentForm
 from bson.json_util import dumps
 from django.conf import settings
 
+def is_not_ro(user):
+    if user.groups.filter(name='read_only').exists():
+        return False
+    return True
 
 @login_required
 def get_dispatcher_log(request):
@@ -99,7 +103,7 @@ def new_comment(request):
 
     mongo_collection = d['log']
 
-    if request.method == 'POST':
+    if request.method == 'POST' and is_not_ro(request.user):
 
         comment = LogCommentForm(request.POST)
         if comment.is_valid():
@@ -146,7 +150,7 @@ def new_log_entry(request):
 
     mongo_collection = d['log']
 
-    if request.method == 'POST':
+    if request.method == 'POST' and is_not_ro(request.user):
 
         # Pull data from POST request form
         new_form = LogEntryForm(request.POST)

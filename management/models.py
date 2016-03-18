@@ -33,7 +33,8 @@ years = (( "2016", "2016"),
          ( "2024", "2024"),
          ( "2025", "2025"),
          ( "2026", "2026"))
-
+shift_types = (("responsible", "responsible"), ("shifter", "shifter"),
+               ("training", "training"), ("run coordinator", "run coordinator"))
 class ShiftDefinition(forms.Form):
     year = forms.ChoiceField(choices=years, required=True, label="Year valid", 
                              help_text="Only one rules definition allowed per year")
@@ -48,6 +49,24 @@ class ShiftDefinition(forms.Form):
                                     label="Shift start/end", help_text="The day of the week shifts start/end")    
     auto_assign_start = forms.DateField(label="Auto assignment from", help_text="The date that shift autoassignments start. Can be the same as the start date.")    
 
+class ShiftSignUp(forms.Form):
+
+    class ChoiceFieldNoValidation(forms.ChoiceField):
+        def validate(self, value):
+            pass
+
+    start_date = forms.DateField(required=True, label="Shift start", 
+                                 help_text="First day of shift")
+    end_date = forms.DateField(required=True, label="Shift end",
+                               help_text="Last day of shift")
+    user = ChoiceFieldNoValidation(required=True, label="User", help_text="Username")
+    shift_type = ChoiceFieldNoValidation(required=True, help_text="Type of shift")
+    institute = ChoiceFieldNoValidation(required=True, label="Affiliation")
+    has_car = forms.BooleanField(required=False,label="Do you have a car?", 
+                                 help_text="Check if you will have access to a car")
+    comment=forms.CharField(required=False, max_length=1000, label="Comment", 
+                            help_text="(optional) put here any special things you would like noted")
+    remove = forms.BooleanField(required=False, widget=forms.HiddenInput)
 class UserInfo(forms.Form):
     username = forms.CharField(required=True, max_length=250)
     last_name = forms.CharField(required=True, label="Family name", max_length=200)

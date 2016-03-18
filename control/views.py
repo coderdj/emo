@@ -48,7 +48,7 @@ def GetStatusUpdate(request):
     else:
         retdict["issues"] = False
 
-    client.close()
+    #client.close()
     if len(ret) != 0:
         return HttpResponse( dumps(retdict), content_type = 'application/json')
 
@@ -62,7 +62,7 @@ def GetNodeUpdates(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.ONLINE_DB_ADDR)
+    #client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
     #if settings.MONGO_USER != "":
     #    db.authenticate(settings.MONGO_USER, settings.MONGO_PW, mechanism='SCRAM-SHA-1')
@@ -76,7 +76,7 @@ def GetNodeUpdates(request):
         ret_doc = collection.find_one({"node":node}, sort=[("_id",-1)])
         ret_doc['date'] = datetime.datetime.now()
         ret.append(ret_doc)
-    client.close()
+    #client.close()
     if len(ret) != 0:
         return HttpResponse( dumps(ret), content_type='application/json')
 
@@ -90,7 +90,7 @@ def GetNodeHistory(request):
     """
 
     # Connect to pymongo
-    client = MongoClient(settings.ONLINE_DB_ADDR)
+    #client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
     
     collection = db[ "daq_rates" ]
@@ -133,7 +133,7 @@ def GetNodeHistory(request):
         #             list(subtable[['timeseconds','datarate']].values.tolist())})
         ret.append({"node": node, "data": thelist})
             
-    client.close()
+    #client.close()
     
     if len(ret) != 0:
         return HttpResponse(dumps(ret), content_type="application/json")
@@ -159,7 +159,7 @@ def stop_run(request):
     insert_doc['comment'] = rs_form.cleaned_data['comment']
 
     # Connect to pymongo                                                         
-    client = MongoClient(settings.ONLINE_DB_ADDR)
+    #client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
 
     collection = db[ "daq_control" ]
@@ -170,7 +170,7 @@ def stop_run(request):
 def GetDispatcherReply(request):
 
     # Connect to pymongo                                                            
-    client = MongoClient(settings.ONLINE_DB_ADDR)
+    #client = MongoClient(settings.ONLINE_DB_ADDR)
     db = client[ settings.ONLINE_DB_NAME ]
 
     collection = db[ "dispatcherreply" ]    
@@ -224,7 +224,7 @@ def start_run(request):
             insert_doc[key] = rs_form.cleaned_data[key]
             
         # Connect to pymongo                                                        
-        client = MongoClient(settings.ONLINE_DB_ADDR)
+        #client = MongoClient(settings.ONLINE_DB_ADDR)
         db = client[ settings.ONLINE_DB_NAME ]
 
         run_collection = db['run_modes']

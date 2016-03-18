@@ -4,10 +4,11 @@ from bson.json_util import dumps
 from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from management.models import UserRequest, UserProfile, UserInfo, ShiftDefinition
+from management.models import UserRequest, UserProfile, UserInfo, ShiftDefinition, ShiftSignUp
 import json
 import pytz
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 import datetime
 from django.conf import settings
@@ -15,7 +16,9 @@ from pymongo import MongoClient
 import pymongo
 import operator
 import math
+import dateutil
 import logging
+from django.contrib.auth import authenticate, login
 
 # Get an instance of a logger                                                                                     
 logger = logging.getLogger('emo')
@@ -25,6 +28,12 @@ db = client[ settings.ONLINE_DB_NAME ]
 
 dayno = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
           "Friday": 4, "Saturday": 5, "Sunday": 6}
+
+@csrf_exempt
+def get_login(request):
+    user = authenticate(username=request.POST['username'],  password=request.POST['password'])
+    login(request, user)
+    return HttpResponse("Logged In")
 
 @login_required
 def GetHs(request):
@@ -119,6 +128,44 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
               "institutes": inst_count}              
     return retdoc
 
+@login_required
+def GetShifts(request):
+    # This is a fullcalendar function
+    # Must take arguments with start and end as ISO dates
+    # with format "2014-12-01"
+
+    if request.method != 'GET':
+        return HttpResponse({}, content_type="application/json")
+
+    if 'start' not in request.GET or 'end' not in request.GET:
+        return HttpResponse({}, content_type="application/json")
+
+    start_time = dateutil.parser.parse(request.GET['start'])
+    end_time = dateutil.parser.parse(request.GET['end'])
+    docs =[]
+    try:
+        docs = db['shifts'].find({
+            "start": {"$gt": start_time,
+                      "$lt": end_time  },
+        })
+    except:
+        return HttpResponse({}, content_type="application/json")
+
+    retdoc=[]
+    for doc in docs:
+        retdoc.append({
+            "start": doc['start'].strftime("%Y-%m-%dT%H:%M:%S"),
+            "end": doc['end'].strftime("%Y-%m-%dT%H:%M:%S"),
+            "title": doc['type'] + ": " + doc['shifter'] + " (" + doc['institute'] + ")",
+            "type": doc['type'],
+            "available": doc['available'],
+            "institute": doc['institute'],
+            "shifter": doc['shifter']
+        })
+    return HttpResponse(dumps(retdoc), content_type="application/json")
+
+
+@login_required
 def GetShiftStats(request):
     
     # SHIFT DOC
@@ -127,37 +174,80 @@ def GetShiftStats(request):
     # end
     # user
     # type : shift, responsible, training
-
-    if request.method == "POST" and "year" in request.POST:
+    ret_doc = {}
+    if request.method == "GET" and "year" in request.GET:
         # Make sure it works on January first too
-        year = request.POST['year']
-        jan_first = datetime.datetime(year=year, month=1, day=1)
-        next_jan = datetime.datetime(year=year+1, month=1, day=1)
+        year = request.GET['year']
+        jan_first = datetime.datetime(year=int(year), month=1, day=1)
+        next_jan = datetime.datetime(year=int(year)+1, month=1, day=1)
         
         rules = db['shift_rules'].find_one({"year": year})
         if rules is not None:
             
             cursor = db['shifts'].find({"start": {"$gte": jan_first, 
                                                   "$lt": next_jan},
-                                        "type": { "$in": ["shift", "responsible"] }})
+                                        "type": { "$in": ["shifter", "responsible"] }})
             done_doc = {}
             for doc in cursor:
-                if doc['institute'] not in ret_doc.keys():
-                    ret_doc[doc['institute']] = 0
-                    ret_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
+                if doc['institute'] not in done_doc:
+                    done_doc[doc['institute']] = 0
+                done_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
             #need_doc = GetShiftResponsibility(rules)
-            need_doc = rulse['shifts']
-            ret_doc = {"responsible": need_doc, "done": ret_doc}
-            return ret_doc
-    return
+            need_doc = rules['shifts']
+            for institute in need_doc['shifts']:
+                if institute in done_doc:
+                    need_doc['shifts'][institute]['done'] = done_doc[institute]
+                else:
+                    need_doc['shifts'][institute]['done'] = 0
+            ret_doc = {"institutes": need_doc}
+    return HttpResponse(dumps(ret_doc), 
+                        content_type = 'application/json')
+
 
 def last_weekday(d, weekday):
     days_behind = d.weekday() - weekday
     return d - datetime.timedelta(days_ahead)
 
+def next_weekday(d, weekday):
+    days_ahead = weekday - d.weekday()
+    if days_ahead < 0: # Target day already happened this week
+        days_ahead += 7
+    return d + datetime.timedelta(days_ahead)
+
+def CreateShiftTemplate(doc):
+    # Creates documents in the shifts db corresponding to unassigned shifts
+    year = doc['year']
+    next_jan = datetime.datetime(year=int(year)+1, month=1, day=1)
+    end_date = next_weekday(next_jan, dayno[doc['shift_reset']]) - datetime.timedelta(days=1)
+    start_date = next_weekday(doc['start_date'], dayno[doc['shift_reset']])
+    shifts_per_week = doc['shifts_per_week']
+
+    db['shifts'].remove({"year": year})
+
+    while start_date < end_date:
+        for i in range(0, shifts_per_week):
+            shift_type="shifter"
+            if i==0:
+                shift_type="responsible"
+            
+            doc = {
+                "year": year,
+                "start": start_date,
+                "end": start_date + datetime.timedelta(days=7),
+                "available": True,
+                "type": shift_type,
+                "institute": "none",
+                "shifter": "none"
+            }
+            #logger.error(doc)
+            db['shifts'].insert(doc)
+            
+        start_date = start_date + datetime.timedelta(days=7)
 
 @login_required
 def shift_rules(request):
+    # Defines a shift rules doc
+    # Also initializes a bunch of empty events for the shifts
 
     shift_def = ShiftDefinition()
     shift_resp = {}
@@ -198,11 +288,12 @@ def shift_rules(request):
             try:
                 db['shift_rules'].update({"year": doc['year']}, 
                                          {"$set": doc}, upsert=True)
-                shift_resp=doc['shifts']
+                shift_resp=doc['shifts']                
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)
                 shift_resp={"ERR":e}
+            CreateShiftTemplate(doc)
             # create new def
             shift_def = new_shift_def
         else:
@@ -212,6 +303,92 @@ def shift_rules(request):
     #retdict={}
     return render(request, "management/shift_rules.html", retdict)
 
+@login_required
+def shift_calendar(request):
+    # The calendar view needs some information about the current user
+    # Here's the logic. If the user is a PI, let him assign any of
+    # his slaves to a shift.
+    # Otherwise he can only assign himself
+    retdict = {}
+    our_user = db['users'].find_one({"username": request.user.username})
+    if our_user is None:
+        return render(request, "management/shift_calendar.html", retdict)
+
+    if our_user['position'] == "PI":
+        user_cursor = (db['users'].find({"institute": our_user['institute'],
+                                         "username": {"$exists": True},
+                                         "last_name": {"$exists": True},
+                                         "first_name": {"$exists": True},
+                                         }))
+        user_list = {}
+        for iuser in user_cursor:
+            if iuser['institute'] not in user_list:
+                user_list[iuser['institute']] = []
+            
+            user_list[iuser['institute']].append({
+                "username": iuser['username'],
+                "last_name": iuser['last_name'],
+                "first_name": iuser['first_name']
+            })
+    else:
+        user_list = { our_user['institute']: [{
+            "username": our_user['username'],
+            "last_name": our_user['last_name'],
+            "first_name": our_user['first_name']
+        }]}
+    signup_form = ShiftSignUp()
+    if request.method == "POST":
+        logger.error("post request")
+        logger.error(request.POST)
+        signup_form = ShiftSignUp(request.POST)
+        if signup_form.is_valid():
+            logger.error(signup_form)
+            # Update doc
+            start = datetime.datetime.combine(signup_form.cleaned_data['start_date'],
+                                              datetime.datetime.min.time())
+            end = datetime.datetime.combine(signup_form.cleaned_data['end_date'],
+                                            datetime.datetime.min.time())
+            query = {
+                "start": start,
+                "type": signup_form.cleaned_data["shift_type"]
+            }            
+            if signup_form.cleaned_data['shift_type'] != "training":
+                if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove']==True:                    
+                    db['shifts'].update(query,
+                                        {"$set": { "available": True,
+                                                   "institute": "none",
+                                                   "shifter": "none"
+                                               }}, upsert=False)
+                    
+                else:
+                    db['shifts'].update(query, 
+                                        {"$set": 
+                                         { "available": False,
+                                           "institute": 
+                                           signup_form.cleaned_data['institute'],
+                                           "shifter": 
+                                           signup_form.cleaned_data['user']
+                                       }}, upsert=False)
+            else:
+                if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove'] == True:
+                    db['shifts'].remove(query)
+                else:
+                    doc = {
+                        "year": signup_form.cleaned_data['start_date'].year,
+                        "start": start,
+                        "end": end,
+                        "available": False,
+                        "type": signup_form.cleaned_data['shift_type'],
+                        "institute": signup_form.cleaned_data['institute'],
+                        "shifter": signup_form.cleaned_data['user']
+                    }
+                    logger.error(doc)
+                    db['shifts'].insert(doc)
+    if signup_form.is_valid() and "remove" in signup_form.cleaned_data:
+        signup_form.cleaned_data['remove']=False
+    retdict={"signup_form": signup_form, 
+             "user_list": user_list}
+    return render(request, "management/shift_calendar.html", retdict)
 
 @login_required
 def get_user_list(request):

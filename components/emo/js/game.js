@@ -1,23 +1,28 @@
 function new_scene(div_name){
     renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending,
+					shadowMapEnabled:  true,
 					alpha: true});
     renderer.setClearColor(0x000000, 1);    
     var width = window.innerWidth;
     var height = window.innerHeight;
-    camera = new THREE.PerspectiveCamera(90, width/height, .1, 10000);
+    document.camera = new THREE.PerspectiveCamera(90, width/height, .1, 10000);
     scene = new THREE.Scene();
-    scene.add(camera);
+    scene.add(document.camera);
 
-    camera.position.z = 500;
-    camera.position.y = height/2;//375;
-    camera.position.x = 0;
-
+    document.camera.position.z = 500;
+    document.camera.position.y = height/2;//375;
+    document.camera.position.x = 0;
+    
     var ambient_light = new THREE.AmbientLight(0x313131, 1.);
-    scene.add(ambient_light);
-
+//    scene.add(ambient_light);
+    
     var scene_light = new THREE.PointLight( 0x5992c2, .5, 0. );
     document.scene_light2 = new THREE.PointLight( 0xff3333, 1.5, 0. );
     var scene_light3 = new THREE.PointLight( 0x5992c2, .5, 0. );
+
+    scene.fog = new THREE.Fog("#253e63", 1., 1500);
+    scene.fog = new THREE.FogExp2("#000000"/*"#253e63"*/, 0.001);
+    //scene.add(fog);
 
     scene_light.position.x=0;
     scene_light.position.y=10;
@@ -31,8 +36,9 @@ function new_scene(div_name){
     scene_light.position.x=300;
     scene_light.position.y=-500;
     scene_light.position.z=0;
+    
 
-    scene.add(scene_light);    
+//    scene.add(scene_light);    
 //    scene.add(document.scene_light2);
 //    scene.add(scene_light3);
 
@@ -42,6 +48,7 @@ function new_scene(div_name){
 
     document.lights=[];
     document.player=null;
+    document.playerLight=null;
     document.background_stars=[];
     document.WIMPs = [];
     document.en_bullets=[];
@@ -50,11 +57,29 @@ function new_scene(div_name){
     document.left_bound = -(window.innerWidth/2)-100;
     document.right_bound = (window.innerWidth/2)+100;
     
+    //outline of playable field                                                                                                                                           
+    //var helper = new THREE.GridHelper( 2*Math.abs(document.left_bound), 10 );
+    //helper.setColors( 0x0000ff, 0x808080 );
+    //helper.position.y = window.innerHeight/2;
+    //scene.add( helper );
+    //var geometry = new THREE.PlaneGeometry( 2*Math.abs(document.left_bound), window.innerHeight, 10, 10 );
+    //var material = new THREE.MeshPhongMaterial( {color: 0xffffff,opacity: 0.1, wireframe: true} );
+    //var plane = new THREE.Mesh( geometry, material );
+    //    plane.position.y=window.innerHeight/2;//-(window.innerWidth/2)-100;                                                                                                   
+/*    var geometry = new THREE.BoxGeometry(2*Math.abs(document.left_bound), window.innerHeight, 10, 10, 10);
+    var material = new THREE.MeshLambertMaterial( {color: 0xffffff,opacity: 0.5, transparent:true, wireframe: true} );       
+    var plane = new THREE.Mesh( geometry, material );                                                                                                                    
+    plane.position.y=window.innerHeight/2;//-(window.innerWidth/2)-100;         
+    plane.position.z=-50;    
+    scene.add( plane );
+
+*/
+
     var geometry = new THREE.PlaneGeometry( 5000, 5000, 100, 100 );
     for (var i = 0, l = geometry.vertices.length; i < l; i++) {
 	geometry.vertices[i].z = Math.random()*300-800;
     }
-    console.log(geometry.vertices);
+    
     var material = new THREE.MeshLambertMaterial( {color: 0x003333} );
     document.plane = new THREE.Mesh( geometry, material );
     //document.plane.position.z=-500;
@@ -63,6 +88,33 @@ function new_scene(div_name){
     
     $("#" + div_name).append(renderer.domElement);
     
+}
+function InitializeGrids(){
+    for(var i=0; i<4; i+=1){
+	var geometry = new THREE.PlaneGeometry( window.innerHeight, 2*Math.abs(document.left_bound), 10, 10 ); 
+	//var geometry = new THREE.BoxGeometry(2*Math.abs(document.left_bound), window.innerHeight, 10, 10, 10);
+	var material = new THREE.MeshLambertMaterial( {color: 0xffffff,opacity: 0.25, transparent:true, wireframe: true} );
+	var plane = new THREE.Mesh( geometry, material );   
+	plane.position.y=-2 + i*window.innerHeight + window.innerHeight/2;//-(window.innerWidth/2)-100;              
+	plane.position.z=-50;
+	plane.rotation.z = Math.PI/2;
+	document.planes.push(plane);
+	scene.add( plane );
+    }
+}
+function AnimateGrids(clock_corr){
+    var top_plane_position = -1000;
+    var oob_index=-1;
+    for(var i=0; i<document.planes.length; i+=1){
+	document.planes[i].position.y -= clock_corr*document.plane_speed;
+	if(document.planes[i].position.y > top_plane_position)
+	    top_plane_position = document.planes[i].position.y;	
+	if(document.planes[i].position.y < -window.innerHeight-500)
+	    oob_index=i;
+    }
+    if(oob_index!=-1){
+	document.planes[oob_index].position.y = top_plane_position + (window.innerHeight) -2;
+    }
 }
 function GetV(seed){
     // seed is between 0 and 1. This returns a random      
@@ -103,6 +155,21 @@ $(document).on("keydown", function (e) {
 	document.ldown=true;
     else if(e.which == 68)
 	document.rdown=true;
+    else if(e.which==13){
+	document.fire=true;
+    }
+    else if(e.which==74 && document.cameraFollow==true){
+	document.cameraFollow=false;
+	document.camera.position.z = 500;
+	document.camera.position.y = window.innerHeight/2;//375;   
+	document.camera.position.x = 0;
+	document.camera.lookAt( new THREE.Vector3(0, window.innerHeight/2, 0));
+
+    }
+    else if(e.which==74 && document.cameraFollow==false)
+	document.cameraFollow=true;
+
+
     /*else if(e.which == 13){
 	bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),
 				     new THREE.MeshBasicMaterial(
@@ -118,10 +185,47 @@ $(document).on("keydown", function (e) {
 	document.getElementById(document.fire_0).play();
     }*/
 });
+function FireMissle(){
+    color=0xffffff;
+    missle = new THREE.Mesh(new THREE.SphereGeometry(20, 1, 1),
+			    new THREE.MeshBasicMaterial(
+                                {color: color}));
+    document.missle=missle;
+    scene.add(missle);
+    missle.position.x = document.player.position.x;
+    missle.position.y = document.player.position.y+10;
+    missle.position.z = document.player.position.z;
+
+    if(document.sound){
+        document.getElementById(document.fire_0).pause();
+        document.getElementById(document.fire_0).currentTime=0;
+        document.getElementById(document.fire_0).play();
+    }
+}
+function DetonateMissle(){
+    posx = document.missle.position.x;
+    posy = document.missle.position.y;
+    posz = document.missle.position.z;
+    MakePhotonAnimation(posx, posy, posz, 2);
+    StartExplosion(posx, posy, posz, 2);
+    scene.remove(document.missle);
+    document.missle=null;
+    if(document.sound){
+        document.getElementById(document.expl).pause();
+        document.getElementById(document.expl).currentTime=0;
+        document.getElementById(document.expl).play();
+    }
+
+
+}
 function FireBullet(n){
-    bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),                     
+    colors = [0x0000ff, 0x00ff00, 0xff0000, 0xffffff];
+    color = colors[0];
+    if(n<colors.length)
+	color=colors[n];
+    bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),                     
                             new THREE.MeshBasicMaterial(                  
-                                {color: 0xff0000}));    
+                                {color: color}));    
     bul = {"x": document.player.position.x, 'bul': bullet};
     document.bullets.push(bul);                                                  
     scene.add(bullet);                                                          
@@ -159,7 +263,18 @@ $(document).on("keyup", function(e){
     else if(e.which == 68)
 	document.rdown=false;
     else if(e.which == 13){
-	FireBullet(0);
+	document.fire=false;
+	document.play_power_up=false;
+        document.getElementById(document.power_up_2).pause();
+	if(document.missle!=null)
+	    DetonateMissle();
+	else if(document.powerWeaponCharge<1000)
+	    FireBullet(0);
+	else if(document.missles>0){
+	    FireMissle();
+	    document.missles-=1;
+	}
+	document.powerWeaponCharge=0;
     }
 });
 
@@ -196,7 +311,13 @@ function fire(){
     if(document.score > 7500) autofire_rate-=50;
     if(document.score > 10000) autofire_rate-=50;
     if(document.score > 20000) autofire_rate-=25;
-    bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),
+
+    if(!document.fire){	
+	setTimeout(fire, autofire_rate);
+	return;
+    }
+    FireBullet();
+    /*bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),
                                      new THREE.MeshBasicMaterial(
                                          {color: 0xff0000}))
     insbull = {"x": document.player.position.x, "bul": bullet};
@@ -209,14 +330,14 @@ function fire(){
         document.getElementById(document.fire_0).pause();
         document.getElementById(document.fire_0).currentTime=0;
         document.getElementById(document.fire_0).play();
-    }
+    }*/
     setTimeout(fire, autofire_rate);
 }
 
 
 function NewBullet(x, y, z){
 
-    bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),
+    bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),
                                      new THREE.MeshBasicMaterial(
                                          {color: 0xffffff}));
 /*    var map = document.SPRITE_MAP;
@@ -230,28 +351,43 @@ function NewBullet(x, y, z){
 
 }  
 
+function SetWIMPActive(){
+    // Sets a WIMP active
+    for(x=0;x<document.WIMPs.length;x+=1){
+	if(document.WIMPs[x]['active']==false){
+	    document.WIMPs[x]['active']=true;
+	    return;
+	}
+    }
+}
 function SpawnWIMP(){
 
     var size = Math.random()*document.WIMP_size + 20;
 size = 50;
     var sign=-1;
-    if(Math.random() > .5)
+    WIMP_range=200;
+    if(Math.random() > .8)
 	sign=1;
+    if(sign==-1)
+	WIMP_range = 600;
     new_WIMP =
-        { 'x': Math.random() *window.innerWidth-(window.innerWidth/2),
-	  'z': (Math.random() * 200 + 150) * sign,     
-          'y': 1500,
+        { 'x': Math.random() *(2*window.innerWidth)-((2*window.innerWidth)/2),
+	  'z': (Math.random() * WIMP_range + 150) * sign,     
+          'y': 1800,
           'obj': new THREE.Mesh(new THREE.SphereGeometry(size, 12, 12),
                                  new THREE.MeshLambertMaterial({
                                      color: 0x5992c2,
 				 })),
 	  'wobble':-1,
-	  'speed': 1,//Math.random() *document.WIMP_speed + document.WIMP_min_speed,
+	  'speed': Math.random() *document.WIMP_speed + document.WIMP_min_speed,
+	  'active': false,
 	};
 
 //    var WIMP_light = new THREE.PointLight( 0xffffff, 10., 50. );
 //    scene.add(WIMP_light);
     scene.add(new_WIMP['obj']);
+    if(!document.WIMPwobble)
+	new_WIMP['wobble']=0;
 //    WIMP_light.position.x = new_WIMP['x'];
 //    WIMP_light.position.y = new_WIMP['y'];
 //    WIMP_light.position.z = new_WIMP['z'];
@@ -294,17 +430,50 @@ function animate(){
     
     document.getElementById("score").innerHTML = document.score.toString();
     document.getElementById("impurities").innerHTML = document.impurities.toString();
+    document.getElementById("missles").innerHTML = document.missles.toString();
+    AnimateGrids(clock_corr)
 
     // movement
+    //Charge power weapon
+    if(document.fire){
+	document.powerWeaponCharge+=10*clock_corr;
+	if(document.powerWeaponCharge > 100 &&         
+	   document.play_power_up==false && document.missles>0){
+	    document.play_power_up=true;
+	    //document.getElementById(document.power_up_2).pause();
+            document.getElementById(document.power_up_2).currentTime=0;
+            document.getElementById(document.power_up_2).play();
+	}
+    }
+    //console.log(document.powerWeaponCharge);
+   
+
+
     var msize=15;
-    if(document.udown && document.player.position.y < window.innerHeight)
+    if(document.udown && document.player.position.y < window.innerHeight){
 	document.player.position.y += msize*clock_corr;
-    if(document.ddown && document.player.position.y>0)
+    }
+    if(document.ddown && document.player.position.y>0){
 	document.player.position.y -=msize*clock_corr;
-    if(document.ldown && document.player.position.x > document.left_bound)
+    }
+    if(document.ldown && document.player.position.x > document.left_bound){
 	document.player.position.x -=msize*clock_corr;
-    if(document.rdown && document.player.position.x < document.right_bound)
+
+    }
+    if(document.rdown && document.player.position.x < document.right_bound){
 	document.player.position.x += msize*clock_corr;
+    }
+    document.playerLight.position.x =document.player.position.x;
+    document.playerLight.position.y =document.player.position.y;
+    document.playerLight.target.position.set( document.player.position.x,
+                                              document.player.position.y+10, 0);
+    if(document.cameraFollow){
+	document.camera.position.x = document.player.position.x;
+	document.camera.position.y = document.player.position.y -50;
+	document.camera.position.z = document.player.position.z + 50;
+	document.camera.lookAt( new THREE.Vector3(document.player.position.x,
+                                document.player.position.y+1000, 0));
+	}
 
     if(document.frame_count%1==0){
 //	AnimateBackgroundBoxes();
@@ -312,14 +481,20 @@ function animate(){
     }
     document.frame_count+=1;
     // Make WIMPs
-    if(document.WIMPs.length < document.max_WIMPs && Math.random()*10000 < document.WIMP_chance){
-	SpawnWIMP();
+    //if(document.WIMPs.length < document.max_WIMPs){
+//	    SpawnWIMP();
+//	    }
+    if(Math.random()*10000 < document.WIMP_chance){
+	//SpawnWIMP();
+	SetWIMPActive();
     }
     for(x=0;x<document.WIMPs.length; x+=1){
+	if(document.WIMPs[x]['active']==false)
+	    continue;
 	document.WIMPs[x]['obj'].position.y -= 	clock_corr*document.WIMPs[x]['speed'];
 	var speed_factor=.5;
 	if(document.WIMPs[x]['obj'].position.z <0)
-	    speed_factor =1;
+	    speed_factor =1;	
 	document.WIMPs[x]['obj'].position.z += clock_corr*speed_factor*document.WIMPs[x]['speed'] *
 	    document.WIMPs[x]['wobble'];
 	if(Math.abs(document.WIMPs[x]['obj'].position.z) < 150 || 
@@ -330,10 +505,10 @@ function animate(){
 
 //	    scene.remove(document.WIMPs[x]['obj']);
 	    var sign=-1;
-	    if(Math.random() > .5)
+	    if(Math.random() > .8)
 		sign=1;
 
-	    document.WIMPs[x]['obj'].position.x = Math.random() *window.innerWidth-(window.innerWidth/2);
+	    document.WIMPs[x]['obj'].position.x = Math.random() *(2*window.innerWidth)-((2*window.innerWidth)/2);
 	    document.WIMPs[x]['obj'].position.z = (Math.random() * 200 + 150) * sign;
             document.WIMPs[x]['obj'].position.y = Math.random()*300 + 1500;
 //	    scene.remove(document.WIMPs[x]['light']);
@@ -364,12 +539,20 @@ function animate(){
         return parseFloat(a['x']) - parseFloat(b['x']);
     });
 
-    // Now check bullets
+    if(document.missle!=null){
+	document.missle.position.y+=clock_corr*15;
+	if(document.missle.position.y > 1000){
+	    scene.remove(document.missle);
+	    document.missle=null;
+	}
+    }
+    
+// Now check bullets
     var star_start=0;
     for(x=0;x<document.bullets.length; x+=1){
 	
 	// Propagate bullet
-	document.bullets[x]['bul'].position.y+=clock_corr*20;
+	document.bullets[x]['bul'].position.y+=clock_corr*30;
 	
 	// Delete bullet if left screen
 	if(document.bullets[x]['bul'].position.y>1000)	{
@@ -407,6 +590,19 @@ function animate(){
 		// If the star has more HP, increment
 		document.background_stars[y]['hit']+=1;
 		if(document.background_stars[y]['hit'] < document.objcolors.length){
+		    // Change color
+		    if(document.sound){
+			document.getElementById(document.enemy_hit).pause();
+			document.getElementById(document.enemy_hit).currentTime=0;
+			document.getElementById(document.enemy_hit).play();
+		    }
+		    MakePhotonAnimation(document.background_stars[y]['star'].position.x, 
+					document.background_stars[y]['star'].position.y, 
+					document.background_stars[y]['star'].position.z, 0);
+		    StartExplosion(document.background_stars[y]['star'].position.x,
+                                   document.background_stars[y]['star'].position.y,
+                                   document.background_stars[y]['star'].position.z,  0);
+		    
 		    document.background_stars[y]['star'].material.color.setHex(document.objcolors[document.background_stars[y]['hit']]);
 		    break;
 		}
@@ -419,43 +615,7 @@ function animate(){
 		//orbTex.repeat.x = orbTex.repeat.y = 32;
 		//orbTex.needsUpdate = true;
 		//document.getElementById(document.dest_0).pause();
-		posx = document.background_stars[y]['star'].position.x;
-		posy = document.background_stars[y]['star'].position.y;
-		posz = document.background_stars[y]['star'].position.z;
-
-
-
-		if(document.sound){
-		    document.getElementById(document.dest_0).volume=1;
-		    document.getElementById(document.dest_0).currentTime=0;
-		    document.getElementById(document.dest_0).play();
-		}
-		
-		score_before = Math.floor(document.score/2500);
-		document.score += Math.round(50*(1/(document.background_stars[y]['size']/(document.min_enemy_size +
-									       ((document.max_enemy_size -
-										 document.min_enemy_size)/2)))));
-		score_after = Math.floor(document.score/2500);
-		if(score_after>score_before && document.impurities>0)
-		    document.impurities-=1;
-		rand = Math.floor(Math.random()*document.objcolors.length);
-		document.background_stars[y]['hit'] = rand;
-		document.background_stars[y]['star'].material.color.setHex
-		(document.objcolors[document.background_stars[y]['hit']]);
-		
-		document.background_stars[y]['y'] = Math.random()*500+1500;
-		document.background_stars[y]['star'].position.y = document.background_stars[y]['y'];
-		document.background_stars[y]['x']= .8*(Math.random() *window.innerWidth-(window.innerWidth/2));
-		document.background_stars[y]['star'].position.x = document.background_stars[y]['x'];
-		MakePhotonAnimation(posx, posy, posz);
-
-		scene_light = new THREE.PointLight( 0xffffff, 6.,0 );
-		scene.add(scene_light);
-		scene_light.position.x=posx;
-		scene_light.position.y=posy;
-		scene_light.position.z=posz;
-		light = {"timer": 30, "light": scene_light};
-		document.lights.push(light);
+		BlowStar(y);
 		break;
 	    }
 	}
@@ -470,7 +630,60 @@ function animate(){
 
     }, 1000 / 100 );
     //requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+    renderer.render(scene, document.camera);
+}
+
+function BlowStar(y){
+    posx = document.background_stars[y]['star'].position.x;
+    posy = document.background_stars[y]['star'].position.y;
+    posz = document.background_stars[y]['star'].position.z;
+    
+    if(document.sound){
+        document.getElementById(document.dest_0).volume=1;
+        document.getElementById(document.dest_0).currentTime=0;
+        document.getElementById(document.dest_0).play();
+    }
+
+    score_before = Math.floor(document.score/2500);
+    mscore_before = Math.floor(document.score/1000);
+    document.score += Math.round(50*(1/(document.background_stars[y]['size']/(document.min_enemy_size +
+                                                                              ((document.max_enemy_size -
+                                                                                document.min_enemy_size)/2)))));
+    if(document.sound && ( (document.score > 5000 && !document.sound5k) ||
+			   (document.score > 15000 && !document.sound15k) ||
+			   (document.score > 30000 && !document.sound30k) ) ){
+	if(!document.sound5k)
+	    document.sound5k=true;
+	else if(!document.sound15k)
+	    document.sound15k=true;
+	else
+	    document.sound30k=true;
+	document.getElementById(document.power_up).volume=1;
+        document.getElementById(document.power_up).currentTime=0;
+        document.getElementById(document.power_up).play();
+    }
+    score_after = Math.floor(document.score/2500);
+    mscore_after = Math.floor(document.score/1000);
+    if(mscore_after > mscore_before){
+	document.missles+=1;
+    }
+    if(score_after>score_before && document.impurities>0)
+        document.impurities-=1;
+    rand = Math.floor(Math.random()*document.objcolors.length);
+    document.background_stars[y]['hit'] = rand;
+    document.background_stars[y]['star'].material.color.setHex
+    (document.objcolors[document.background_stars[y]['hit']]);
+    
+    document.background_stars[y]['y'] = Math.random()*500+1500;
+    document.background_stars[y]['star'].position.y = document.background_stars[y]['y'];
+    document.background_stars[y]['x']= .8*(Math.random() *window.innerWidth-(window.innerWidth/2));
+    document.background_stars[y]['star'].position.x = document.background_stars[y]['x'];
+    document.background_stars[y]['z'] = 10000;
+    document.background_stars[y]['star'].position.z = 10000;
+    MakePhotonAnimation(posx, posy, posz, 1);
+
+    StartExplosion(posx, posy, posz, 1);
+
 }
 
 function InitializeAtom(index, x, y, z, hit, size){
@@ -482,9 +695,6 @@ function InitializeAtom(index, x, y, z, hit, size){
 	"size": size,
 	"balls": [],
     };
-    for(i=0;i<6;i+=1){
-	console.log("a");
-    }
 }
 function ProcessEnemies(clock_corr)
 {    
@@ -493,20 +703,25 @@ function ProcessEnemies(clock_corr)
         size = Math.random()*(document.max_enemy_size-document.min_enemy_size)
             + document.min_enemy_size;
         rand = Math.floor(Math.random()*document.objcolors.length);
+
         new_star =
             { 'x': .8*(Math.random() *window.innerWidth-(window.innerWidth/2)),
-              'z': 0,//Math.random() * 50,                                                                                                       
-              'y': Math.random() * 1000 + 1000,
+              'z': 10000,//Math.random() * 50,                                                                                                       
+              'y': Math.random() * 1000 + 1200,
               'hit': rand,
-              'star': new THREE.Mesh(new THREE.BoxGeometry(size,
-                                                           size,
-                                                           size),
+              'star': new THREE.Mesh(//document.enemyGeometry,
+		  new THREE.BoxGeometry(size,
+					size,
+					size),
                                      new THREE.MeshLambertMaterial(
-                                         {wireframe: false,
-                                          color: document.objcolors[rand]})),
+                                         {wireframe: true,
+                                          color: document.objcolors[rand],
+					  emissive: "#282828",
+					 wireframeLinewidth: 2})),
 //                                        [Math.round(Math.random() *                                                                            
 //                                                    document.objcolors.length)]}))                                                             
             };
+	//new_star['star'].scale.set(size/5,size/5,size/5);
 	scene.add(new_star['star']);
         new_star['star'].position.x = new_star['x'];
         new_star['star'].position.y = new_star['y'];
@@ -514,7 +729,7 @@ function ProcessEnemies(clock_corr)
         new_star['size']=size;
         new_star['xoff']=0;
         new_star['rotax'] = new THREE.Vector3(Math.random(),Math.random(),
-					                                            Math.random());
+					      Math.random());
         new_star['xofflim']=Math.random()*300+50;
         new_star['xoffdir']=-1;
 	new_star['xoffstep']=Math.random()*5;
@@ -541,6 +756,12 @@ function ProcessEnemies(clock_corr)
         // Move downwards                                                                                                                        
         document.background_stars[x]['y'] -= clock_corr*((.1*Math.round
                                               (document.score/2000))+.5);
+	if(document.background_stars[x]['y'] <= 1000)
+	    document.background_stars[x]['z'] = 0;
+	else if(document.background_stars[x]['y'] <= 1200){
+	    document.background_stars[x]['z'] = (document.background_stars[x]['y']-1000)*50;
+	}
+	document.background_stars[x]['star'].position.z = document.background_stars[x]['z'];
         document.background_stars[x]['star'].position.y =
             document.background_stars[x]['y'];
         if(document.background_stars[x]['y'] < -300){
@@ -548,7 +769,8 @@ function ProcessEnemies(clock_corr)
             document.background_stars[x]['star'].position.y = document.background_stars[x]['y'];
             document.background_stars[x]['x']= Math.random() *window.innerWidth-(window.innerWidth/2);
             document.background_stars[x]['star'].position.x = document.background_stars[x]['x'];
-
+	    document.background_stars[x]['z']=10000;
+	    document.background_stars[x]['star'].position.z = 10000;
 //          scene.remove(document.background_stars[x]['star']);                                                                                  
 //          document.background_stars =                                                                                                          
 //          document.background_stars.splice(x,1);                                                                                               
@@ -573,12 +795,41 @@ function ProcessEnemies(clock_corr)
     });
 
 }
+function StartExplosion(posx, posy, posz, big){
+    min_time=100;
+    min_time_index=-1;
+    for(x=0;x<document.lights.length; x+=1){
+	if(document.lights[x]['timer']==0){
+	    min_time_index=x;
+	    break;
+	}
+	else if(document.lights[x]['timer'] < min_time){
+	    min_time = document.lights[x]['timer'];
+	    min_time_index = x;
+	}
+    }
+    if(min_time_index == -1)
+	return;
+    if(big==1){
+	document.lights[x]['timer']=30;
+	document.lights[x]['light'].intensity=5.;
+    }
+    else if (big==0){
+	document.lights[x]['timer']=5;
+	document.lights[x]['light'].intensity=1.;
+    }
+    document.lights[x]['light'].position.x=posx;
+    document.lights[x]['light'].position.y=posy;
+    document.lights[x]['light'].position.z=posz;
+
+}
 
 function light_animation()
 {
     for(x=0;x<document.lights.length;x+=1){
+	if(document.lights[x]['timer'] <= 0)
+	    continue;
 	document.lights[x]['timer']-=1;
-	console.log(document.lights[x]['timer']);
 	if(document.lights[x]['timer']==15)
 	    document.lights[x]['light'].intensity=3.;
 	if(document.lights[x]['timer']==12)
@@ -596,57 +847,85 @@ function light_animation()
 	
 	
 	if(document.lights[x]['timer']<=0){
-	    scene.remove(document.lights[x]['light']);
-	    document.lights.splice(x,1);
-	    x-=1;
+	    document.lights[x]['light'].intensity=0.;
+	    //scene.remove(document.lights[x]['light']);
+	    //document.lights.splice(x,1);
+	    //x-=1;
 	}
     }
 }
-function MakePhotonAnimation(posx, posy, posz){
-    var new_photon = {};
+function MakePhotonAnimation(posx, posy, posz, big){
+    
+    var sm =0.1;
+    if(big == 1)
+	sm=0.25;
     var photons = new THREE.Geometry();
-    for ( z=0; z<document.exp_photons; z++ ){
+    if(big!=2)
+	exp_photons = document.exp_photons;
+    else 
+	exp_photons = document.misslePhotons;
+    for ( z=0; z<exp_photons; z++ ){
+	if(big==0 && z>5)
+	    break;
         //attributes.alpha.value[ x ] = .1;                             \
                                                                                      
         var particle = new THREE.Vector3( posx, posy, posz);
-        particle.velocity = new THREE.Vector3( .25*GetV(Math.random()),
-                                               .25*GetV(Math.random()),
-                                               Math.abs(.25*GetV(Math.random())) );
+	if(big!=2)
+            particle.velocity = new THREE.Vector3( sm*GetV(Math.random()),
+						   sm*GetV(Math.random()),
+						   Math.abs(sm*GetV(Math.random())) );
+	else 
+	    particle.velocity = new THREE.Vector3( sm*GetV(Math.random()),
+                                                   sm*GetV(Math.random()),
+                                                   0);
+
         photons.vertices.push(particle);
     }
     
-    var material = new THREE.ParticleBasicMaterial( 
-	{ size: 7,
-          color: document.objcolors[Math.round(Math.random() * 
-					       document.objcolors.length)] });
+//    var material = new THREE.ParticleBasicMaterial( 
+//	{ size: 10,
+//          color: document.objcolors[Math.round(Math.random() * 
+//					       document.objcolors.length)] });
     
-/*
-  //  var orbTex = new THREE.Texture(orb);                               
-//    orbTex.wrapS = THREE.RepeatWrapping;                               
-//    orbTex.wrapT = THREE.RepeatWrapping;                               
-//    orbTex.repeat.x = orbTex.repeat.y = 32;                            
-//    orbTex.needsUpdate = true;               
-    uniforms = {
-	color:     { type: "c", value: new THREE.Color( 0xffffff ) },
-//	texture:   { type: "t", value: orbTex }
-    };
 
-    var material = new THREE.ShaderMaterial( {
-	uniforms:       uniforms,
-	vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-	fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
-	blending:       THREE.AdditiveBlending,
-	depthTest:      false,
-	transparent:    true	
-	});
-*/
+      var orbTex = new THREE.Texture(orb);                               
+    //orbTex.wrapS = THREE.RepeatWrapping;                               
+    //orbTex.wrapT = THREE.RepeatWrapping;                               
+    //orbTex.repeat.x = orbTex.repeat.y = 32;                            
+    orbTex.needsUpdate = true;               
+    //uniforms = {
+//	color:     { type: "c", value:  document.objcolors[Math.round(Math.random()*
+//								      document.objcolors.length)] },
+								      //	texture:   { type: "t", value: orbTex }
+  //  };
+
+    
+    properties = {size: 30, map: orbTex, blending: THREE.AdditiveBlending, transparent: true, color: document.objcolors[Math.round(Math.random()*document.objcolors.length)]};
+    if(!big){
+	properties['size']=20;
+	properties['color']="0xffffaa";
+    }
+    material = new THREE.PointsMaterial(properties);
+//    var material = new THREE.ShaderMaterial( {
+//	uniforms:       uniforms,
+//	vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+//	fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+//	blending:       THREE.AdditiveBlending,
+//	depthTest:      false,
+//	transparent:    true	
+//	});
+
     var photon_system = new THREE.ParticleSystem( photons, material );
     photon_system.sortParticles = true;
     scene.add(photon_system);
-    photon_system.phocount=0;
+    if(!big)
+	photon_system.phocount=15;
+    else
+	photon_system.phocount=0;
     photon_doc={
 	"system": photon_system, 
-	"geometry": photons
+	"geometry": photons,
+	"big": big
     }
     document.photons.push(photon_doc);
 }
@@ -658,10 +937,28 @@ function photon_animation(clock_corr){
 	photon_system = document.photons[l]['system'];
 	for ( p=0; p<photons.vertices.length; p+=1 ){
             var photon = photons.vertices[p];
-	    velocity = new THREE.Vector3(photon.velocity.x+5*Math.random()-2.5,
-					photon.velocity.y+5*Math.random()-2.5,
-					photon.velocity.z+5*Math.random()-2.5);
+	    velocity = new THREE.Vector3(photon.velocity.x*1.5,
+					photon.velocity.y*1.5,
+					photon.velocity.z*1.5);
             photon.add(velocity);
+	    
+	    // If on plane with enemies allow chain reactions
+	    //var vertex = photon.clone();
+	    if(document.photons[l]['big'] && Math.abs(photon.z) < 20){
+		for(y=0;y<document.background_stars.length;y+=1){		    		    
+		    if(document.background_stars[y]['z']!=0) continue;
+		    xdiff = (photon.x -
+			     document.background_stars[y]['star'].position.x);
+		    if(Math.abs(xdiff) <= document.background_stars[y]['size']*1.25
+		       &&
+		       Math.abs(photon.y -
+				document.background_stars[y]['star'].position.y) < 40){
+			//Blow enemy
+			BlowStar(y);
+			break;
+		    }
+		}
+	    }
 	}
 	photon_system.phocount+=1;
 	if(photon_system.phocount>20){
@@ -681,6 +978,10 @@ function reset(){
     document.frame_count=1;
     if(document.player!=null)
 	scene.remove(document.player);
+    if(document.playerLight!=null){
+	scene.remove(document.playerLight.target);
+	scene.remove(document.playerLight);
+    }
     for(x=0;x<document.background_stars.length;x+=1)
 	scene.remove(document.background_stars[x]['star']);
     for(x=0;x<document.bullets.length; x+=1)
@@ -694,20 +995,23 @@ function reset(){
     for(x=0;x<document.lights.length; x+=1){
 	scene.remove(document.lights[x]['light']);
     }
+    for(x=0;x<document.planes.length;x+=1){
+	scene.remove(document.planes[x]);
+    }
     document.lights=[];
     document.player=null;
+    document.playerLight=null;
     document.en_bullet_speed=10;
       document.max_enemy_size=40;
       document.min_enemy_size=15;
       document.player_x=0;
       document.player_y = 0;
       document.background_stars=[];
-//      console.log(document.background_stars);
 //      document.n_stars=20;
 document.n_stars=15;
       document.bullets = [];
       document.score=0;
-      document.exp_photons=20;
+      document.exp_photons=40;
       document.ldown=false;
       document.rdown=false;
       document.udown=false;
@@ -716,27 +1020,69 @@ document.n_stars=15;
       document.en_bullet_chance=10; // 1-1000, rand()*1000 < num
 //    document.objcolors = [0xFF0FFF, 0xCCFF00, 0xFF000F, 0x996600, 0xFFFFFF];
     document.objcolors=[ 0xfff607, 0x07ff70, 0x0782ff, 0xff0707];
+    document.expcolors=[ 0xffffff, 0xfff607, 0x07ff70, 0x0782ff, 0xff0707, 0xffffff];
+    //Planes
+    document.planes = [];
+    document.plane_speed=5;
+    document.sound5k = false;
+    document.sound15k = false;
+    document.sound30k = false;
     // WIMPs
     document.WIMPs=[];
-    document.max_WIMPs=15;
+    document.max_WIMPs=40;
     document.WIMP_speed = 10;
     document.WIMP_min_speed=1;
     document.WIMP_size=50;
-    document.WIMP_chance=50;
+    document.WIMP_chance=100;//50;
+    document.WIMPwobble=false;
     document.clock_corr=70;
+    document.cameraFollow=false;
+    document.powerWeaponCharge=0;
+    document.misslePhotons=50;
+    document.missles=0;
+    document.play_power_up=false;
     //document.objcolors=[0xFFFFFF];
 
 
 }
 
-function draw_simple_cylinder(scene, camera, renderer, callback){
+function draw_simple_cylinder(scene, camera, renderer, callback, geo_path){
+    InitializeGrids();
+    document.enemyGeoPath = geo_path;
+        loader = new THREE.JSONLoader();
 
+    document.playerLight = new THREE.SpotLight( 0xffffff, 5., 0., Math.PI/2 );
+    scene.add( document.playerLight.target )
+
+    document.playerLight.position.set( 0, 0, 0 );
+    //document.playerLight.castShadow=true;
+    document.playerLight.target.position.set( 0, 10, 0 );
+    
+    scene.add( document.playerLight );
     document.player = new THREE.Mesh(new THREE.CylinderGeometry(10,10,20),
-                            new THREE.MeshBasicMaterial(
+                            new THREE.MeshLambertMaterial(
 				{ wireframe: true, opacity: 0.5 } ));
+    document.player.position.set(0, 0, 0);
     scene.add(document.player);
     document.player.position.y = document.player_y;
-    callback();
+    while(document.lights.length < 15){
+	light_color = document.expcolors[Math.floor(Math.random()*document.expcolors.length)];
+
+	if(document.lights.length < document.expcolors.length)
+	    light_color = document.expcolors[document.lights.length];
+	scene_light = new THREE.PointLight( light_color, 0.,0. );	
+	scene.add(scene_light);
+	document.lights.push({"timer": 0, "light": scene_light});
+    }
+    while(document.WIMPs.length < document.max_WIMPs){
+        SpawnWIMP();
+    }
+
+    loader.load( geo_path, function(geometry, materials){
+	document.enemyGeometry = geometry;
+	document.enemyMaterials = materials;	
+	callback();
+    });
 
 }
 

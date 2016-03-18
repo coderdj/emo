@@ -369,11 +369,11 @@ $(document).ready(function(){
 
 
      ret2 = "<table>";
-     if(data['data'].length>=1){
+/*     if(data['data'].length>=1){
         ret2+="<div class='row'><div class='col-xs-12'><h5><strong>Reader</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Collection: </strong>   "+data['data'][0].collection + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][0]['status'])+"'>"+data['data'][0]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][0]['location']+"</div></div>";
      }
-
-     for(var x=1;x<data['data'].length;x+=1){
+*/
+     for(var x=0;x<data['data'].length;x+=1){
          ret2+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
 
 

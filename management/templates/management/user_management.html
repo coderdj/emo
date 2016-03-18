@@ -138,8 +138,8 @@ else
 
 //           document.getElementById("id_"+key).value=valstring;
 }
-         else{
-
+         else if(key != "g_id"){
+console.log(key);
              document.getElementById("id_"+key).value=data[key];
 }
      }
