@@ -5,20 +5,34 @@
 */
 
 .emo-search-bar{
-    width: -moz-calc(100% - 5px);
+/*    width: -moz-calc(100% - 5px);
     width: -webkit-calc(100% - 5px);
     width: calc(100% - 5px);
+  */
+ width: -moz-calc(100%);                                             
+    width: -webkit-calc(100%);                                            
+    width: calc(100%);  
     margin-top:0;
     border: 1px solid #AAAAAA;
     box-shadow: 3px 3px 3px #BBBBBB;
 
   border-top:0;
   min-height:40px;
-  padding-bottom: 5px;
-
+/*  padding-bottom: 5px;
+*/
   margin-left:5px;
     background-color: white;
 
+}
+
+.tagButton {
+    border-width:0px #5992c2 solid;   
+    padding:8px;
+    background-color: #5992c2;
+    color: #EEEEEE;
+    #-webkit-border-radius:10px;
+    #-moz-border-radius:10px;
+    border-radius:30px;    
 }
 .beforeentry{
 margin-left: 5%;

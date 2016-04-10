@@ -128,6 +128,61 @@ def runs(request):
                                                "form" : filter_form,
                                                "query": filter_query} )
 
+'''
+TAGS given the form:
+
+name: string, *unique*
+user: username,
+date: date,
+
+'''
+@login_required
+def addTag(request):
+
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    if (request.method == "GET" and "tagname" in request.GET and
+        "id" in request.GET):
+        logger.error(request.GET)                      
+        db = client[settings.RUNS_DB_NAME]
+        coll = db[settings.RUNS_DB_COLLECTION]
+        search = {"_id": ObjectId(request.GET['id'])}
+        doc = coll.find_one(search)
+
+        if doc is not None:
+            
+            # Add tag
+            update = {}
+            tag = {
+                "name": request.GET['tagname'],
+                "user": request.user.username,
+                "date": datetime.datetime.now()
+            }            
+            
+            if "tags" not in doc and "remove" not in request.GET:
+                update['$set'] = {"tags": [ tag ] }
+            elif "remove" not in request.GET:
+                # Check if tag exists
+                for etag in doc['tags']:
+                    if etag['name'] == request.GET['tagname']:
+                        return HttpResponse({"success": False},
+                                            content_type="application/json")
+
+                update['$push'] = {"tags": tag}
+            elif "remove" in request.GET:
+                
+                # Make sure the requesting user is allowed to remove the tag
+                for etag in doc['tags']:
+                    if (etag['name'] == request.GET['tagname'] and
+                        etag['user'] == request.user.username):
+                        update['$pull'] = {"tags": {"name": request.GET['tagname']}}
+            
+            if update!={}:
+                coll.update(search, update)
+
+            return HttpResponse({"success": True}, content_type="application/json")
+    return HttpResponse({"success": False}, content_type="application/json")
+
+
 """
 @login_required
 def rundetail ( request ):

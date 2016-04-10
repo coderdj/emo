@@ -16,10 +16,6 @@
 <script src="{% static "js/jquery.json-view.js" %}"></script>
 <link href="{% static "css/jquery.json-view.css" %}" rel="stylesheet"/>
 
-<!--<script src="{% static "DataTables-1.10.7/extensions/TableTools/js/dataTables.tableTools.min.js"%}"></script>
-<link href="{% static "DataTables-1.10.7/extensions/TableTools/css/dataTables.tableTools.min.css"%}" rel="stylesheet"/>
-<script src="{% static "js/datatables.min.js"%}"></script>
-<link href="{% static "css/datatables.min.css"%}" rel="stylesheet"/>-->
 
 
 <script>
@@ -60,38 +56,31 @@
 </style>
 {% endblock %} 
 {% block content %}
-<div class="emo-search-bar">
+<div style="position:relative">
+  <div class="collapse" id="search-bar">
+<div class="emo-search-bar" style="width:100%;">
   <form method="GET" action="/runs/">
     <div class="row">
-      <div class="col-xs-2" style="line-height:40px;padding-left:50px;"><strong>Search:</strong></div>
-      <div class="col-xs-3">From: {{form.startdate}} </div>
-      <div class="col-xs-3">To:&nbsp;   {{form.enddate}} </div>
-      <div class="col-xs-3">Source: {{ form.mode }}</div>
-      <div class="col-xs-3" style="line-height:40px">Detector: {{ form.detector }}</div>
-      <div class="col-xs-3">Query: {{ form.custom }} </div>
-      <div class="col-xs-3">
+      <div class="col-xs-2" style="line-height:40px;padding-left:40px;width:130px"><strong>Search:</strong></div>
+      <div class="col-xs-6 col-sm-2">From: {{form.startdate}} </div>
+      <div class="col-xs-6 col-sm-2">To:&nbsp;   {{form.enddate}} </div>
+<!--      <div class="col-xs-3">Source: {{ form.mode }}</div>-->
+      <div class="col-xs-6 col-sm-3" style="line-height:40px;width:200px">Detector: {{ form.detector }}</div>
+      <div class="col-xs-6 col-sm-3">Query: {{ form.custom }} </div>
+      <div class="col-xs-1">
         <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Search</button>
       </div>
     </div>
   </form>
 </div>
+</div>
+  <div class="expand-pulldown" style="position:absolute;bottom:-10;left:45%;">
+    <button class="btn btn-mini btn-info" style="background-color:white;color:#444444;border-top:0px;margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0;" type="button" data-toggle="collapse" data-target="#search-bar" aria-expanded="false" aria-controls="emo-search-bar">Advanced Search</button>
+  </div>
+</div>
 
-<!--<div class="row" style="margin-bottom:8px;margin-left:5px;">
-  <div class="col-xs-12">
-    <span><strong>Click rows to select runs. Control-click to select multiple.</strong></span>
-  </div>
-</div>
-<div class="row" style="margin-bottom:8px;margin-left:5px;">
-  <div class="col-xs-6">    
-    <span><strong>Download selected as: </strong></span>&nbsp;
-    <button class="btn btn-info" id='download_as_runlist'>Runs List</button>
-    <button class="btn btn-info" id='download_as_raw'>Raw Paths</button>
-    <button class="btn btn-info" id='download_as_processed'>Processed Paths</button>
-  </div>
-</div>
--->
-<div class="row" id="main_row">
-  <div class="col-sm-6 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
+<div class="row" id="main_row" style="margin-top:30px;">
+  <div class="col-sm-8 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
     <table class="table table-bordered" id="runstable" style="background-color:white">
       <thead>
 	<tr>
@@ -100,6 +89,7 @@
 	  <th>Date</th>
 	  <th>Source</th>
 	  <th>Trigger</th>
+	  <th>Tags</th>
 	  <th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>
 	</tr>
       </thead>
@@ -117,40 +107,48 @@
       </tbody> 
     </table>
   </div>
-  <div class="col-sm-6 col-xs-12" style="padding:5px;">
+  <div class="col-sm-4 col-xs-12" style="padding:5px;">
     <div class="emobox" id="tab_content" style="padding:10px;margin:0px;overflow-y:scroll;overflow-x:hidden;">
       <div style="height:100%;">
+
+	<h4 style="margin-bottom:2px" id="run_detail_head">Run detail: click a <img src="{%static "img/details_open.png" %}"/> to view</h4>
+            <hr style="margin-top:0px;margin-bottom:4px;">
+            <table>
+              <tbody>
+		<tr><td style="min-width:40px;padding-left:5px;"><strong>Run name</strong></td><td style="padding-left:5px" id="detail_name"></td>
+                <td style="min-width:40px;padding-left:15px;"><strong>Detector</strong></td><td style="padding-left:5px" id="detail_detector"></td></tr>
+                <tr><td style="min-width:40px;padding-left:5px;"><strong>Source type</strong></td><td style="padding-left:5px" id="detail_source"></td>
+                <td style="min-width:40px;padding-left:15px;"><strong>Starting User</strong></td><td style="padding-left:5px" id="detail_user"></td></tr>
+                <tr><td style="min-width:40px;padding-left:5px;"><strong>Start Date</strong></td><td style="padding-left:5px" id="detail_sdate"></td>
+                <td style="min-width:40px;padding-left:15px;"><strong>End Date</strong></td><td style="padding-left:5px" id="detail_edate"></td></tr>
+              </tbody>
+            </table>
+            <h4 style="margin-bottom:2px">Tags</h4>
+            <hr style="margin-top:0px;margin-bottom:4px;">
+            <div id="detail_tags"></div>
+
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs" role="tablist">
-	  <li role="presentation" class="active"><a href="#detail" aria-controls="detail" role="tab" data-toggle="tab">Info</a></li>
+	  <li role="presentation" class="active"><a href="#locations_tab" aria-controls="locations_tab" role="tab" data-toggle="tab">Storage</a></l>
+          <li role="presentation"><a href="#comments_tab" aria-controls="comments_tab" role="tab" data-toggle="tab">Comments</a></li>
 	  <li role="presentation"><a href="#json" aria-controls="json" role="tab" data-toggle="tab">JSON</a></li>
 	</ul>
 	
 	<!-- Tab panes -->
 	<div class="tab-content">
-	  <div role="tabpanel" class="tab-pane active" id="detail" style="height:100%">
-	    <h4 style="margin-bottom:2px" id="run_detail_head">Run detail: click a <img src="{%static "img/details_open.png" %}"/> to view</h4>
-	    <hr style="margin-top:0px;margin-bottom:4px;">
-	    <table>
-	      <tbody>
-		<tr><td style="min-width:40px;padding-left:5px;"><strong>Run name</strong></td><td style="padding-left:5px" id="detail_name"></td>
-		<td style="min-width:40px;padding-left:15px;"><strong>Detector</strong></td><td style="padding-left:5px" id="detail_detector"></td></tr>
-		<tr><td style="min-width:40px;padding-left:5px;"><strong>Source type</strong></td><td style="padding-left:5px" id="detail_source"></td>
-		<td style="min-width:40px;padding-left:15px;"><strong>Starting User</strong></td><td style="padding-left:5px" id="detail_user"></td></tr>
-		<tr><td style="min-width:40px;padding-left:5px;"><strong>Start Date</strong></td><td style="padding-left:5px" id="detail_sdate"></td>
-                <td style="min-width:40px;padding-left:15px;"><strong>End Date</strong></td><td style="padding-left:5px" id="detail_edate"></td></tr>
-	      </tbody>
-	    </table>
+	  <div role="tabpanel" class="tab-pane active" id="locations_tab" style="height:60vh;overflow-y:scroll;">
 	    <h4 style="margin-bottom:2px">Locations</h4>
             <hr style="margin-top:0px;margin-bottom:4px;">
-	    <div id="detail_locations"></div>
-	    <h4 style="margin-bottom:2px">Comments</h4>
-	    <hr style="margin-top:0px;margin-bottom:4px;">
-	    <div id="detail_comments"></div>
+            <div id="detail_locations">No storage sites registered for this run.</div>
 	  </div>
-	  <div role="tabpanel" class="tab-pane" id="json" style="height:70vh;overflow-y:scroll;">...</div>
+	  <div role="tabpanel" class="tab-pane" id="comments_tab" style="height:60vh;overflow-y:scroll;">
+	    <h4 style="margin-bottom:2px">Comments</h4>
+            <hr style="margin-top:0px;margin-bottom:4px;">
+            <div id="detail_comments"></div>
+	  </div>
+	  <div role="tabpanel" class="tab-pane" id="json" style="height:60vh;overflow-y:scroll;">...</div>
 	</div>
-
+	
       </div>
     </div>
   </div>
@@ -160,6 +158,34 @@
 <script>
  var table;		
 //$(".new_comment_form").submit(function(e){
+ 
+function RemoveTag(id, name){
+  if(id!="" && name !=""){
+      URL="newtag?remove=true;id="+id+";tagname="+name;
+      console.log(URL);
+      $.get(URL,function(){return false;});
+  }
+  return false;
+}
+function NewTag(form){
+   arr = $(form).serializeArray();
+   var id="";
+   var content="";
+   for(var x=0;x<arr.length;x+=1){
+     if(arr[x]["name"]=="content")
+       content=arr[x]["value"];
+     else if(arr[x]["name"]=="id")
+       id=arr[x]["value"];
+  }
+  if(id!="" && content !=""){
+      URL="newtag?id="+id+";tagname="+content;
+      console.log(URL);
+      
+     $.get(URL,function(){return false;});
+  }
+return false;
+};
+ 
  function NewComment(form){
 
  //	e.preventDefault();
@@ -180,10 +206,13 @@
 		ret += data["user"];                                                                           
 		ret += ' </b>&nbsp; wrote on &nbsp; ';
 		var date = new Date(data["date"]['$date']);
-		ret += date.getUTCDate() + "." + (date.getUTCMonth()+1) +
-               "." + date.getUTCFullYear() + " at " +
-		date.getUTCHours() + ":" + date.getUTCMinutes() + ":" +
-		date.getUTCSeconds();
+		    ret += 
+		    date.getUTCDate() + "." + 
+		    ("0"+(date.getUTCMonth()+1)).slice(-2) +
+		    "." + ("0"+date.getUTCFullYear()).slice(-2) + " at " +
+		    ("0"+date.getUTCHours()).slice(-2) + ":" + 
+		    ("0"+date.getUTCMinutes()).slice(-2) + ":" +
+		    ("0"+date.getUTCSeconds()).slice(-2);
 		ret += '<p>{% autoescape off %}';
 		ret += data["text"];
 		ret += '{% endautoescape %}</p></p></div>';
@@ -208,12 +237,27 @@ for(var p in json){
   }
 }
 }
+function AddTagHTML(data){
+
+  if( !("tags" in data))
+     return "";
+  var rhtml = "<br style='margin:1px'><div style='width:100%'>";
+  for(var x=0;x<data['tags'].length;x+=1){
+     rhtml += '<span class="tagButton"><a style="color:white" href='+"'"+'/runs/?startdate=&enddate=&detector=tpc&custom=%7B"tags"%3A+%7B"%24elemMatch"%3A+%7B"name"%3A+"'+data['tags'][x]['name']+'"%7D%7D%7D&submit='+"'>"+data['tags'][x]['name']+"</a>";
+     if(data['user'] == "{{ request.user.username }}")
+        rhtml += '&nbsp;&nbsp;<span class="badge" style="cursor:hand;cursor:pointer;" onclick="RemoveTag(' +"'"+data['_id']['$oid']+"', '"+data['tags'][x]['name']+"'"+')">x</span>';
+     rhtml += '</span>&nbsp;';
+  }
+  rhtml += "</div><br style='margin:1px'>";
+  return rhtml;
+
+}
 $(document).ready(function(){
   var height = window.innerHeight;
   var cache_data = {};
   var RUNURL="";
-  document.getElementById("main_row").style.height = height -130 + "px";
-  document.getElementById("tab_content").style.height = height-130 + "px";
+  document.getElementById("main_row").style.height = height -80 + "px";
+  document.getElementById("tab_content").style.height = height-80 + "px";
   // For row selection and list printing
   var selected = [];
   var thedata = {{ runs_list|safe }};
@@ -237,8 +281,12 @@ $(document).ready(function(){
          "width":     '20px'
       },
       {
-         "data": "number",
-		    "width": '30px'
+        "data": null,//"number",
+		    "width": '30px',
+	"render": function(data){
+             if(data['detector']=='muon_veto') return data['name'];
+		return data['number'];
+        }
       },		   
 //      {
 //         "data":    "name"
@@ -248,12 +296,12 @@ $(document).ready(function(){
 //         "width":   "15%",
          "render":  function(data){
                       var m = new Date(data['$date']);
-                      var dateString = m.getUTCFullYear() + "/" +
-                                       (m.getUTCMonth()+1) + "/" +
-                                       m.getUTCDate() + " " +
-                                       m.getUTCHours() + ":" +
-                                       m.getUTCMinutes() + ":" +
-		                               m.getUTCSeconds();
+                      var dateString = ("0"+m.getUTCFullYear()).slice(-2) + "/" +
+                                       ("0"+(m.getUTCMonth()+1)).slice(-2) + "/" +
+                                       ("0"+m.getUTCDate()).slice(-2) + " " +
+                                       ("0"+m.getUTCHours()).slice(-2) + ":" +
+                                       ("0"+m.getUTCMinutes()).slice(-2) + ":" +
+		                       ("0"+m.getUTCSeconds()).slice(-2);
                       return dateString;
                      }
        },
@@ -266,6 +314,17 @@ $(document).ready(function(){
                   if(data) return "Self";
                   return "External";
           }
+       },
+       {
+          "data": "tags",
+          "render": function(data){
+             if(data==null) return "";
+	     var ret="";
+             for(x=0;x<data.length;x+=1){
+               ret+='<a href='+"'"+'/runs/?startdate=&enddate=&detector=tpc&custom=%7B"tags"%3A+%7B"%24elemMatch"%3A+%7B"name"%3A+"'+data[x]['name']+'"%7D%7D%7D&submit='+"'>"+data[x]['name']+"</a>&nbsp;";
+             }
+             return ret;
+           }
        },
        {
           "data":    "comments",
@@ -318,17 +377,26 @@ $(document).ready(function(){
 
                     // dates
                     var start = new Date(data.start['$date']);
-                    dstring = start.getUTCFullYear() +
+                    dstring = start.getUTCFullYear() +"/"+
+		    ("0" + (start.getUTCMonth()+1)).slice(-2) +"/"+
+		    ("0" + start.getUTCDate()).slice(-2) + " " +
+		    ("0" + start.getUTCHours()).slice(-2) + ":" +
+		    ("0" + start.getUTCMinutes()).slice(-2) + ":" +
+		    ("0" + start.getUTCSeconds()).slice(-2);
+/*		    start.getUTCFullYear() +
                        "/"+ (start.getUTCMonth()+1) +"/"+ start.getUTCDate() + " " +
                         start.getUTCHours() + ":" + start.getUTCMinutes() + ":" +
-                       start.getUTCSeconds();
+                       start.getUTCSeconds();*/
                     document.getElementById("detail_sdate").innerHTML=dstring;
                     if('end' in data){
                        var end = new Date(data.end['$date']);
-                       document.getElementById("detail_edate").innerHTML= end.getUTCFullYear() +
-                             "/"+ (end.getUTCMonth()+1) +"/"+ end.getUTCDate() + " " +
-                             end.getUTCHours() + ":" + end.getUTCMinutes() + ":" +
-		            end.getUTCSeconds();
+                       document.getElementById("detail_edate").innerHTML= 
+		    end.getUTCFullYear() +"/"+
+                    ("0" + (end.getUTCMonth()+1)).slice(-2) +"/"+
+                    ("0" + end.getUTCDate()).slice(-2) + " " +
+                    ("0" + end.getUTCHours()).slice(-2) + ":" +
+                    ("0" + end.getUTCMinutes()).slice(-2) + ":" +
+                    ("0" + end.getUTCSeconds()).slice(-2);
                      }
                      else
                          document.getElementById("detail_edate").innerHTML="None";
@@ -340,10 +408,13 @@ $(document).ready(function(){
                          ret += data.comments[i]["user"];                             
                          ret += ' </b>&nbsp; wrote on &nbsp; ';
                         var date = new Date(data.comments[i]["date"]['$date']);
-        ret += date.getUTCDate() + "." + (date.getUTCMonth()+1) +
-               "." + date.getUTCFullYear() + " at " +
-            date.getUTCHours() + ":" + date.getUTCMinutes() + ":" +
-            date.getUTCSeconds();
+				  
+                    ("0" + start.getUTCSeconds()).slice(-2);
+
+        ret += date.getUTCDate() + "." + ("0"+(date.getUTCMonth()+1)).slice(-2) +
+               "." + ("0"+date.getUTCFullYear()).slice(-2) + " at " +
+            ("0"+date.getUTCHours()).slice(-2) + ":" + ("0"+date.getUTCMinutes()).slice(-2) + ":" +
+            ("0"+date.getUTCSeconds()).slice(-2);
 		ret += '<p>{% autoescape off %}';
 		ret += data.comments[i]["text"];
         ret += '{% endautoescape %}</p></p></div></div>';
@@ -369,23 +440,38 @@ $(document).ready(function(){
 
 
      ret2 = "<table>";
-/*     if(data['data'].length>=1){
-        ret2+="<div class='row'><div class='col-xs-12'><h5><strong>Reader</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Collection: </strong>   "+data['data'][0].collection + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][0]['status'])+"'>"+data['data'][0]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][0]['location']+"</div></div>";
-     }
-*/
+
+    if('data' in data){
+     if(data['data'].length == 0)ret2+="No storage sites registered for this run.";
      for(var x=0;x<data['data'].length;x+=1){
          ret2+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
 
 
      }
+}
+else
+ret2+="No storage sites registered for this run.";
+ret2+="</table>";
      if(!_.isEqual(cache_data, data)){
           cache_data=data;
              document.getElementById("json").innerHTML="";
                       $("#json").jsonView(data,  { collapsed: true });
+
+    // NEW TAG FORM
+    ret3 = AddTagHTML(data);
+    ret3 += "<form class='new_tag_form' method='get' onsubmit='return NewTag(this)'>" +
+		     '<div class="row"><div class="col-xs-9"><input type="text" id="' + data._id['$oid'] + '_formtext" style="width:100%" name="content"></input></div>' +
+      '<div class="col-xs-3">' +
+      '<input type="hidden" name="id" value="' + data._id['$oid'] + '"/>' +
+      '<button class="btn btn-info" type="submit" style="margin-bottom:15px;">New Tag</button></div></div>';
+
+      ret3 +=  '</form>';
+
     
     document.getElementById("detail_comments").innerHTML=ret;
 
    document.getElementById("detail_locations").innerHTML=ret2;
+   document.getElementById("detail_tags").innerHTML=ret3;
 }
    }); // end getjson
    }
