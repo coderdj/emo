@@ -40,10 +40,10 @@ def GetHs(request):
     users = db['users'].find({"g_id": {"$exists": True}}).sort("g_id",pymongo.DESCENDING).limit(5)
     ret=[]
     for usr in users:
-        if usr['username'] != 'tunnell':
-            ret.append({"name": usr['username'], "g_id": usr['g_id']})
-        else:
-            ret.append({"name": usr['username'], "g_id": 0})
+        #if usr['username'] != 'tunnell':
+        ret.append({"name": usr['username'], "g_id": usr['g_id']})
+        ##else:
+        #ret.append({"name": usr['username'], "g_id": 0})
     return HttpResponse(json.dumps({"list": ret}), content_type="application/json")
 
 @login_required

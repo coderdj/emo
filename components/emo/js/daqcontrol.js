@@ -137,11 +137,18 @@ function loadData( chart, data, callback )
     callback(chart);
 }
 
+function ConvertDateUTC(date){
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(),  date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+}
 
 function GetTimeString(startdate){
     // Return the time string based on the run's start time
     // also computes how long run has been running in a nice way
-    var nowdate = new Date();
+    var nowdate = ConvertDateUTC(new Date());
+    //startdate = ConvertDateUTC(startdate);
+    console.log("!!!");
+    console.log(Date.UTC(startdate));
+    console.log(nowdate.toString());
     var diff = nowdate-startdate;
     console.log(nowdate);
     console.log(startdate);
@@ -213,12 +220,11 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
     $.getJSON( dataUrl, function(detector_data){
-console.log(detector_data);
-console.log("flipflop");
+
 	$.getJSON( nodesUrl, function(node_data) {
 
 	    
-	    var currentTime = new Date()
+	    var currentTime = new Date().getTime();
 	    if(node_data.length>0)
 		currentTime = new Date(node_data[0]['date']['$date']);
 	    var nodeInfo = {"tpc": [], "muon_veto": []};
@@ -279,9 +285,9 @@ console.log("flipflop");
 		    thedatestring = detector_data['status'][status_id].startTime;
                     console.log(thedatestring);
                     thedatestring = thedatestring.substr(0, thedatestring.length - 8);
-		    thedatestring += "+01:00";
+		    //thedatestring += "+01:00";
 
-		    startdate = new Date( thedatestring  );
+		    startdate = ConvertDateUTC(new Date( thedatestring  ));
                     if(detector_data['status'][status_id]['state'] == "Running"){
 			timestring = GetTimeString( startdate );
 			if(det_name == 'tpc')
@@ -312,10 +318,10 @@ console.log("flipflop");
 			thedatestring = thedatestring.substr(0, 
 							     thedatestring.length - 
 							     8);
-			thedatestring += "+01:00";
+			//thedatestring += "+01:00";
 			console.log(thedatestring);
 			
-			startdate = new Date( thedatestring );
+			startdate = ConvertDateUTC(new Date( thedatestring ));
 			if(detector_data['status'][status_id]['state'] == "Running")
 			    timestring = GetTimeString( startdate );
 			else

@@ -1,14 +1,15 @@
 function new_scene(div_name){
     renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending,
-					shadowMapEnabled:  true,
+//					shadowMapEnabled:  true,
+					maxLights: 10,
 					alpha: true});
-    renderer.setClearColor(0x000000, 1);    
+//    renderer.setClearColor(0x000000, 0);    
     var width = window.innerWidth;
     var height = window.innerHeight;
     document.camera = new THREE.PerspectiveCamera(90, width/height, .1, 10000);
     scene = new THREE.Scene();
     scene.add(document.camera);
-
+    document.scene=scene;
     document.camera.position.z = 500;
     document.camera.position.y = height/2;//375;
     document.camera.position.x = 0;
@@ -20,8 +21,8 @@ function new_scene(div_name){
     document.scene_light2 = new THREE.PointLight( 0xff3333, 1.5, 0. );
     var scene_light3 = new THREE.PointLight( 0x5992c2, .5, 0. );
 
-    scene.fog = new THREE.Fog("#253e63", 1., 1500);
-    scene.fog = new THREE.FogExp2("#000000"/*"#253e63"*/, 0.001);
+//    scene.fog = new THREE.Fog("#253e63", 1., 1500);
+//    scene.fog = new THREE.FogExp2("#000000"/*"#253e63"*/, 0.001);
     //scene.add(fog);
 
     scene_light.position.x=0;
@@ -74,14 +75,38 @@ function new_scene(div_name){
     scene.add( plane );
 
 */
+    // Load the background texture
+    var texture = new THREE.ImageUtils.loadTexture( document.background_image );
+    console.log(texture);
+    var backgroundMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 2),
+        new THREE.MeshBasicMaterial({
+            map: texture, 
+        }));
+    backgroundMesh.material.depthTest = false;
+    backgroundMesh.material.depthWrite = false;
+    backgroundMesh.position.x=0;
+    backgroundMesh.position.y=0;
+    backgroundMesh.position.z =0;
+    //backgroundMesh.position.y=-2 + 0 + window.innerHeight/2;//-(window.innerWidth/2)-100;                                                                      
+    //backgroundMesh.position.z=-1000;
+    //backgroundMesh.rotation.z = Math.PI/2;
+    //document.planes.push(plane);
+    document.backgroundscene = new THREE.Scene();
 
-    var geometry = new THREE.PlaneGeometry( 5000, 5000, 100, 100 );
-    for (var i = 0, l = geometry.vertices.length; i < l; i++) {
-	geometry.vertices[i].z = Math.random()*300-800;
-    }
+    //document.backgroundscene.add(ambient_light);                                  
+    document.bgCam = new THREE.Camera();
+    document.backgroundscene.add(document.bgCam);
+    document.backgroundscene.add( backgroundMesh );
+
     
-    var material = new THREE.MeshLambertMaterial( {color: 0x003333} );
-    document.plane = new THREE.Mesh( geometry, material );
+    //var geometry = new THREE.PlaneGeometry( 5000, 5000, 100, 100 );
+    //for (var i = 0, l = geometry.vertices.length; i < l; i++) {
+    //geometry.vertices[i].z = Math.random()*300-800;
+//}
+    
+    //var material = new THREE.MeshLambertMaterial( {color: 0x003333} );
+    //document.plane = new THREE.Mesh( geometry, material );
     //document.plane.position.z=-500;
     //scene.add( document.plane );
 
@@ -90,6 +115,8 @@ function new_scene(div_name){
     
 }
 function InitializeGrids(){
+    if(!document.useGrid)
+	return;
     for(var i=0; i<4; i+=1){
 	var geometry = new THREE.PlaneGeometry( window.innerHeight, 2*Math.abs(document.left_bound), 10, 10 ); 
 	//var geometry = new THREE.BoxGeometry(2*Math.abs(document.left_bound), window.innerHeight, 10, 10, 10);
@@ -103,6 +130,8 @@ function InitializeGrids(){
     }
 }
 function AnimateGrids(clock_corr){
+    if(!document.useGrid)
+	return;
     var top_plane_position = -1000;
     var oob_index=-1;
     for(var i=0; i<document.planes.length; i+=1){
@@ -126,6 +155,123 @@ function GetV(seed){
           absval+=5.;
       return absval;
 }
+
+function CreateNebAst(){
+    
+    // Make nebula
+    neb = Math.floor(Math.random()*document.background_nebs.length);
+    var map = new THREE.TextureLoader().load( document.background_nebs[neb] );
+    var material = new THREE.SpriteMaterial( { map: map, fog: true, } );
+    var sprite = new THREE.Sprite( material );
+    document.background_sprites.push(sprite);
+    sprite.scale.set(25, 25, 25);
+
+    InitializeNebAst(document.background_sprites.length-1, true);
+    scene.add( sprite );
+
+    // Make asteroid
+    ast= Math.floor(Math.random()*document.background_ast.length);
+        var map = new THREE.TextureLoader().load( document.background_ast[ast] );
+        var material = new THREE.SpriteMaterial( { map: map, fog: true, transparent: true } );
+        var sprite = new THREE.Sprite( material );
+    sprite.scale.set(25, 25, 25);
+
+    document.background_sprites.push(sprite);
+    InitializeNebAst(document.background_sprites.length-1, true);
+    
+    scene.add( sprite );
+}
+
+function InitializeNebAst(index, newast){
+    if(index < 0 || index > document.background_sprites.length)
+        return;
+    y = 2000;
+    if(newast)
+        y = 2000*Math.random() + 1200;
+    bubble_range=1000;
+
+    position = [Math.random() *(2*window.innerWidth)-((2*window.innerWidth)/2),
+                y,
+                (Math.random() * bubble_range) -1000];
+    document.background_sprites[index].position.x = position[0];
+    document.background_sprites[index].position.y = position[1];
+    document.background_sprites[index].position.z = position[2];
+
+}
+function AnimateNebAst(anim){
+    if(document.background_sprites.length < document.max_background_sprites)
+	CreateNebAst();
+    for(x=0; x< document.background_sprites.length; x+=1){
+        document.background_sprites[x].position.y -= document.background_sprite_speed*anim;
+//      document.bubbles[x]['outer'].position.y -= document.bubble_speed*anim;         
+	if(document.background_sprites[x].position.y < window.innerHeight - 1000)
+            InitializeNebAst(x, false);
+    }
+}
+
+
+function CreateBubble(){
+
+    // Get semi-random color and size
+    var rsize = Math.random()*document.WIMP_size/50 + 1;
+    var crand = Math.floor(Math.random()*document.bubble_colors.length);
+
+    // Make materials and mesh
+    var innerMaterial = new THREE.MeshLambertMaterial( 
+	{//opacity: 0.5, 
+	 color: document.bubble_colors[crand]} );        
+    var outerMaterial = new THREE.MeshBasicMaterial( 
+	{color: document.bubble_colors_outer[crand],
+	side: THREE.BackSide} );
+    var geometry = new THREE.SphereGeometry(rsize, 12, 12);
+    
+    // Make the object
+    var bubble_inner = new THREE.Mesh(geometry, innerMaterial);
+    //var bubble_outer = new THREE.Mesh(geometry, outerMaterial);
+
+    // Put it somewhere
+    document.bubbles.push({
+	//"outer": bubble_outer, 
+	"inner": bubble_inner});
+    InitializeBubble(document.bubbles.length-1, true);
+
+    // Add to scene
+    scene.add(bubble_inner)
+//    scene.add(bubble_outer);
+}
+function InitializeBubble(index, newbub){
+    if(index < 0 || index > document.bubbles.length)
+	return;
+    y = 2000;
+    if(newbub)
+	y = 2000*Math.random() + 1200;
+    var sign=-1;
+    bubble_range=100;
+    if(Math.random() > .5)
+        sign=1;
+    if(sign==-1)
+        bubble_range = 100;
+    position = [Math.random() *(2*window.innerWidth)-((2*window.innerWidth)/2),
+		y, 
+		(Math.random() * bubble_range) * sign];
+    document.bubbles[index]['inner'].position.x = position[0];
+    document.bubbles[index]['inner'].position.y = position[1];
+    document.bubbles[index]['inner'].position.z = position[2];
+ //   document.bubbles[index]['outer'].position.x = position[0];
+ //   document.bubbles[index]['outer'].position.y = position[1];
+ //   document.bubbles[index]['outer'].position.z = position[2];          
+}
+function AnimateBubbles(anim){
+    if(document.bubbles.length < document.max_bubbles)
+	CreateBubble();
+    for(x=0; x< document.bubbles.length; x+=1){
+	document.bubbles[x]['inner'].position.y -= document.bubble_speed*anim;
+//	document.bubbles[x]['outer'].position.y -= document.bubble_speed*anim;
+	if(document.bubbles[x]['inner'].position.y < window.innerHeight - 1000)
+	    InitializeBubble(x);
+    }
+}
+
 
 function rotateAroundObjectAxis(object, axis, radians) {
 
@@ -219,13 +365,22 @@ function DetonateMissle(){
 
 }
 function FireBullet(n){
-    colors = [0x0000ff, 0x00ff00, 0xff0000, 0xffffff];
+    colors = [0x4444aa, 0x44aa44, 0xaa4444, 0xffffff];
     color = colors[0];
     if(n<colors.length)
 	color=colors[n];
-    bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),                     
-                            new THREE.MeshBasicMaterial(                  
-                                {color: color}));    
+    //bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),                     
+      //                      new THREE.MeshBasicMaterial(                  
+        //                        {color: color}));    
+    var laserBeam= new THREEx.LaserBeam(color);
+//    scene.add(laserBeam.object3d);
+    var object3d= laserBeam.object3d
+  //  object3d.position.x= document.player.position.x;
+  //  object3d.position.y= document.player.position.y;
+    object3d.rotation.z= -Math.PI/2;
+    object3d.scale.set(25, 100, 25);
+    bullet = object3d;
+
     bul = {"x": document.player.position.x, 'bul': bullet};
     document.bullets.push(bul);                                                  
     scene.add(bullet);                                                          
@@ -337,9 +492,15 @@ function fire(){
 
 function NewBullet(x, y, z){
 
-    bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),
-                                     new THREE.MeshBasicMaterial(
-                                         {color: 0xffffff}));
+//    bullet = new THREE.Mesh(new THREE.SphereGeometry(8,1,1),
+  //                                   new THREE.MeshBasicMaterial(
+    //                                     {color: 0xff0000}));
+    var laserBeam= new THREEx.LaserBeam(0xaa4444);
+    var bullet= laserBeam.object3d
+    bullet.rotation.z= -Math.PI/2;
+    bullet.scale.set(35, 70, 35);
+    //bullet = object3d;
+
 /*    var map = document.SPRITE_MAP;
     var material = new THREE.SpriteMaterial( { map: map, color: 0xffffff, fog: true } );
     var bullet = new THREE.Sprite( material );*/
@@ -348,6 +509,12 @@ function NewBullet(x, y, z){
     bullet.position.x = x;
     bullet.position.y = y;
     bullet.position.z = z;
+    
+if(document.sound){
+        document.getElementById(document.laser).pause();
+        document.getElementById(document.laser).currentTime=0;
+        document.getElementById(document.laser).play();
+    }
 
 }  
 
@@ -370,13 +537,20 @@ size = 50;
 	sign=1;
     if(sign==-1)
 	WIMP_range = 600;
+
+    var trand = Math.floor(Math.random()*document.planets.length);
+    var texture= THREE.ImageUtils.loadTexture(document.planets[trand]);
+
     new_WIMP =
         { 'x': Math.random() *(2*window.innerWidth)-((2*window.innerWidth)/2),
 	  'z': (Math.random() * WIMP_range + 150) * sign,     
           'y': 1800,
           'obj': new THREE.Mesh(new THREE.SphereGeometry(size, 12, 12),
                                  new THREE.MeshLambertMaterial({
-                                     color: 0x5992c2,
+				     map: texture,
+				     //bumpMap: texture,
+				     //bumpScale: 5,
+//                                     color: 0x5992c2,
 				 })),
 	  'wobble':-1,
 	  'speed': Math.random() *document.WIMP_speed + document.WIMP_min_speed,
@@ -466,7 +640,15 @@ function animate(){
     document.playerLight.position.x =document.player.position.x;
     document.playerLight.position.y =document.player.position.y;
     document.playerLight.target.position.set( document.player.position.x,
-                                              document.player.position.y+10, 0);
+					      document.player.position.y+100, 0);
+    if(document.useSpotlight){
+	document.spotLight.position.x = document.player.position.x;
+    document.spotLight.position.y =document.player.position.y;
+
+    document.spotLight.lookAt(new THREE.Vector3(document.player.position.x,
+					       document.player.position.y+1000,
+					       0))
+    }
     if(document.cameraFollow){
 	document.camera.position.x = document.player.position.x;
 	document.camera.position.y = document.player.position.y -50;
@@ -501,7 +683,7 @@ function animate(){
 	  Math.abs(document.WIMPs[x]['obj'].position.z) > 400)
 	    document.WIMPs[x]['wobble']*=-1;
 //	document.WIMPs[x]['light'].position.y -= document.WIMPs[x]['speed'];
-	if(document.WIMPs[x]['obj'].position.y < -500){
+	if(document.WIMPs[x]['obj'].position.y < -800){
 
 //	    scene.remove(document.WIMPs[x]['obj']);
 	    var sign=-1;
@@ -534,6 +716,8 @@ function animate(){
 
     // Process Enemy movement
     ProcessEnemies(clock_corr);
+    AnimateBubbles(clock_corr);
+    AnimateNebAst(clock_corr);
 
     document.background_stars.sort(function(a, b) {
         return parseFloat(a['x']) - parseFloat(b['x']);
@@ -603,7 +787,7 @@ function animate(){
                                    document.background_stars[y]['star'].position.y,
                                    document.background_stars[y]['star'].position.z,  0);
 		    
-		    document.background_stars[y]['star'].material.color.setHex(document.objcolors[document.background_stars[y]['hit']]);
+		    document.background_stars[y]['star'].material.materials[1].color.setHex(document.objcolors[document.background_stars[y]['hit']]);
 		    break;
 		}
 
@@ -630,7 +814,10 @@ function animate(){
 
     }, 1000 / 100 );
     //requestAnimationFrame(animate);
-    renderer.render(scene, document.camera);
+    renderer.autoClear = false;
+    renderer.clear();
+    renderer.render(document.backgroundscene, document.bgCam);
+    renderer.render(document.scene, document.camera);
 }
 
 function BlowStar(y){
@@ -671,7 +858,7 @@ function BlowStar(y){
         document.impurities-=1;
     rand = Math.floor(Math.random()*document.objcolors.length);
     document.background_stars[y]['hit'] = rand;
-    document.background_stars[y]['star'].material.color.setHex
+    document.background_stars[y]['star'].material.materials[1].color.setHex
     (document.objcolors[document.background_stars[y]['hit']]);
     
     document.background_stars[y]['y'] = Math.random()*500+1500;
@@ -700,6 +887,40 @@ function ProcessEnemies(clock_corr)
 {    
     if(document.background_stars.length < document.n_stars +
        Math.round(document.score/2000)){
+	
+	// Make a new enemy
+	loader = new THREE.JSONLoader();
+	loader.load( document.enemy_geo_0,
+                     function (geometry, materials){			
+			 size = Math.random()*
+			     (document.max_enemy_size-document.min_enemy_size)
+			     + document.min_enemy_size; 
+			 rand = Math.floor(Math.random()
+					   *document.objcolors.length);
+			 console.log(materials);
+			 materials[1].color.setHex(document.objcolors[rand]);
+			 var enemy_material = 
+			         new THREE.MeshFaceMaterial(materials);
+
+		//	     THREE.MeshLambertMaterial( { color: document.objcolors[rand], ambient: 0xaaaaaa, shading: THREE.FlatShading } );
+
+/*			 new THREE.MeshLambertMaterial( {
+                            // wireframe: true,
+                             color: document.objcolors[rand],
+                             //vertexColors: THREE.NoColors,
+			     ambient: 0xaaaaaa,
+                             shading: THREE.flatShading,                   
+			 });*/
+			 new_star = {
+			     'x': .8*(Math.random() *
+				      window.innerWidth-(window.innerWidth/2)),
+			     'z': 10000,//Math.random() * 50, 
+			     'y': Math.random() * 1000 + 1200, 
+			     'hit': rand,                                      
+			     'star': new THREE.Mesh(geometry, enemy_material),
+			 };
+			 console.log(new_star['star']);
+			     /*
         size = Math.random()*(document.max_enemy_size-document.min_enemy_size)
             + document.min_enemy_size;
         rand = Math.floor(Math.random()*document.objcolors.length);
@@ -720,23 +941,27 @@ function ProcessEnemies(clock_corr)
 					 wireframeLinewidth: 2})),
 //                                        [Math.round(Math.random() *                                                                            
 //                                                    document.objcolors.length)]}))                                                             
-            };
-	//new_star['star'].scale.set(size/5,size/5,size/5);
+            };*/
+	    new_star['star'].scale.set(size/5,size/5,size/5);
+			 new_star['star'].rotation.x = Math.PI/2;                                      
+
 	scene.add(new_star['star']);
-        new_star['star'].position.x = new_star['x'];
-        new_star['star'].position.y = new_star['y'];
-	new_star['star'].position.z = new_star['z'];
-        new_star['size']=size;
-        new_star['xoff']=0;
-        new_star['rotax'] = new THREE.Vector3(Math.random(),Math.random(),
-					      Math.random());
-        new_star['xofflim']=Math.random()*300+50;
-        new_star['xoffdir']=-1;
-	new_star['xoffstep']=Math.random()*5;
-	//document.background_stars.push(new_star);                                                                                              
-        document.background_stars = insert(new_star,
-                                           document.background_stars, 'x');
-    }
+			 
+			 new_star['star'].position.x = new_star['x'];
+			 new_star['star'].position.y = new_star['y'];
+			 new_star['star'].position.z = new_star['z'];
+			 new_star['size']=size;
+			 new_star['xoff']=0;
+			 //new_star['rotax'] = new THREE.Vector3(Math.random(),Math.random(),
+			 //Math.random());
+			 new_star['xofflim']=Math.random()*300+200;
+			 new_star['xoffdir']=-1;
+			 new_star['xoffstep']=Math.random()*5;
+			 //document.background_stars.push(new_star);                                                                                              
+			 document.background_stars = insert(new_star,
+				document.background_stars, 'x');
+		     });
+		   }
 
       // Star movement                                                                                                                             
     for(x=0; x<document.background_stars.length; x+=1){
@@ -744,12 +969,12 @@ function ProcessEnemies(clock_corr)
         //do x jitter                                                                                                                            
 	star = document.background_stars[x];
         star['xoff']+=clock_corr*(star['xoffstep']*star['xoffdir']);
-        rotateAroundObjectAxis(star['star'], star['rotax'], .05);//50.);//Math.PI / 180);                                                        
+        //rotateAroundObjectAxis(star['star'], star['rotax'], .305);//50.);//Math.PI / 180);                                                        
 
         if(Math.abs(star['xoff'])>star['xofflim']) star['xoffdir']*=-1;
         if(star['star'].position.x < .95*document.left_bound)
             star['xoffdir'] = 1;
-        if(star['star'].position.x > .95*document.right_bound)
+        else if(star['star'].position.x > .95*document.right_bound)
             star['xoffdir']=-1;
         star['star'].position.x = star['x']+star['xoff'];
 
@@ -810,6 +1035,7 @@ function StartExplosion(posx, posy, posz, big){
     }
     if(min_time_index == -1)
 	return;
+    x = min_time_index;
     if(big==1){
 	document.lights[x]['timer']=30;
 	document.lights[x]['light'].intensity=5.;
@@ -854,6 +1080,20 @@ function light_animation()
 	}
     }
 }
+function generateSprite() {
+    var canvas = document.createElement( 'canvas' );
+    canvas.width = 16;
+    canvas.height = 16;
+    var context = canvas.getContext( '2d' );
+    var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
+    gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
+    gradient.addColorStop( 0.4, 'rgba(0,255,255,.6)' );
+    gradient.addColorStop( 0.6, 'rgba(0,0,64,.3)' );
+    gradient.addColorStop( 1, 'rgba(0,0,64,0.0)' );
+    context.fillStyle = gradient;
+    context.fillRect( 0, 0, canvas.width, canvas.height );
+    return canvas;
+    }
 function MakePhotonAnimation(posx, posy, posz, big){
     
     var sm =0.1;
@@ -882,39 +1122,13 @@ function MakePhotonAnimation(posx, posy, posz, big){
         photons.vertices.push(particle);
     }
     
-//    var material = new THREE.ParticleBasicMaterial( 
-//	{ size: 10,
-//          color: document.objcolors[Math.round(Math.random() * 
-//					       document.objcolors.length)] });
-    
-
-      var orbTex = new THREE.Texture(orb);                               
-    //orbTex.wrapS = THREE.RepeatWrapping;                               
-    //orbTex.wrapT = THREE.RepeatWrapping;                               
-    //orbTex.repeat.x = orbTex.repeat.y = 32;                            
-    orbTex.needsUpdate = true;               
-    //uniforms = {
-//	color:     { type: "c", value:  document.objcolors[Math.round(Math.random()*
-//								      document.objcolors.length)] },
-								      //	texture:   { type: "t", value: orbTex }
-  //  };
-
-    
-    properties = {size: 30, map: orbTex, blending: THREE.AdditiveBlending, transparent: true, color: document.objcolors[Math.round(Math.random()*document.objcolors.length)]};
+    properties = {map: new THREE.CanvasTexture( generateSprite() ),
+		  size: 40, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, };//color: document.objcolors[Math.round(Math.random()*document.objcolors.length)]};
     if(!big){
-	properties['size']=20;
-	properties['color']="0xffffaa";
+	properties['size']=30;
     }
     material = new THREE.PointsMaterial(properties);
-//    var material = new THREE.ShaderMaterial( {
-//	uniforms:       uniforms,
-//	vertexShader:   document.getElementById( 'vertexshader' ).textContent,
-//	fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
-//	blending:       THREE.AdditiveBlending,
-//	depthTest:      false,
-//	transparent:    true	
-//	});
-
+    console.log(material);
     var photon_system = new THREE.ParticleSystem( photons, material );
     photon_system.sortParticles = true;
     scene.add(photon_system);
@@ -981,9 +1195,15 @@ function reset(){
     if(document.playerLight!=null){
 	scene.remove(document.playerLight.target);
 	scene.remove(document.playerLight);
+	if(document.useSpotlight)
+	    scene.remove(document.spotLight);
     }
     for(x=0;x<document.background_stars.length;x+=1)
 	scene.remove(document.background_stars[x]['star']);
+    for(x=0;x<document.bubbles.length;x+=1){
+	scene.remove(document.bubbles[x]['inner']);
+	scene.remove(document.bubbles[x]['outer']);
+    }
     for(x=0;x<document.bullets.length; x+=1)
 	scene.remove(document.bullets[x]['bul']);
     for(x=0;x<document.en_bullets.length;x+=1)
@@ -998,12 +1218,18 @@ function reset(){
     for(x=0;x<document.planes.length;x+=1){
 	scene.remove(document.planes[x]);
     }
+    for(x=0;x<document.background_sprites.length;x+=1){
+        scene.remove(document.background_sprites[x]);
+    }
+
+    document.background_sprites=[];
+    document.bubbles = [];
     document.lights=[];
     document.player=null;
     document.playerLight=null;
     document.en_bullet_speed=10;
       document.max_enemy_size=40;
-      document.min_enemy_size=15;
+      document.min_enemy_size=30;
       document.player_x=0;
       document.player_y = 0;
       document.background_stars=[];
@@ -1019,14 +1245,28 @@ document.n_stars=15;
       document.ddown=false;
       document.en_bullet_chance=10; // 1-1000, rand()*1000 < num
 //    document.objcolors = [0xFF0FFF, 0xCCFF00, 0xFF000F, 0x996600, 0xFFFFFF];
-    document.objcolors=[ 0xfff607, 0x07ff70, 0x0782ff, 0xff0707];
+    document.objcolors=[ 0xaa8811, 0x33aa33, 0x3388aa, 0xaa3333];
+//    document.objcolors=[ 0xfff607, 0x07ff70, 0x0782ff, 0xff0707];
     document.expcolors=[ 0xffffff, 0xfff607, 0x07ff70, 0x0782ff, 0xff0707, 0xffffff];
+
+    document.bubble_colors = [0xff0303, 0x8400ff, 0x00fff6, 0x0028ff, 0x00ff28];
+    document.bubble_colors_outer = [0xff0303, 0x8400ff, 0x00fff6, 0x0028ff, 0x00ff28];
     //Planes
+    document.useGrid=false;
     document.planes = [];
-    document.plane_speed=5;
+    document.plane_speed=8;
     document.sound5k = false;
     document.sound15k = false;
     document.sound30k = false;
+
+    //bubbles
+    document.bubble_speed = 15;
+    document.max_bubbles = 50;
+
+    // sprites
+    document.background_sprite_speed=1;
+    document.max_background_sprites=100;
+
     // WIMPs
     document.WIMPs=[];
     document.max_WIMPs=40;
@@ -1042,7 +1282,7 @@ document.n_stars=15;
     document.missles=0;
     document.play_power_up=false;
     //document.objcolors=[0xFFFFFF];
-
+    document.useSpotlight=false;
 
 }
 
@@ -1051,25 +1291,51 @@ function draw_simple_cylinder(scene, camera, renderer, callback, geo_path){
     document.enemyGeoPath = geo_path;
         loader = new THREE.JSONLoader();
 
+    if(document.useSpotlight){
+	var slgeometry = new THREE.CylinderGeometry(0.0, 250, 700, 48*2, 40, true);
+	slgeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, -slgeometry.parameters.height/2, 0 ) );
+	slgeometry.applyMatrix( new THREE.Matrix4().makeRotationX( -Math.PI / 2 ) );
+	var slmaterial = new THREEx.VolumetricSpotLightMaterial();
+	//var slmaterial = new THREE.MeshBasicMaterial();
+	document.spotLight  = new THREE.Mesh(slgeometry, slmaterial);
+	document.spotLight.position.set(0, 0, 0);
+	document.spotLight.lookAt(new THREE.Vector3(0,500, 0));
+	
+	
+	slmaterial.uniforms.lightColor.value.set('white');
+	slmaterial.uniforms.attenuation.value =250;
+	slmaterial.uniforms.attenuation2.value =500;
+
+	
+	slmaterial.uniforms.spotPosition.value= document.spotLight.position;
+	slmaterial.uniforms.anglePower.value =1;
+	
+	scene.add(document.spotLight);
+    }
+
     document.playerLight = new THREE.SpotLight( 0xffffff, 5., 0., Math.PI/2 );
-    scene.add( document.playerLight.target )
+    //document.playerLight.target = (0, 10, 0);
+    scene.add( document.playerLight.target );
 
     document.playerLight.position.set( 0, 0, 0 );
     //document.playerLight.castShadow=true;
     document.playerLight.target.position.set( 0, 10, 0 );
     
     scene.add( document.playerLight );
-    document.player = new THREE.Mesh(new THREE.CylinderGeometry(10,10,20),
-                            new THREE.MeshLambertMaterial(
-				{ wireframe: true, opacity: 0.5 } ));
+    document.player = new THREE.Mesh(new THREE.CylinderGeometry(0,10,20),
+                            new THREE.MeshBasicMaterial(
+				{ wireframe: true } ));
     document.player.position.set(0, 0, 0);
     scene.add(document.player);
     document.player.position.y = document.player_y;
     while(document.lights.length < 15){
 	light_color = document.expcolors[Math.floor(Math.random()*document.expcolors.length)];
-
 	if(document.lights.length < document.expcolors.length)
 	    light_color = document.expcolors[document.lights.length];
+	
+	// For all blue
+	light_color = 0x2222aa;
+
 	scene_light = new THREE.PointLight( light_color, 0.,0. );	
 	scene.add(scene_light);
 	document.lights.push({"timer": 0, "light": scene_light});

@@ -15,7 +15,12 @@
     <script src="{% static "js/OrbitControls.js" %}"></script>
     <script src="{% static "emo/js/game.js" %}"></script>
     <script src="{% static "emo/js/orb.js" %}"></script>
-    <audio id="theme_song" autobuffer style="display:none;" src="{% static "emo/tcobra.m4a" %} "></audio>
+    <script src="{% static "js/threex.volumetricspotlightmaterial.js" %}"></script>
+    <script src="{% static "js/threex.laserbeam.js" %}"></script>
+    <audio id="theme_song_1" autobuffer style="display:none;" src="{% static "audio/l1.mp3" %} "></audio>
+    <audio id="theme_song_2" autobuffer style="display:none;" src="{% static "audio/l2.mp3" %} "></audio>
+    <audio id="theme_song_3" autobuffer style="display:none;" src="{% static "audio/l3.mp3" %} "></audio>
+    <audio id="theme_song_4" autobuffer style="display:none;" src="{% static "audio/l4.mp3" %} "></audio>
     <audio id="fire_0" autobuffer style="display:none;" src="{% static "audio/s2_short.mp3" %} "></audio>
 <audio id="dest_0" autobuffer style="display:none;" src="{% static "audio/s1_long.mp3" %} "></audio>
 <audio id="zipper" autobuffer style="display:none;" src="{% static "audio/zipper.mp3" %} "></audio>
@@ -23,7 +28,15 @@
 <audio id="power_up" autobuffer style="display:none;" src="{% static "audio/power_up.mp3" %}"></audio>
 <audio id="power_up_2" autobuffer style="display:none;" src="{% static "audio/power_up_2.mp3" %}"></audio>
 <audio id="expl" autobuffer style="display:none;" src="{% static "audio/expl.mp3" %}"></audio>
+<audio id="laser" autobuffer style="display:none;" src="{% static "audio/laser.mp3" %}"></audio>
+<style>
+  body{
+//  background-image:url("/components/img/space_1.jpg");
+//background-image:url("/components/img/nebula.png");
 
+}
+
+</style>
 
   <!--  <script>
       document.SPRITE_MAP = new THREE.TextureLoader().load( "{% static "img/particle_1.png" %}" );
@@ -37,8 +50,9 @@
       <div id="yourdiv" style="display: inline-block;margin-top:-200px;background-color:white;padding:10px;">
 	<h4 id="last_score"></h4>
 	<h2>XeBlaster</h2>
-	<h4>Protect your detector from impurities! Don't let them pollute your signal!</h4>	
+	<h4>Battle the forces of evil to secure the galaxy's supply of xenon!</h4>
 	<p>Move: wasd, Fire: enter, Camera: j</p>
+	<p>Hold enter: charge shot</p>
 	<p>
 	  <strong>High Scores</strong>
 	  <ul id="hslist" style="list-style-type:none">
@@ -54,7 +68,7 @@
       <h2 style="color:white">Missles: <span id="missles">0</span></h2>
       </div>
     <div style="position:fixed;bottom:0;right:0;padding-right:50px;">
-      <h2 style="color:white">Impurities: <span id="impurities">0</span></h2>
+      <h2 style="color:white">Enemies missed: <span id="impurities">0</span></h2>
     </div>
     <script>
       var Url="/management/get_hs";
@@ -75,6 +89,23 @@ console.log(data);
 
            });
       }
+
+
+    // Get static elements
+		  document.background_image = "{% static "img/space_1.jpg" %}";
+     document.planets = [ "{% static "img/asteroid_0.jpg" %}", 
+	  "{% static "img/asteroid_1.gif" %}",
+		  "{% static "img/asteroid_2.jpg" %}"]
+     document.background_nebs=[ "{% static "img/assets/neb_0.png" %}",
+"{% static "img/assets/neb_1.png" %}",
+"{% static "img/assets/neb_2.png" %}",
+"{% static "img/assets/neb_3.png" %}"];
+document.background_ast=[ "{% static "img/assets/ast_0.png" %}",
+"{% static "img/assets/ast_1.png" %}",
+"{% static "img/assets/ast_2.png" %}",
+"{% static "img/assets/ast_3.png" %}"];
+
+
       function SetHighScore(){
          var seturl="/management/set_hs?g_id=" + document.score.toString();
          console.log(seturl);
@@ -89,7 +120,8 @@ console.log(data);
       document.getElementById(document.game_end).play();
 
          SetHighScore();			   
-		document.getElementById(document.music).pause();
+         for(x=0;x<document.music.length;x+=1)
+		document.getElementById(document.music[x]).pause();
          document.run_animation=false;
          document.getElementById("last_score").innerHTML = "Your last score: " + document.score.toString();
       reset;
@@ -98,9 +130,11 @@ console.log(data);
       function StartGame(){
       reset();
 
-      document.getElementById(document.music).currentTime=0;
-      document.getElementById(document.music).volume=.3;
-      document.getElementById(document.music).play();
+      for(x=0;x<document.music.length;x+=1){
+      document.getElementById(document.music[x]).currentTime=0;
+      document.getElementById(document.music[x]).volume=.6;
+      }
+      document.getElementById(document.music[0]).play();
       
 
       $("#menu").hide();
@@ -121,13 +155,40 @@ document.sound=true;
       document.run_animation=false;
       document.fire_0="fire_0";
       document.expl="expl";
+      document.laser="laser";
+      document.enemy_geo_0 = "{% static "game/SpaceShip.json" %}";
+      document.getElementById(document.laser).volume=.4;
+     
       document.power_up_2="power_up_2";
-      document.music="theme_song";
+      document.music=["theme_song_2", "theme_song_4", "theme_song_3", "theme_song_1"];		  
+      document.music_index = 0;
+  
 
-document.getElementById(document.music).addEventListener('ended', function() {
-    this.currentTime = 0;
-    this.play();
-}, false);
+document.getElementById(document.music[0]).addEventListener('ended', function() {
+                   this.pause();
+                   this.currentTime=0;
+                   document.getElementById(document.music[1]).currentTime=0;
+                   document.getElementById(document.music[1]).play();
+		  }, false);
+document.getElementById(document.music[1]).addEventListener('ended', function() {
+		     this.pause();
+		     this.currentTime=0;
+                   document.getElementById(document.music[2]).currentTime=0;
+                   document.getElementById(document.music[2]).play();
+                  }, false);
+document.getElementById(document.music[2]).addEventListener('ended', function() {
+		     this.pause();
+		     this.currentTime=0;
+                   document.getElementById(document.music[3]).currentTime=0;
+                   document.getElementById(document.music[3]).play();
+                  }, false);
+document.getElementById(document.music[3]).addEventListener('ended', function() {
+		     this.pause();
+		     this.currentTime=0;
+                   document.getElementById(document.music[0]).currentTime=0;
+                   document.getElementById(document.music[0]).play();
+                  }, false);
+
 
       document.dest_0="dest_0";
       document.game_end="zipper";
@@ -136,8 +197,10 @@ document.getElementById(document.music).addEventListener('ended', function() {
       document.player=null;
       document.background_stars=[];
       document.WIMPs = [];
+		  document.background_sprites=[];
       document.en_bullets=[];
       document.bullets=[];
+		  document.bubbles = [];
       document.photons=[];
 		  document.planes = [];
 

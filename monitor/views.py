@@ -473,7 +473,7 @@ def get_runs_list(get_request):
     run_list = []
     query = {}
     if "run_mode" in get_request:
-        query['runmode'] = get_request['run_mode']
+        query['source.type'] = get_request['run_mode']
 
     if "all_runs" in get_request and get_request['all_runs']==1:
         cursor = collection.find(query)
@@ -924,10 +924,10 @@ def get_uptime(request):
                     day_hist_tpc.append({})
                 logger.error(bin_no)
                 logger.error(len(day_hist_tpc))
-                if doc['runmode'] in day_hist_tpc[bin_no]:
+                if doc['source']['type'] in day_hist_tpc[bin_no]:
                     day_hist_tpc[bin_no][doc['source']['type']]+=incval
                 else:
-                    day_hist_tpc[bin_no][doc['souce']['type']]=incval
+                    day_hist_tpc[bin_no][doc['source']['type']]=incval
             if doc['detector'] == 'muon_veto':
                 while bin_no >= len(day_hist_muon_veto):
                     day_hist_muon_veto.append({})
@@ -946,7 +946,7 @@ def get_uptime(request):
                 if doc['detector'] == 'tpc':
                     while bin_no >= len(day_hist_tpc):
                         day_hist_tpc.append({})
-                    if doc['runmode'] in day_hist_tpc[bin_no]:
+                    if doc['source']['type'] in day_hist_tpc[bin_no]:
                         day_hist_tpc[bin_no][doc['source']['type']]+=incval
                     else:
                         day_hist_tpc[bin_no][doc['source']['type']]=incval
@@ -1020,7 +1020,7 @@ def get_calendar_events(request):
         endtimestamp = run['starttimestamp']
         if "endtimestamp" in run:
             endtimestamp = run["endtimestamp"]
-        retdoc.append({"title": run['runmode'],
+        retdoc.append({"title": run['source']['type'],
                     "runname": run['name'],
                     "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S"),
                     "detectors": list(run['detectors'].keys()), 
@@ -1053,7 +1053,9 @@ def getWaveform(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     db = client[settings.BUFFER_DB_REPL]
                 elif database=="untriggered" and server=="eb2":
-                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
+                    client=MongoClient("mongodb://"+
+                                       settings.MONGO_ADMIN + ":" +
+                                       settings.MONGO_ADMIN_PASS + "@eb2:27001/admin")
                     db=client["untriggered"]
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
@@ -1144,7 +1146,9 @@ def getCollection(request):
         if server == "eb2":
             try:
                 if database=="untriggered":
-                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
+                    client=MongoClient("mongodb://"+settings.MONGO_ADMIN+
+                                       ":"+settings.MONGO_ADMIN_PASS+
+                                       "@eb2:27001/admin")
                     db=client[database]
                     coll_list = db.collection_names()
                     retlist = []
@@ -1209,7 +1213,8 @@ def getModules(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 elif database=="untriggered" and server=="eb2":
-                    client=MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
+                    client=MongoClient("mongodb://"+settings.MONGO_ADMIN+":"+
+                                       settings.MONGO_ADMIN_PASS+"@eb2:27001/admin")
                     retlist = client[settings.BUFFER_DB_REPL][collection].distinct("module")
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
@@ -1252,7 +1257,8 @@ def getChannels(request):
                     retlist = client[settings.BUFFER_DB_REPL][collection].find(
                         {"module":module}).limit(30).distinct("channel")
                 elif database == "untriggered" and server=="eb2":
-                    client= MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
+                    client= MongoClient("mongodb://"+settings.MONGO_ADMIN+":"+
+                                        settings.MONGO_ADMIN_PASS+"@eb2:27001/admin")
                     retlist = client["untriggered"][collection].find({"module":module}).limit(30).distinct("channel")
 
                 else:
@@ -1303,12 +1309,13 @@ def getOccurrences(request):
                     client = MongoClient(settings.BUFFER_DB_ADDR)
                     retlist = list(client[settings.BUFFER_DB_REPL][collection].find(searchdict, {"data":0}).sort("time",-1).limit(500))
                 elif database=="untriggered" and server=="eb2":
-                    client = MongoClient("mongodb://daq:luxdoesnotstink@eb2:27001/admin")
-                    retlist = list(client["untriggered"][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+                    client = MongoClient("mongodb://"+settings.MONGO_ADMIN+":"+
+                                         settings.MONGO_ADMIN_PASS+"@eb2:27001/admin")
+                    retlist = list(client["untriggered"][collection].find(searchdict, {"data":0}).sort("time",-1).limit(500))
 
                 else:
                     client = MongoClient(settings.MV_DB_ADDR)
-                    retlist = list(client[settings.MV_BUFFER_REPL][collection].find(searchdict, {"data":0}).sort("time",1).limit(500))
+                    retlist = list(client[settings.MV_BUFFER_REPL][collection].find(searchdict, {"data":0}).sort("time",-1).limit(500))
 
                 #db = client[database]                
                 client.close()
