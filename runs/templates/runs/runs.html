@@ -15,6 +15,10 @@
 <script src="{% static "js/lodash.core.js" %}"></script>
 <script src="{% static "js/jquery.json-view.js" %}"></script>
 <link href="{% static "css/jquery.json-view.css" %}" rel="stylesheet"/>
+<script src="{% static "jquery-hashtags-master/js/autosize.min.js" %}" type="text/javascript"></script>
+<script src="{% static "jquery-hashtags-master/js/jquery.hashtags.js" %}" type="text/javascript"></script>
+
+<link href="{% static "jquery-hashtags-master/css/jquery.hashtags.css" %}" rel="stylesheet">
 
 
 
@@ -61,14 +65,16 @@
 <div class="emo-search-bar" style="width:100%;">
   <form method="GET" action="/runs/">
     <div class="row">
-      <div class="col-xs-2" style="line-height:40px;padding-left:40px;width:130px"><strong>Search:</strong></div>
-      <div class="col-xs-6 col-sm-2">From: {{form.startdate}} </div>
-      <div class="col-xs-6 col-sm-2">To:&nbsp;   {{form.enddate}} </div>
+      <div class="col-xs-2 col-sm-3" style="line-height:40px;padding-left:40px;width:130px"><strong>Search:</strong></div>
+      <div class="col-xs-6 col-sm-3">From: {{form.startdate}} </div>
+      <div class="col-xs-6 col-sm-3">To:&nbsp;   {{form.enddate}} </div>
 <!--      <div class="col-xs-3">Source: {{ form.mode }}</div>-->
       <div class="col-xs-6 col-sm-3" style="line-height:40px;width:200px">Detector: {{ form.detector }}</div>
-      <div class="col-xs-6 col-sm-3">Query: {{ form.custom }} </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-8 col-sm-7" style="padding-left:130px;">Query: {{ form.custom }} </div>
       <div class="col-xs-1">
-        <button class="btn btn-info btn-sm" style="margin:8px;" type="submit" name="submit" style="height:30%;">Search</button>
+        <button class="btn btn-info btn-sm" type="submit" name="submit" style="height:30%;padding-left:50px;padding-right:50px;margin:8px;">Search</button>
       </div>
     </div>
   </form>
@@ -80,7 +86,7 @@
 </div>
 
 <div class="row" id="main_row" style="margin-top:30px;">
-  <div class="col-sm-8 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
+  <div class="col-sm-7 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
     <table class="table table-bordered" id="runstable" style="background-color:white">
       <thead>
 	<tr>
@@ -107,7 +113,7 @@
       </tbody> 
     </table>
   </div>
-  <div class="col-sm-4 col-xs-12" style="padding:5px;">
+  <div class="col-sm-5 col-xs-12" style="padding:5px;">
     <div class="emobox" id="tab_content" style="padding:10px;margin:0px;overflow-y:scroll;overflow-x:hidden;">
       <div style="height:100%;">
 
@@ -156,6 +162,29 @@
 
 
 <script>
+function AddStrongTags(text){
+  var new_string = "";
+  var last=0;
+  for(var x=0;x<text.length;x+=1){
+    if(text[x]=="#"){
+      new_string += text.substring(last, x);
+      new_string += "<strong style='color:#5992c2'>";
+      open=true;
+      last=x;
+    }
+    else if(open && text[x]==" "){
+      new_string += text.substring(last, x);
+      new_string += "</strong>";
+      open = true;
+      last = x;
+    }
+    else if(x == text.length-1){
+      new_string += text.substring(last, x+1);
+      if(open) new_string += "</strong>";
+    }
+  }
+  return new_string;
+}
  var table;		
 //$(".new_comment_form").submit(function(e){
  
@@ -213,8 +242,8 @@ return false;
 		    ("0"+date.getUTCHours()).slice(-2) + ":" + 
 		    ("0"+date.getUTCMinutes()).slice(-2) + ":" +
 		    ("0"+date.getUTCSeconds()).slice(-2);
-		ret += '<p>{% autoescape off %}';
-		ret += data["text"];
+		ret += '<p class="run_comment">{% autoescape off %}';
+		ret += AddStrongTags(data["text"]);
 		ret += '{% endautoescape %}</p></p></div>';
 		commentdiv.append(ret);
 		    $(".formtextinput").val("");
@@ -253,6 +282,7 @@ function AddTagHTML(data){
 
 }
 $(document).ready(function(){
+
   var height = window.innerHeight;
   var cache_data = {};
   var RUNURL="";
@@ -347,7 +377,8 @@ $(document).ready(function(){
 //    $("div.toolbar").html('<b>Use search box to filter</b>');
       
   // Event listener for opening and closing details
-  $('#runstable tbody').on('click', 'td.runs-expand', function(event){
+  $('#runstable tbody').on('click', 'td.runs-expand', function(event){	
+
       event.preventDefault();
 
       var tr = $(this).closest('tr');
@@ -415,8 +446,8 @@ $(document).ready(function(){
                "." + ("0"+date.getUTCFullYear()).slice(-2) + " at " +
             ("0"+date.getUTCHours()).slice(-2) + ":" + ("0"+date.getUTCMinutes()).slice(-2) + ":" +
             ("0"+date.getUTCSeconds()).slice(-2);
-		ret += '<p>{% autoescape off %}';
-		ret += data.comments[i]["text"];
+		ret += '<p class="run_comment">{% autoescape off %}';
+		ret += AddStrongTags(data.comments[i]["text"]);
         ret += '{% endautoescape %}</p></p></div></div>';
     }
     }
@@ -472,6 +503,9 @@ ret2+="</table>";
 
    document.getElementById("detail_locations").innerHTML=ret2;
    document.getElementById("detail_tags").innerHTML=ret3;
+
+//	$("#run_comment").hashtags();
+        $("textarea").hashtags();
 }
    }); // end getjson
    }

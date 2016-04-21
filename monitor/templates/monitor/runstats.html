@@ -101,12 +101,9 @@ $(document).ready(function() {
                    alert('there was an error while fetching events!');
             },
             eventRender: function(event, element, view){
+                console.log(event);
+                detector=event['detector'];
 
-                detector="tpc";
-                if(event.detectors.length>1)
-                   detector="combined";
-                else if(event.detectors[0][0]=='m')
-                   detector="muon_veto";
                 if(!(detector in colors)){
 
                      var ar = Math.floor((Math.random() * 256) + 1);
@@ -134,12 +131,12 @@ $(document).ready(function() {
 
                 document.getElementById("run_modal_title").innerHTML = "Detail for run " + calEvent.runname;
                 document.getElementById("run_modal_name").innerHTML = calEvent.runname;        
-                detector="tpc";
-                if(calEvent.detectors.length>1)
+                detector=calEvent.detector;
+               /*if(calEvent.detectors.length>1)
                    detector="combined";
                 else if(calEvent.detectors[0][0]=='m')
                    detector="muon_veto";
-
+*/
                 document.getElementById("run_modal_detector").innerHTML = detector;
                 document.getElementById("run_modal_user").innerHTML = calEvent.user;
                 document.getElementById("run_modal_source").innerHTML = calEvent.title;

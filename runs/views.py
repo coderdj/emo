@@ -51,12 +51,13 @@ def last_run_per_det(request):
 
     collection = db[ settings.RUNS_DB_COLLECTION ]
     last_runs_tpc = collection.find({"detector":"tpc"}).sort("start", -1).limit(1)
-    last_runs_mv = collection.find({"detectors":"muon_veto"}).sort("start", -1).limit(1)
+    last_runs_mv = collection.find({"detector":"muon_veto"}).sort("start", -1).limit(1)
     
     retdoc = {"tpc":{}, "muon_veto":{}}
     if last_runs_tpc.count()!=0:
         last_run_tpc = last_runs_tpc[0]
         retdoc["tpc"] = { "name": last_run_tpc['name'],
+                          "number": last_run_tpc['number'],
                           "source": last_run_tpc['source']['type'],
                           "user": last_run_tpc['user'],
                           "date": last_run_tpc['start']
@@ -232,6 +233,26 @@ def download_list ( request ):
     ret = {}
     return HttpResponse( json.dumps( ret ), type = 'application/json' )
 
+def get_hash_tags(comment):
+    tags = []
+    openTag = ""
+    openT=False
+
+    for x in comment:
+        if openT:
+            if x != ' ':
+                openTag+=x
+            else: 
+                openT = false
+                tags.append(openTag)
+                openTag = ""
+        elif x == '#':
+            openT = True            
+    if openT and len(openTag)>0:
+        tags.append(openTag)
+    
+    return tags
+
 @login_required
 def new_comment(request):
 
@@ -265,6 +286,19 @@ def new_comment(request):
                     "date": date,
                     "user":  user,
                     }
+                
+                # Scan for hash tags
+                tags = get_hash_tags(text)
+                if len(tags)>0:
+                    for tag in tags:
+                        subdoc = {
+                            "name": tag,
+                            "user": user,
+                            "date": date
+                        }
+                        mongo_collection.update({"_id": ObjectId(doc_id)},
+                                                {"$push": {"tags": subdoc}})
+                    
 
                 mongo_collection.update({"_id": ObjectId(doc_id)}, {"$push": 
                                                                     {"comments": 

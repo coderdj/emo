@@ -1,0 +1,280 @@
+from django.http import HttpResponsePermanentRedirect, HttpResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+import datetime
+import pytz
+import json
+from pymongo import MongoClient
+from bson.objectid import ObjectId
+from log.models import LogEntryForm, LogSearchForm, LogCommentForm
+from bson.json_util import dumps
+from django.conf import settings
+from equipment.models import NewEquipmentForm, NewActionForm
+import os, mimetypes
+from io import StringIO, BytesIO
+# Create your views here.
+import logging
+logger = logging.getLogger('emo')
+
+
+@login_required
+def equipment(request):
+    
+    # Query the DB for equipment with GET. 
+    
+    c = MongoClient(settings.MONITOR_DB_ADDR)
+    d = c[settings.MONITOR_DB_NAME]
+    
+    mongo_collection = d['equipment']
+    mongo_query = {}
+
+    # Set a value for max entries
+    max_entries = 10000
+
+    if request.method == "GET":
+        
+        if 'type' in request.GET:
+            mongo_query['type'] = request.GET['type']
+        if 'model' in request.GET:
+            mongo_query['model'] = request.GET['model']
+        # add more query possibilities
+
+    cursor = mongo_collection.find(mongo_query, 
+                                   sort= [ ("entry_date", -1)], 
+                                   limit=max_entries)
+    
+    for doc in cursor:
+        if 'status' not in doc.keys():
+            doc['status'] = "Installed"
+            mongo_collection.update({"model":doc['model'],"serial":doc['serial']},doc)
+    '''
+    for doc in cursor:
+        if "actions" not in doc.keys():
+            doc['actions'] = []
+        logger.error((doc['actions']))
+        if len(doc['actions'])>5:
+            new_action = {
+                "date": datetime.datetime.now(),
+                "type": "Item relocation",
+                "location": "LNGS, XENON1T counting room",
+                "user": request.user.username,
+                "comment": "Installed during initial XENON1T DAQ installation. November 2015.",
+                "files": []
+            }
+            doc['actions'].append(new_action)
+            
+            while len(doc['actions'])>3:
+                doc['actions'].pop(2)
+            mongo_collection.update({"model":doc['model'],"serial":doc['serial']},doc)
+    '''
+    
+    ret = {}
+    theform = NewEquipmentForm()
+    if cursor.count() > 0:
+        ret = {"equipment_list": dumps(cursor), "new_eq_form": theform}
+    else:
+        ret = {"equipment_list": [], "new_eq_form": theform}
+    return render(request, "equipment/equipment.html", ret)
+
+def get_diffs(doc, new_entry):
+    diffstring = ""
+    for item in doc.keys():
+        if item=='actions' or item=='_id':
+            continue
+        if doc[item] != new_entry[item]:
+            diffstring += item.upper()+"("+str(doc[item])+", "+str(new_entry[item])+") "
+    return diffstring
+
+@login_required
+def new_equipment(request):
+
+    c = MongoClient(settings.MONITOR_DB_ADDR)
+    d = c[settings.MONITOR_DB_NAME]
+    mongo_collection = d['equipment']
+    mongo_query = {}
+
+    if request.method == "GET":
+        if "model" in request.GET and "serial" in request.GET: 
+            model = request.GET['model']
+            serial = request.GET['serial']
+
+            doc = mongo_collection.find_one({"model": model, "serial":serial})
+            if doc is not None:
+                return HttpResponse(dumps(doc), content_type="application/json")
+        
+    if not request.method == 'POST':
+        return HttpResponsePermanentRedirect("/equipment")
+    
+    # We want a full form so we will use validation
+    entry = NewEquipmentForm(request.POST)
+    if entry.is_valid():
+        
+        # Get Data
+        new_entry = {}
+        for field in entry.cleaned_data.keys():
+            if entry.cleaned_data[field] is not None:
+                if field == 'purchased':
+                    new_entry[field] = (datetime.datetime.combine(entry.cleaned_data['purchased'], datetime.datetime.min.time()))
+                else:
+                    new_entry[field] = entry.cleaned_data[field]
+            else:
+                new_entry[field] = ""
+        
+        new_entry["entry_date"] = datetime.datetime.now()
+        model = new_entry['model']
+        serial = new_entry['serial']
+        doc = mongo_collection.find_one({"model": model, "serial":serial})
+        if doc is not None:
+            new_entry['actions'] = doc['actions']
+            new_entry['entry_date']=doc['entry_date']
+            diffstring = get_diffs(doc, new_entry)
+            doc['actions'].append({
+                "date": datetime.datetime.now(),
+                "type": "Record update",
+                "location": "NA",
+                "user": request.user.username,                
+                "comment": "Database record updated. " + diffstring,
+                "files": []
+            })
+        else:
+            new_entry['actions'] = []
+            new_entry['actions'].append({                      
+                "date": datetime.datetime.now(),
+                "type": "Record creation",
+                "location": "NA",
+                "user": request.user.username,
+                "comment": "Database record created", 
+                "files": []                                        
+            })   
+                
+
+        mongo_collection.update({"model": new_entry['model'],
+                                 "serial": new_entry['serial']},
+                                new_entry, upsert=True)
+
+    return HttpResponsePermanentRedirect('/equipment/')
+
+@login_required
+def get_actions(request):
+    
+    if (request.method !='GET' or 'model' not in request.GET 
+        or 'serial' not in request.GET):
+        return HttpResponse({"actions": []}, content_type="application/json")
+
+    c = MongoClient(settings.MONITOR_DB_ADDR)
+    d = c[settings.MONITOR_DB_NAME]
+    mongo_collection = d['equipment']
+    mongo_query = {"model": request.GET['model'], "serial": request.GET['serial']}
+    
+    doc = mongo_collection.find_one(mongo_query)
+    if doc is None:
+        return HttpResponse(dumps({"actions": []}), content_type="application/json")
+
+    
+    actions = []
+    if 'actions' in doc.keys():
+        for item in doc['actions']:
+            new_action = {
+                "date": item['date'],
+                "type": item['type'],
+                "location": item['location'], 
+                "user": item['user'],
+                "comment": item['comment'],
+                "files": item['files']}
+            actions.append(new_action)
+        return HttpResponse(dumps({"actions": actions}), content_type="application/json")
+    return HttpResponse(dumps({"actions": []}), content_type="application/json")
+
+
+def handle_uploaded_file(file, modelstring, name):
+    # Create file
+    full_path = settings.FILE_PATH + modelstring + name
+    # No writing to other directories
+    if name.find('/') != -1:
+        return
+    if not os.path.exists(os.path.dirname(full_path)):
+        try:
+            os.makedirs(os.path.dirname(full_path))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                logger.error("Error creating file")
+                return
+    with open(full_path, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+@login_required
+def get_file(request):
+    if (request.method != "GET" or 'file' not in request.GET 
+        or 'model' not in request.GET or 'serial' not in request.GET
+        or request.GET['file'].find('/')!=-1):
+        return HttpResponsePermanentRedirect("/equipment")
+    filename = request.GET['file']
+    model = request.GET['model']
+    serial = request.GET['serial']
+    modelstring = ("/" + model + "_" + serial + "/")
+    full_path = settings.FILE_PATH + modelstring + filename
+    if os.path.isfile(full_path):        
+        thefile = BytesIO(open(full_path, "rb").read())
+        mimetype = mimetypes.guess_type(os.path.basename(full_path))[0]
+        return HttpResponse(thefile.read(), content_type=mimetype)
+    return HttpResponsePermanentRedirect("/equipment")
+
+@login_required
+def add_action(request):
+    
+    if request.method != 'POST':
+        return HttpResponsePermanentRedirect("/equipment")
+    
+    form = NewActionForm(request.POST, request.FILES)
+    logger.error(request.POST)
+    if form.is_valid():
+        logger.error("VALID");
+        # First find document
+        c = MongoClient(settings.MONITOR_DB_ADDR)
+        d = c[settings.MONITOR_DB_NAME]
+        mongo_collection = d['equipment']
+
+        mongo_query={}
+        #logger.error(request.POST['manufacturer'])
+        if 'manufacturer' in request.POST and request.POST['manufacturer']!= "":
+            mongo_query = {"model": form.cleaned_data['model'],
+                           "manufacturer": request.POST['manufacturer']}
+        elif 'serial' in form.cleaned_data:
+            mongo_query = {"model": form.cleaned_data['model'],
+                           "serial": form.cleaned_data['serial']}
+        else:
+            return HttpResponsePermanentRedirect("/equipment")
+        logger.error(mongo_query)
+        docs = mongo_collection.find(mongo_query)
+        logger.error(docs.count())
+        if docs.count()==0:
+            return HttpResponsePermanentRedirect("/equipment")
+
+        for doc in docs:
+
+            if "actions" not in doc.keys():
+                doc['actions'] = []
+            new_action = {
+                "date": datetime.datetime.now(),
+                "type": form.cleaned_data['action_type'],
+                "location": form.cleaned_data['location'],
+                "user": request.user.username,
+                "comment": form.cleaned_data['comment'],
+                "files": []
+            }
+            # Handle files. Need to use model object!        
+            for fname in request.FILES.keys():
+                f = request.FILES[fname]
+                new_action['files'].append(f.name)
+                modelstring = ("/" + str(form.cleaned_data['model']) +
+                               "_" + str(form.cleaned_data['serial']) + "/")
+                name = f.name
+                handle_uploaded_file(f, modelstring, name)
+            doc['actions'].append(new_action)
+            mongo_collection.update({"model": doc['model'], 
+                                     "serial": doc['serial']},
+                                    doc, upsert=True)
+    return HttpResponsePermanentRedirect("/equipment")
+
+    

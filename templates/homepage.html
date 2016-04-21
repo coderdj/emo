@@ -1,3 +1,6 @@
+{% load staticfiles %}
+
+<script src="{% static "jquery/js/jquery_timeago.js" %}"></script>
 <style>
 .calbox{
 background-color: white;
@@ -32,43 +35,82 @@ width: calc(100% - 150px);
 <div class="row" style="margin:10px;">
     <div class="calbox col-xs-12 col-sm-8" style="padding-top:0;">
       <div class="row lrow" style="padding-left:10px;padding-top:4px;color:#EEEEEE;background-color:#5992c2;font-weight:bold;font-size:x-large;">
-      <h4>Experiment Overview    
-	<span class="pull-right" style="padding-right:5px">Current DAQ Controller: <span id="superman"></span></span>
-      </h4>                                         
+	<h3>Overview <span class="pull-right" style="font-size:14px;padding-top:10px;padding-right:5px">Current DAQ Controller: <span id="superman"></span></span>
+      </h5> </h3>
     </div>
 
-      <h5 style="padding-left:0px;margin-bottom:0;margin-left:-15px;"><strong>Most recent data sets</strong></h5>
+      <h4 style="padding-left:3px;margin-bottom:0;margin-left:-15px;"><strong>Latest Data</strong></h4>
       <div class="row lrow" style="border-width:0">
-	<div class="col-sm-2 col-xs-12" style="background-color:#36bc98;color:#EEEEEE;"><strong>TPC</strong></div>
-	<div class="col-sm-8 col-xs-12" id="tpc_run_string"></div>	
-	<div class="col-sm-2 col-xs-12" id="tpc_run_link"></div>
+	<div class="col-sm-2 col-xs-12" style="background-color:#5992c2;color:#EEEEEE;"><strong>TPC</strong></div>
+	<div class="col-sm-7 col-xs-12" id="tpc_run_string"></div>	
+	<div class="col-sm-3 col-xs-12" id="tpc_run_link"></div>
       </div>
       <div class="row lrow">
-	<div class="col-sm-2 col-xs-12" style="background-color:#5a54bd;color:#EEEEEE"><strong>Muon Veto</strong></div>
-	<div class="col-sm-8 col-xs-12" id="mv_run_string"></div>
-	<div class="col-sm-2 col-xs-12" id="mv_run_link"></div>
+	<div class="col-sm-2 col-xs-12" style="background-color:#5992c2;color:#EEEEEE"><strong>Muon Veto</strong></div>
+	<div class="col-sm-7 col-xs-12" id="mv_run_string"></div>
+	<div class="col-sm-3 col-xs-12" id="mv_run_link"></div>
       </div>
-      <h5 style="padding-left:0px;margin-bottom:0;margin-left:-15px;"><strong>Current shifters</strong></h5>
+      <h4 style="padding-left:3px;margin-bottom:0;margin-left:-15px;"><strong>Current shifters</strong></h4>      
+      
       <div class="row" style="margin-top:10px;">
-        <div class="col-xs-12 col-sm-3" style="background-color:#5992c2;color:#EEEEEE"><strong>Responsible</strong></div>
-        <div class="col-sm-3 col-xs-12" id="resp_name"></div>
-	<div class="col-sm-3 col-xs-12"><i class="fa fa-envelope"></i>&nbsp;<span id="resp_email"></span></div>
-	
-	<div class="col-sm-3 col-xs-12"><i class="fa fa-phone"></i>&nbsp;<span id="resp_phone"></span></div>
-      </div>
-      <div class="row">
-	<div class="col-sm-3 col-sm-offset-3 col-xs-12"><i class="fa fa-skype"></i>&nbsp;<span id="resp_skype"></span></div>
-	<div class="col-sm-3 col-xs-12"><i class="fa fa-github"></i>&nbsp;<span id="resp_github"></span></div>	
-      </div>      
-      <div class="row" style="margin-top:10px;">
-        <div class="col-sm-3 col-xs-12" style="background-color:#5992c2;color:#EEEEEE"><strong>Shifter</strong></div>
-          <div class="col-sm-3 col-xs-12" id="shifter_name">Another guy</div>
-          <div class="col-sm-3 col-xs-12"><i class="fa fa-envelope"></i>&nbsp;<span id="shifter_email">At LNGS</span></div>	  
-          <div class="col-sm-3 col-xs-12"><i class="fa fa-phone"></i>&nbsp;<span id="shifter_phone">in the cold</span></div>
-      </div>      
-      <div class="row">
-        <div class="col-sm-3 col-sm-offset-3 col-xs-12"><i class="fa fa-skype"></i>&nbsp;<span id="shifter_skype">eating pasta</span></div>
-        <div class="col-sm-3 col-xs-12"><i class="fa fa-github"></i>&nbsp;<span id="shifter_github">and getting no sun</span></div>	  
+	<div class="col-xs-12 col-sm-4">
+          <div class="col-xs-12 col-sm-10" 
+	       style="background-color:#5992c2;color:#EEEEEE">
+	    <strong>Responsible</strong>
+	  </div>
+          <div class="col-xs-12" id="resp_name"></div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-envelope"></i>&nbsp;<span id="resp_email"></span>
+	  </div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-phone"></i>&nbsp;<span id="resp_phone"></span>
+	  </div>      
+	  <div class="col-xs-12">
+	    <i class="fa fa-skype"></i>&nbsp;<span id="resp_skype"></span>
+	  </div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-github"></i>&nbsp;<span id="resp_github"></span>
+	  </div>	
+	</div>
+	<div class="col-xs-12 col-sm-4">
+          <div class="col-sm-10 col-xs-12" 
+	       style="background-color:#5992c2;color:#EEEEEE">
+	    <strong>Shifter</strong>
+	  </div>
+	  <div class="col-xs-12" id="shifter_name"></div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-envelope"></i>&nbsp;<span id="shifter_email"></span>
+	  </div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-phone"></i>&nbsp;<span id="shifter_phone"></span>
+	  </div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-skype"></i>&nbsp;<span id="shifter_skype"></span>
+	  </div>
+	  <div class="col-xs-12">
+	    <i class="fa fa-github"></i>&nbsp;<span id="shifter_github"></span>
+	  </div>	  
+	</div>
+	<div class="col-xs-12 col-sm-4">
+          <div class="col-sm-10 col-xs-12"
+               style="background-color:#5992c2;color:#EEEEEE">
+            <strong>Run Coordinator (3 Month)</strong>
+          </div>
+          <div class="col-xs-12">Cyril Grignon</div>
+          <div class="col-xs-12">
+            <i class="fa fa-envelope"></i>&nbsp;<span>cyril.grignon@unimainz.de</span>
+          </div>
+          <div class="col-xs-12">
+            <i class="fa fa-phone"></i>&nbsp;<span>+4919248818</span>
+          </div>
+          <div class="col-xs-12">
+            <i class="fa fa-skype"></i>&nbsp;<span>cyril.grignon</span>
+          </div>
+          <div class="col-xs-12">
+            <i class="fa fa-github"></i>&nbsp;<span>CyrilGrignon</span>
+          </div>
+        </div>
+
       </div>
       <div class="row">
 	<hr style="width:100%;border-color:#AAAAAA">
@@ -186,7 +228,19 @@ return "#";
 				   series: {animation:false,
              				dataLabels: {
 	                                  enabled: true,
-                  			format: '{point.name}: {point.y:.1f}'
+                                          formatter: function(){
+ console.log(this);
+                                            var ret;
+                                            if(this.key=="Idle")
+                                               ret = "Idle: ";
+                                            else if(this.key=="None")
+                                               ret = "No source: ";
+                                            else
+                                               ret = this.key + ": ";
+                                           ret += Highcharts.numberFormat(this.y, 2);
+                                           return ret;
+                                          },
+//                  			format: '{point.name}: {point.y:.1f}'
 		         		}
 			           }
 				},
@@ -206,14 +260,24 @@ console.log("HI");
               document.getElementById("inst_name_div").innerHTML = data['user']['institute'];
       });
         $.getJSON(runURL, function(data){
-           document.getElementById("tpc_run_string").innerHTML = "<strong>" + data['tpc']['user'] + "</strong> started a <strong>" + data['tpc']['source'] + " </strong>run on " + (new Date(data['tpc']['date']['$date'])).toDateString() + " at " + (new Date(data['tpc']['date']['$date'])).toTimeString();
-  document.getElementById("mv_run_string").innerHTML = "<strong>" + data['muon_veto']['user'] + "</strong> started a <strong>" + data['muon_veto']['source'] + " </strong>run on " + (new Date(data['muon_veto']['date']['$date'])).toDateString() + " at " + (new Date(data['muon_veto']['date']['$date'])).toTimeString();
+console.log(data);
+           var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + data['tpc']['name'] + "%22%7D&submit=";
+           document.getElementById("tpc_run_string").innerHTML = 
+               "<strong>" + data['tpc']['user'] + 
+               "</strong> started run <strong>" + data['tpc']['number'] + 
+               " </strong> " + 
+               jQuery.timeago(new Date(data['tpc']['date']['$date']));
+ 
+  document.getElementById("mv_run_string").innerHTML = "<strong>" 
+             + data['muon_veto']['user'] + "</strong> started run <strong>" 
+             + data['muon_veto']['name'] + " </strong> " 
+             + jQuery.timeago(new Date(data['muon_veto']['date']['$date']));
          var url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + data['tpc']['name'] + "%22%7D&submit=";
 
-         document.getElementById("tpc_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#36bc98;color:#EEEEEE;' href='" + url + "'>See in runs DB</a>";
+         document.getElementById("tpc_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#DDDDDD;color:#222222;' href='" + url + "'>See in runs DB</a>";
          url = "/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22" + data['muon_veto']['name'] + "%22%7D&submit=";
 
-  document.getElementById("mv_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#5a54bd;color:#EEEEEE' href='" +url + "'>See in runs DB</a>";
+  document.getElementById("mv_run_link").innerHTML = "<a class='btn btn-info' style='background-color:#DDDDDD;color:#222222' href='" +url + "'>See in runs DB</a>";
 
   console.log(data);
 });

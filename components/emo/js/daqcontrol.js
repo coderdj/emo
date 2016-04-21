@@ -144,10 +144,11 @@ function ConvertDateUTC(date){
 function GetTimeString(startdate){
     // Return the time string based on the run's start time
     // also computes how long run has been running in a nice way
+    return "...started "+jQuery.timeago(startdate);
     var nowdate = ConvertDateUTC(new Date());
     //startdate = ConvertDateUTC(startdate);
-    console.log("!!!");
-    console.log(Date.UTC(startdate));
+    console.log("!!!!");
+    console.log((startdate));
     console.log(nowdate.toString());
     var diff = nowdate-startdate;
     console.log(nowdate);
@@ -171,6 +172,9 @@ function GetTimeString(startdate){
         else
             timestring += ( minutes.toString() + " minutes.");
     }
+    console.log(hours);
+    console.log(minutes);
+    console.log("?");
     if(hours==0 && minutes==0)
         timestring="...just started";
     return timestring;
@@ -283,11 +287,12 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    
 		    var timestring = "";
 		    thedatestring = detector_data['status'][status_id].startTime;
-                    console.log(thedatestring);
-                    thedatestring = thedatestring.substr(0, thedatestring.length - 8);
-		    //thedatestring += "+01:00";
+                    //console.log(thedatestring);
+		    //console.log(detector_data['status'][status_id]);
+                    //thedatestring = thedatestring.substr(0, thedatestring.length - 1);
+		    //thedatestring += "+00:00";
 
-		    startdate = ConvertDateUTC(new Date( thedatestring  ));
+		    startdate = new Date( thedatestring  );
                     if(detector_data['status'][status_id]['state'] == "Running"){
 			timestring = GetTimeString( startdate );
 			if(det_name == 'tpc')
@@ -314,14 +319,14 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    var timestring="";
 		    if(detector_data['status'][status_id].startTime!=""){
 			thedatestring = detector_data['status'][status_id].startTime;
-			console.log(thedatestring);
-			thedatestring = thedatestring.substr(0, 
-							     thedatestring.length - 
-							     8);
+			//console.log(thedatestring);
+			//thedatestring = thedatestring.substr(0, 
+			//thedatestring.length - 
+			//1);
 			//thedatestring += "+01:00";
-			console.log(thedatestring);
+			//console.log(thedatestring);
 			
-			startdate = ConvertDateUTC(new Date( thedatestring ));
+			startdate = new Date( thedatestring );
 			if(detector_data['status'][status_id]['state'] == "Running")
 			    timestring = GetTimeString( startdate );
 			else

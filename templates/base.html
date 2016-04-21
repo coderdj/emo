@@ -61,7 +61,7 @@
 <link rel="stylesheet" href="{% static "google-code-prettify/prettify.css" %}">
 <script src="{% static "google-code-prettify/prettify.js" %}"></script>
 <script src="{% static "emo/js/emo_js_helper.js" %}"></script>
-<script type="text/javascript">  var global_can_start_runs = false;</script>
+<script type="text/javascript">  var global_can_start_runs = null;</script>
 
 <!--<script type="text/javascript" src="{% static "emo/js/sideBAR.js" %}"></script>-->
 <!--<link href="{%  static "css/sideBAR.css" %}" rel="stylesheet">-->
@@ -70,7 +70,6 @@
 
 <link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
 <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
-
 
 <style>
 .gitter-chat-embed {
@@ -145,7 +144,7 @@ margin-left:-30px;margin-right:-30px;
      
     /* Landscape phones and down */
     @media (max-width: 480px) { ... }
-</style>	    
+</style>
 {% block head %}
 {% endblock %}
 {% google_analytics %}
@@ -332,25 +331,33 @@ margin-left:-30px;margin-right:-30px;
   <h2>Data flow monitoring</h2>
   <br>
   <p style="color:white">
-    Please log in to view content.
+    Please log in to view content. 
   </p>
 </div>
-<br><br><br>
+<br><br>
+  <div class="row">
+    <div class="col-sm-offset-5 col-sm-2 col-xs-12">
+      <a class="btn btn-xl btn-info" href="/accounts/login" style="padding:10px;padding-left:50px;padding-right:50px;font-size:14pt;">Log in</a>
+    </div>
+  </div>
+  
+
+
 <br><br><br>
   <div class="col-xs-12 row">
     <div class="social-buttons">
-        <div class="col-sm-3 col-xs-6" style="min-width:200px;">
+        <div class="col-sm-3 col-xs-6 col-sm-offset-3" style="min-width:200px;">
           <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
              href="http://www.github.com/coderdj/emo">
-            <i class="fa fa-github" style="font-size:14pt"></i> Website GitHub
+            <i class="fa fa-github" style="font-size:14pt"></i> GitHub
           </a>
 	  </div>
-        <div class="col-sm-3 col-xs-6" style="min-width:200px;">
+        <!--<div class="col-sm-3 col-xs-6" style="min-width:200px;">
           <a class="btn btn-block btn-default btn-social btn-lg btn-github" style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
              href="http://www.github.com/XENON1T">
             <i class="fa fa-github" style="font-size:14pt"></i> XENON1T GitHub
           </a>
-        </div>
+        </div>-->
 
         <div class="col-sm-3 col-xs-6" style="min-width:200px;">
           <a class="btn btn-block btn-default btn-social btn-lg btn-github"
@@ -359,13 +366,13 @@ margin-left:-30px;margin-right:-30px;
             xenon1t.org
       </a>
     </div>
-    <div class="col-sm-3 col-xs-6" style="min-width:200px;">
+	<!--<div class="col-sm-3 col-xs-6" style="min-width:200px;">
       <a class="btn btn-block btn-default btn-social btn-lg btn-github"
          style="color:black;font-size:10pt;padding-left:3px;padding-right:3px;"
          href="https://xecluster.lngs.infn.it/dokuwiki/doku.php">
         XENON1T dokuwiki
       </a>
-    </div>
+    </div>-->
 {% endblock %}
 	{% endif %}
 			
@@ -373,8 +380,10 @@ margin-left:-30px;margin-right:-30px;
 <!--		</div>	-->
 {% clicky %}
   </body>
-    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+      {% if user.is_authenticated %}
 
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    {% endif %}
 <script>
 // General modifications
   !function ($) {
@@ -471,19 +480,6 @@ margin-left:-30px;margin-right:-30px;
 				}
 			}
 			document.getElementById("status").innerHTML = status_html;
-/*			if (status == "Running"){
-				document.getElementById("status").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-			}
-			else if ( status == "Idle" ) {
-				document.getElementById("status").innerHTML = '<i style="color:yellow;" class="fa fa-exclamation-triangle"></i>';
-			}
-			else if ( status == "Error" ) {
-				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
-			}
-			else {
-				document.getElementById("status").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
-			}
-*/
 			status_more = "<strong><div class='row emo-status-menu-entry'><div class='col-xs-2'>Detector</div>" +
 					"<div class='col-xs-2'>Status</div><div class=col-xs-4>Mode</div><div class='col-xs-4'>Run name</div></div></strong>";
 			for (x = 0; x < data['status'].length; x++) {
@@ -536,37 +532,24 @@ le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?prio
                     DoUpdate( Url );
                 }, 10000 );
 	}
-	var UpdateUrl = "/control/get_status_update";
-	$(function(){
-		if($(window).width()<=450){
-        //   $(".sidebar.left").sidebar().trigger("sidebar:close");
-	$(".sidebar.left").trigger("sidebar:toggle");
-    $("#content").toggleClass('emo-sidebar-show');
-      $("#content").toggleClass('emo-sidebar-hide');
-
-//     $('div#main').toggleClass('sidebar-show');
-
-     window.dispatchEvent(new Event('resize'));
-}
-
-		$(".sidebar-links div a").on('click', function(){
-	         if($(this).closest('div').hasClass("selected"))
-                    $(".sidebar-links div").removeClass("selected");
-                 else{
-		    $(".sidebar-links div").removeClass("selected");
-                    $(this).closest('div').addClass("selected");
-	         }
-                });
-/*	   var links = $('.sidebar-links > a');
-					
-     links.on('click', function () {
-
-     links.removeClass('selected');
-     $(this).addClass('selected');
-    });*/
-
-	   DoUpdate(UpdateUrl);
-	});
+$(function(){
+        var UpdateUrl = "/control/get_status_update";
+	if($(window).width()<=450){
+          $(".sidebar.left").trigger("sidebar:toggle");
+          $("#content").toggleClass('emo-sidebar-show');
+          $("#content").toggleClass('emo-sidebar-hide');
+          window.dispatchEvent(new Event('resize'));
+        }
+	$(".sidebar-links div a").on('click', function(){
+	  if($(this).closest('div').hasClass("selected"))
+	    $(".sidebar-links div").removeClass("selected");
+          else{
+	    $(".sidebar-links div").removeClass("selected");
+            $(this).closest('div').addClass("selected");
+	  }
+         });
+   DoUpdate(UpdateUrl);
+});
 
 </script>
 

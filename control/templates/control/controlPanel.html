@@ -3,9 +3,15 @@
 {% block head %}
 {% endblock %}
 {% block content %}
-<script src="{% static "emo/js/daqcontrol.js" %}" type="text/javascript" xmlns:rows="http://www.w3.org/1999/xhtml"></script>
+<script src="{% static "emo/js/daqcontrol.js" %}" type="text/javascript"></script>
+<!-- xmlns:rows="http://www.w3.org/1999/xhtml"></script>-->
 <script src="{% static "js/jquery-resize.min.js" %}" type="text/javascript"></script>
 <audio id="deleted" autobuffer style="display:none;" src="{% static "audio/data_deleted.mp3" %}"></audio>
+<script src="{% static "jquery-hashtags-master/js/autosize.min.js" %}" type="text/javascript"></script>
+<script src="{% static "jquery-hashtags-master/js/jquery.hashtags.js" %}" type="text/javascript"></script>
+
+<link href="{% static "jquery-hashtags-master/css/jquery.hashtags.css" %}" rel="stylesheet">
+<script src="{% static "jquery/js/jquery_timeago.js" %}"></script>
 
 
 
@@ -77,9 +83,9 @@
 </div>
 
 <!--<p class="bg-danger" style="width:100%;padding-left:20px">Please note: after a recent update there is a bug in the baseline determination. I've disabled it until I fix the bug. Cheers. Dan.</p>-->
-<!--{% if request.user.profile.canstartruns != True %}
-<p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission. </p>
-{% endif %}-->
+{% if request.user.profile.canstartruns != True %}
+<p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission <a href="/profile" style="font-weight:bold;color:#DDDDDD">here</a> </p>
+{% endif %}
 
 <div class="row" style="height:20px;margin:0px;margin-top:15px;margin-bottom:15px;">
   <div class="col-sm-6 col-xs-12">
@@ -433,6 +439,7 @@
   var feedbackURL = "/control/run_start_feedback";
   var feedback_html = "";
 
+  
   /*$("#run_stop_form").submit(function(){
      document.getElementById("deleted").pause();
         document.getElementById("deleted").currentTime=0;
@@ -525,7 +532,7 @@
      });
 
      // No starting runs if there are open alerts
-     if(global_can_start_runs){ 
+     if(global_can_start_runs==null || global_can_start_runs==true){ 
         document.getElementById('run_start_form').style.display = 'block';
         document.getElementById('no_start_runs').style.display = 'none';
      } 
@@ -602,6 +609,7 @@ console.log(data[x]);
 
   // Load page function
   $( function() {
+	$("textarea").hashtags();
 	$("#content").resize(function()
 		{console.log("HERE");
  $('#rates_panel').highcharts().setSize($("#rates_panel").width(), 200, false); 

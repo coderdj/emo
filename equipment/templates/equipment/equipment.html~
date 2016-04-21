@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% block content %}
+<script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
+<script src="{% static "js/summernote.min.js"%}"></script>
+<link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
+<link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
+<link href="{% static "css/summernote.css" %}" rel="stylesheet">
+
+<script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
+<script src="{% static "DataTables-1.10.9/media/js/dataTables.bootstrap.min.js"%}"></script>
+<link href="{% static "DataTables-1.10.9/media/css/dataTables.bootstrap.min.css"%}" rel="stylesheet" />
+<style>
+td.details-control {
+    background: url('{%static "img/details_open.png" %}') no-repeat center center;
+    cursor: pointer;
+    width: 50px;
+}
+tr.shown td.details-control {
+    background: url('{%static "img/details_close.png" %}') no-repeat center center;
+    width:50px;
+}
+table.dataTable {
+background-color:white;
+}
+#content{
+background-color:white;
+}
+</style>
+
+<div class="row" style="margin-top:10px;margin-bottom:20px;">
+  <div class="col-xs-3 col-sm-3">
+    <h3>DAQ Equipment Database</h3>
+  </div>
+  <div class="col-xs-1 col-sm-1 col-xs-offset-8">
+    <button data-toggle="modal" onclick="NewEntry()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewEntry </button>
+  </div>
+</div>
+
+<table class="table" id="equipment_table">
+  <thead>
+    <tr>
+      <th>Model Number</th>
+      <th>Manufacturer</th>
+      <th>Type</th>
+      <th>Serial</th>
+      <th>Purchase Date</th>
+      <th>Detail</th>
+      <th>Edit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="color:black;"></td>
+      <td style="color:black;"></td>
+      <td style="color:black;"></td>
+      <td style="color:black"></td>
+      <td style="width:100px"></td>
+      <td style="width:10px" class="details-control"></td>
+      <td style="width:10px" class="details-edit"></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="modal fade" id="equipmentDetailModal" style="width:100%">
+  <div class="modal-dialog" style="width:95%;height:90%;margin-left:10px;margin-right:10px;">
+    <div class="modal-content" style="height:100%">
+      <div class="modal-header">
+        <button type="button" class="close"
+                data-dismiss="modal" aria-hidden="true">×
+        </button>
+        <h4 class="modal-title" id="new_eq_title">Equipment Detail for 
+	  <span id="detail_type"></span> type <strong><span id="detail_model">
+	  </span></strong>
+	  from <span id="detail_manufacturer"></span>, serial: 
+	  <strong><span id="detail_serial"></span></strong>
+	</h4>
+      </div>
+      <div class="modal-body" style="min-height:200px;overflow-y:auto;height:80%">
+	<div class="row">
+	  <div class="col-xs-4 col-sm-3">
+	    <strong>Purchase date: </strong>
+	  </div>	  
+	  <div class="col-xs-8 col-sm-3">
+	    <span id="detail_purchased"></span>
+	  </div>
+	  <div class="col-xs-4 col-sm-3">
+            <strong>Purchased by: </strong>
+          </div>
+          <div class="col-xs-8 col-sm-3">
+            <span id="detail_purchaser"></span>
+	  </div>
+	  <div class="col-xs-4 col-sm-3">
+            <strong>Experiment: </strong>
+          </div>
+          <div class="col-xs-8 col-sm-3">
+            <span id="detail_experiment"></span>
+	  </div>
+	  <div class="col-xs-4 col-sm-3">
+            <strong>Operating System: </strong>
+          </div>
+          <div class="col-xs-8 col-sm-3">
+            <span id="detail_os"></span>
+	  </div>	  
+	  <div class="col-xs-4 col-sm-3"><strong>Comment: </strong>
+	  </div>
+	  <div class="col-xs-8 col-sm-9">
+	    <span id="detail_comment"></span>
+	  </div>
+	</div>
+	  <hr>
+          <div class="col-xs-12"><h4 style="display:inline">History</h4><button class="btn btn-info pull-right" onclick="NewAction()" style="margin-bottom:0"><span class="glyphicon glyphicon-plus"></span>&nbsp;New Action</button>
+      </div>
+	  <form enctype="multipart/form-data" method="POST" action="add_action" id="new_action_form">
+	    <input type="hidden" name="model" id="add_action_model"></input>
+	    <input type="hidden" name="serial" id="add_action_serial"></input>
+            {% csrf_token %}
+	  <div id="new_action_div"></div>
+	  </form>
+      <div class="col-xs-12" id="detail_history" style="margin-top:10px">No content</div>
+      </div>
+<!--      <div class="modal-footer" style="max-height:30px;">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+        <button type="submit" class="btn btn-success">
+          Enter</button>
+      </div>-->
+    </div>
+  </div>
+</div>
+
+<!--<div class="modal fade" id="newActionModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type"button" class="close"
+                data-dismiss="modal" aria-hidden="true">×</button>
+	<h4 class="modal-title">Add a New Action</h4>
+      </div>      
+      <form method="POST" action="new_action" id="new_action_form">
+	{% csrf_token %}
+	<div class="modal-body" style="min-height:200px; overflow-y; auto;">
+	  <div class="row">
+	    <div class="col-sm-6"><strong>Action type:</strong></div>
+	    <div class="col-sm-6">INPUT</div>
+	  </div>
+	</div>	
+	<div class="modal-footer">
+	  <a onclick="CloseNewAction()" class="btn btn-danger">Cancel</a>
+    	  <button type="submit" class="btn btn-success">
+            Enter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+-->
+
+<div class="modal fade" id="equipmentEditModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" 
+		data-dismiss="modal" aria-hidden="true">×
+	</button>
+	<h4 class="modal-title" id="new_eq_title">Add a New Item</h4>
+      </div>
+      <span style="font-size:12px;margin-left:15px;" id="id_entry_date">New entry</span>
+      <span style="font-size:12px;margin-left:15px;"><strong>* required field</strong></span>
+      <form method="POST" action="new_equipment" id="new_equipment_form">
+        {% csrf_token %}
+        <div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	  {% for field in new_eq_form %}
+          <div class="row">
+            <div class="col-sm-6"><strong>{{ field.label }}{% if field.field.required %}*{% endif %}</strong></div>
+	    <div class="col-sm-6">{{ field }}</div>
+	  </div>
+	  <br style="margin:1px">
+	  {% endfor %}
+	  
+
+	  
+	</div>
+	<div class="modal-footer">
+          <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+          <button type="submit" class="btn btn-success">
+            Enter</button>
+        </div>
+      </form>
+    </div>
+  </div>  
+</div>
+
+
+<script>
+var table = null;
+var detail_address="/equipment/get_actions";
+function EditEntry(button){
+console.log("HERE");
+  found = false;
+  var tr = $(button).closest('tr');
+  var row = table.row(tr);
+  var data = row.data();
+  for (var key in data) {
+     if(key=="actions")
+        continue;
+     if (data.hasOwnProperty(key) && key!="_id") {
+         if(key=="entry_date")
+            document.getElementById("id_"+key).innerHTML = "Record from " + (new Date(data[key]["$date"])).toISOString();
+         else
+             document.getElementById("id_"+key).value=data[key];
+     }
+  }
+console.log(data);
+  // Open dialog
+  $('#equipmentEditModal').modal('show');
+
+}; // end listener for detail click
+
+
+$(document).ready(function(){
+
+   var table_data=null;
+   table_data = {{ equipment_list|safe }};
+   table = $("#equipment_table").DataTable({
+         "data": table_data,          
+         "columns": [
+            { "data": "model" },
+            { "data": "manufacturer" },
+            { "data": "type" },
+            { "data": "serial" },
+            { "data": "purchased", "width": "15%", "render": function (data) {
+              if(!data)
+                 return "unknown";
+              var m = new Date(data['$date']);
+             var dateString = m.getUTCFullYear() +
+                 "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " ";           
+             return dateString;
+            }},
+            {
+                "className":      'details-control',
+                "orderable":      false,
+                "data":           null,
+                "defaultContent": '<button class="btn btn-info btn-xs" style="font-size:8px;padding-top:0px;padding-bottom:0px;margin-bottom:0px;">Details</button>'
+            },
+
+            {
+                "className":      'details-edit',
+                "orderable":      false,
+                "data":           null,
+                "defaultContent": '<button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this)">Edit</button>'
+            },],
+           "iDisplayLength": 50,
+
+});
+
+// Event listener for attaching items
+$('#equipment_table tbody').on('click', 'td.details-control', function () {
+  console.log("HERE");
+  var tr = $(this).closest('tr');
+  var row = table.row(tr);
+  var data = row.data();
+//  document.getElementById("detail_model").innerHTML = data['model'];
+  $("#add_action_model").val(data['model']);
+$("#add_action_serial").val(data['serial']);
+  for(var item in data){
+console.log(item);
+    if(item=="_id" || item=="actions" || item=="entry_date")
+       continue;
+    if(!data.hasOwnProperty(item))
+       continue;
+    dom_element = "detail_"+item;
+    if(!data[item])
+        document.getElementById(dom_element).innerHTML="unknown";
+    else if(item == "purchased")
+       document.getElementById(dom_element).innerHTML = (new Date(data[item]["$date"])).toISOString().substr(0,10);
+   else
+       document.getElementById(dom_element).innerHTML = data[item];
+}
+//  document.getElementById("detail_manufacturer").innerHTML = data['manufacturer'];
+//  document.getElementById("detail_serial").innerHTML = data['serial'];
+//  document.getElementById("detail_type").innerHTML = data['type'];
+//if(! data['purchased'])
+//document.getElementById("detail_purchased").innerHTML="unknown";
+//else
+//  document.getElementById("detail_purchased").innerHTML = (new Date(data['purchased']["$date"])).toISOString().substr(0,10);
+//  document.getElementById("detail_purchaser").innerHTML = data['purchaser'];
+//  document.getElementById("detail_experiment").innerHTML = data['experiment'];
+//  document.getElementById("detail_os").innerHTML = data['os'];
+//  document.getElementById("detail_comment").innerHTML = data['comment'];
+
+  queryaddr = detail_address + "/?model="+data['model']  + ";serial=" + data['serial'];
+  console.log(queryaddr);
+  $.getJSON(queryaddr, function(data2){
+    console.log(data2);
+    if(data2['actions'].length!=0){
+      document.getElementById("detail_history").innerHTML = "";
+       }
+     for(x=data2['actions'].length-1; x>=0;x-=1){
+         html = "<div class='col-xs-12' style='margin-top:10px;'><hr style='margin:0px;'><strong>Action type:</strong>&nbsp;" + data2['actions'][x]['type'] + "&nbsp;&nbsp;<strong>on</strong>&nbsp;"+(new Date(data2['actions'][x]['date']['$date'])).toISOString().substr(0,19) + "&nbsp;<strong>by user</strong>&nbsp;" + data2['actions'][x]['user'];
+         html+="<p><strong>Comment:</strong> "+data2['actions'][x]['comment'] + "</p><p><strong>Item location:</strong>&nbsp;" +data2['actions'][x]['location']+
+"<p>"; 
+      if(data2['actions'][x]['files'].length>0)
+         html+="<strong>Files: </strong>&nbsp;"
+       for(y=0;y<data2['actions'][x]['files'].length;y+=1){
+         filename=data2['actions'][x]['files'][y];
+         html+="<a href='get_file/?file="+filename+";model=" + data['model'] + ";serial="+data['serial']+"'>"+filename+"</a>&nbsp;";
+}
+html+="</p></div>";
+     
+$("#detail_history").append(html);
+}
+     $('#equipmentDetailModal').modal('show');
+ });
+}); // end listener for detail click
+
+});
+function NewEntry(){
+     document.getElementById("new_equipment_form").reset();
+     document.getElementById("id_entry_date").innerHTML = "New Entry";
+     $('#equipmentEditModal').modal('show');
+}
+function NewAction(){
+
+    document.getElementById("new_action_form").reset();
+document.getElementById("new_action_div").innerHTML = "<div class='col-xs-12' style='min-height:100px;margin-top:10px;margin-bottom:10px;'><div class='row'><div class='col-xs-3'><strong>Action type: </div><div class='col-xs-9'><input type='text' name='action_type' style='width:95%'></input></div></div>" +
+"<div class='row'><div class='col-xs-3'><strong>Item location:</strong></div><div class='col-xs-9'><input type='text' name='location' style='width:95%'></input></div></div>" +
+ "<div class='row'><div class='col-xs-3'><strong>Comment:</strong></div><div class='col-xs-9'><input type='text' name='comment' style='width:95%'></input></div></div>"+
+"<div class='row'><div class='col-xs-3'><strong>File (optional):</strong></div><div class='col-xs-9'><input type='file' name='uploadfile' style='width:95%'></input></div></div>"+
+"<div class='row'><div class='col-xs-3'><strong>File 2 (optional):</strong></div><div class='col-xs-9'><input type='file' name='uploadfile_2' style='width:95%'></input></div></div>"+
+"<div class='row'><div class='col-xs-3'><strong>File 3 (optional):</strong></div><div class='col-xs-9'><input type='file' name='uploadfile' style='width:95%'></input></div></div>"+
+"<input type='checkbox' name='manufacturer' value='"+document.getElementById("detail_manufacturer").innerHTML+"'>&nbsp;<span style='font-size:10pt'>Add for all identical modules</span>&nbsp;<button style='margin-top:10px' class='btn btn-danger pull-right' onclick='CloseNewAction()'>Cancel</button>" + 
+"<button style='margin-top:10px;margin-right:3px;' class='btn btn-success pull-right' type='submit'>Submit</button></div>";
+//$('#equipmentDetailModal').css('opacity', .5);
+//$('#equipmentDetailModal').unbind();
+//    $('#newActionModal').modal('show');
+
+}
+function CloseNewAction(){
+document.getElementById("new_action_div").innerHTML = "";
+//$('#equipmentDetailModal').css('opacity', 1);
+//$('#newActionModal').modal('hide');
+//$('#equipmentDetailModal').modal('hide');
+//$('body').removeClass('modal-open');
+//$('.modal-backdrop').remove();
+//$('#equipmentDetailModal').modal('show');//removeData("modal").modal({});
+
+<!--$('body').removeClass('modal-open');-->
+<!--$('.modal-backdrop').remove();-->
+
+}
+</script>
+{% endblock %}

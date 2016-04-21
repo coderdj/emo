@@ -999,15 +999,15 @@ def get_calendar_events(request):
 
     runs_client = MongoClient(settings.RUNS_DB_ADDR)
     rundb = runs_client[settings.RUNS_DB_NAME]
-    run_coll = rundb["runs"]
+    run_coll = rundb[settings.RUNS_DB_COLLECTION]
 
     start_time = dateutil.parser.parse(request.GET['start'])
     end_time = dateutil.parser.parse(request.GET['end'])
     docs =[]
     try:
         docs = run_coll.find({
-            "starttimestamp": {"$gt": start_time,
-                               "$lt": end_time  }
+            "start": {"$gt": start_time,
+                      "$lt": end_time  }
         })
     except:
         print("Error finding event")
@@ -1015,19 +1015,23 @@ def get_calendar_events(request):
     
     # format and return as http response
     retdoc = []
-    logger.error("HI")
     for run in docs:
-        endtimestamp = run['starttimestamp']
-        if "endtimestamp" in run:
-            endtimestamp = run["endtimestamp"]
-        retdoc.append({"title": run['source']['type'],
+        endtimestamp = run['start']
+        if "end" in run:
+            endtimestamp = run["end"]
+        newdoc={"source": run['source']['type'],
                     "runname": run['name'],
-                    "start": run['starttimestamp'].strftime("%Y-%m-%dT%H:%M:%S"),
-                    "detectors": list(run['detectors'].keys()), 
+                    "start": run['start'].strftime("%Y-%m-%dT%H:%M:%S"),
+                    "detector": run['detector'], 
                     "user": run['user'],
                     "end": endtimestamp.strftime("%Y-%m-%dT%H:%M:%S"),
-        })        
-    logger.error(retdoc)
+        }        
+        if run['detector'] == 'tpc':
+            newdoc['title'] = "Run "+ str(run['number'])
+        else:
+            newdoc['title'] = "Run " + str(run['name'])
+        retdoc.append(newdoc)
+
     return HttpResponse(dumps(retdoc), content_type="application/json")
 
 @login_required

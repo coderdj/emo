@@ -51,41 +51,42 @@ with the web interface. This relies on certain formats being followed. And new c
 <h4>Run Control Docs</h4>
 <p>The run control doc has the following form:</p>
 <pre class="prettyprint">
-doc:{
-		"runmode": string,
-		"user": string,
-		"name": string,
-		"detector": string,
-		"shorttype": string,
-		"starttimestamp": datetime,
-		"endtimestamp": datetime,
-		"trigger": {
-			"mode" : string,
-			"status": string,
-			"ended": string,		
-		},
-		"reader": {
-			"options": ini_file_as_string,
-			"compressed": int,
-			"starttime": int,
-			"endtime": int,
-			"data_taking_ended": bool,
-			"storage_buffer": {
-				"dbname": string,
-				"dbcollection": string,
-				"dbaddr": string,
-		},
-		"processor": {
-			"mode": string,
-		},
-		"comments": [
-			{ 
-				"user": string,
-				"date": datetime,
-				"text": string,
-			},
-		],
-	} 
+doc ={
+   "source": {
+   "type": string,
+   "id": currently undefined, # for radioactive sources
+   },
+   "user": string,
+   "name": string,
+   "reader": {
+     "ini": { reader options document },
+     "self_trigger": boolean,
+   },
+   "detector": string,
+   "_id": MongoDB ObjectID,
+   "trigger": {
+      "mode": string,
+      "ended": boolean,
+      "options": { trigger options documents },
+   },
+   "number": integer, # TPC only
+   "tags": [
+     {
+        "user": string,
+        "name": string,
+        "date": Date Field,
+     },
+   ],
+   "comments": [
+     {
+      "user": string,
+      "text": string,
+      "date": Date Field,
+     },
+   ],
+   "start": Datetime field,
+   "end": Datetime field,
+}
 </pre>
 <br>
 <p>The default collection for run docs is 'online.runs'.
@@ -213,109 +214,60 @@ the run configuration document will probably change as fields are added, modifie
 Normal users can view operations modes. Superusers can edit the JSON directly in their browser.
 </p>
 	<pre class="prettyprint">
-doc = {
-	"user": string, 					# Who made the document
-	"created": datetime,				# when was it made
-	"name": string,						# long name of doc, ambe_run10_mod0, for example
-	"shortname": string,				# name for run badges, for example just "AmBe". Max 5-6 characters
-	"detector": string,					# name of the detector this doc is for
-   	"blt_size": 524288,
-   	"run_start": 1,
-	"run_start_module": 1868,
-	"muon_veto": 0,                     # NIM for S-IN prop to MV or not
-	"pulser_freq": 0,                   # 0 inactive
-	"write_mode": 0,                    # 0 -none, 1-file, 2-MongoDB
-	"compression": 1,                   # 0 -none, 1-snappy
-	"baseline_mode": 1,                 # 0 -load from file, 1-run start, 2-none
-	"processing_num_threads": 8,        # Number of processing threads
-	"processing_mode":  4,              # Parsing mode: 0-none, 1-event, 2-occurrence, 3-occurrenceZLE, 4-new FW
-	"processing_readout_threshold": 1,  # # of BLTs that must be in board buffer before it's read
-	"occurrence_integral": 0,           # Integrate each pulse (! Only processing modes 2,3,4) 0-off, 1-on
-	"file_path": "",
-	"file_events_per_file": 1000000,
-	"mongo_address": "xedaq00",
-	"mongo_database": "raw",
-	"mongo_collection": "data*",
-	"mongo_write_concern": 0,           # 0- No write concern, 1- on
-	"mongo_min_insert_size": 1,         # minimum size of BSON vector for bulk inserts
-	"trigger_mode"	: string,			# mode for the trigger. Should be something the trigger understands
-	"processing_mode": string,			# mode for the processor. ditto
-	"registers": [
-		{
-			"register": "EF24",
-			"value": "0",
-			"board": "-1",
-			"comment": "board reset register"
-		},
-		{
-			"register": "EF1C",
-			"value": "1",
-			"board": "-1",
-			"comment": "events per BLT"
-		},
-		{
-			"register": "EF00",
-			"value": "10",
-			"board": "-1",
-			"comment": "BERR register, 10=enable BERR",
-		},
-		{
-			"register": "8100",
-			"value": "0",
-			"board": "-1",
-			"comment": "acquisition control register. Always set to 0"
-		},
-	],
-	"DDC-10": {
-		"address": "130.92.139.240",
-		"sign": 1,
-		"window": 100,
-		"delay": 200,
-		"signal_threshold": 150,
-		"integration_threshold": 20000,
-		"width_cut": 50,
-		"rise_time_cut": 30,
-		"component_status": 1,
-		"parameter_0": 0,
-		"parameter_1": 0,
-		"parameter_2": 0,
-		"parameter_3": 50,
-		"outer_ring_factor": 2,
-		"inner_ring_factor": 1,
-		"prescaling": 1000,
-	},
-	"links": [
-		{
-			"type": "V2718",
-			"link": 0,
-			"crate": 0,
-			"reader": 0,
-		},
-		{
-			"type": "V2718",
-			"link": 0,
-			"board": 0,
-			"reader": 1,
-		}
-	],
-	"boards": [
-		{
-			"type": "V1724",
-			"link": 0,
-			"board": 0,
-			"vme_address": "32100000",
-			"serial": "876",
-			"reader": 0,
-		},
-		{
-			"type": "V1724",
-			"link": 0,
-			"board": 0,
-			"vme_address": "22230000",
-			"serial": "770",
-			"reader": 1,
-		},
-	]
+doc={
+  "compression": 1,              # Use snappy compression (1-on 0-off)
+  "run_start_module": 2374,      # Module that sends s-in signal
+  "mongo_write_concern": 0,      # Write concern MongoDB (1-Acknoledged, 0-off)
+  "comment": "String",           # Comment describing this run mode
+  "blt_size": 8388608,           # Size of block transfer in bytes (8MB default)
+  "mongo_address": "mongodb://eb0:27000",  # Connection string for mongoDB. No password
+  "write_mode": 0,               # Mode of writing (0-no writing, 2-MongoDB)
+  "DDC-10": {...},               # Options for DDC-10 module
+  "name": "mode_name",           # Name of this run mode
+  "occurrence_integral": 0,      # Make integrals of each occurrence (0-off 1-on)
+  "pulser_freq": 10,             # Pulser/ext-trigger frequency (Hz)
+  "registers": [                 # Digitizer settings
+    { 
+      "register": "EF24",        # Address (hex)
+      "comment": "comment",      # Description
+      "board": "-1",             # Board ID or -1 for all
+      "value": "1"               # Value (hex)
+    }
+  ],
+  "baselines": 1,                # Automatic DAC adjustment (0-off 1-on)
+  "source_type": "none",         # Type of source (LED, None, etc)
+  "mongo_min_insert_size": 1,    # Minimum size of bulk inserts
+  "nickname": "test",            # Short name for mode
+  "processing_mode": 4,          # Process mode (always 4 for TPC custom FW)
+  "muon_veto": 0,                # Muon veto activation NIM (0-off 1-on)
+  "processing_num_threads": 8,   # Number of threads for block parsing
+  "run_start": 1,                # Start run (0-board internal, 1- S-in)
+  "mongo_database": "untriggered", # Mongo database to write
+  "boards": [                    # VME module definitions
+    {
+      "type": "V2718",           # Board type (V1724, V2718, V1495)
+      "crate": 0,                # Crate ID (CAEN crate)
+      "serial": "2374",          # Serial number
+      "reader": 0,               # Which reader (defined in reader config)
+      "link": 0,                 # Link index
+      "vme_address": "DC000000"  # Board VME address
+    }
+  ],
+  "user": "username",             # Who created this mode
+  "processing_readout_threshold": 0, # kodiaq internal threshold for processors
+  "detector": "tpc",              # Detector name (tpc/muon_veto)
+  "led_trigger": 0,               # LED trigger (off-0, on-1)
+  "links": [                      # Link definitions
+    {
+      "reader": 0,                # Reader ID
+      "type": "V2718",            # Link type (always V2718 in this setup)
+      "crate": 0,                 # Crate index
+      "link": 0                   # Link index
+    }
+  ],
+  "date": {                       # When this mode was created
+    "$date": 1456158021842
+  }
 }
 </pre>
 <br><p>

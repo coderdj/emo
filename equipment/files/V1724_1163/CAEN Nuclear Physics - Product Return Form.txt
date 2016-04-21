@@ -1,0 +1,83 @@
+
+Subject:
+CAEN Nuclear Physics - Product Return Form
+From:
+CAEN SPA <caen-noreplies@caen.it>
+Date:
+01/14/2016 09:42 AM
+To:
+<daniel.coderre@lhep.unibe.ch>
+
+
+Dear Customer,
+
+the PRN (PRODUCT REFERENCE NUMBER) identifies the product to be repaired.
+Please mention the PRN you found in the PRF in any correspondence towards CAEN, considering the product sent in repair.
+
+Depending on where you are located, the Product must be shipped directly to CAEN S.p.A. headquarters or to your Country Dealer: to find
+the proper address please visit the page at http://www.caen.it/csite/SalesNetwork.jsp
+For more details, feel free to contact us at support.nuclear@caen.it
+
+
+
+Product Return Form from Daniel Coderre
+Date: 14/1/2016 - 09:42:52
+
+Sender
+--------------------------
+Daniel Coderre
+University of Bern 
+Sidlerstrasse 5
+3012
+Bern
+Bern
+Switzerland
+Phone: +41316315405 - Fax: 	E-mail: daniel.coderre@lhep.unibe.ch
+
+Return Shipment to:
+--------------------------
+Marcello Messina
+LNGS 
+VIA G. ACITELLI, 22
+67100
+Assergi
+AQ
+Italy
+Phone: +41316315405 - Fax: 	E-mail: daniel.coderre@lhep.unibe.ch
+
+Product # 1 - PRN W7348
+--------------------------
+Product Description:
+Model Name: V1724
+Model Serial Number: 108
+Experiment: XENON1T
+
+Failure Description:
+Module runs fine if channel 01 is disabled with channel mask register. If channel 1 is enabled, reading data from buffer fails. Buffer is set to read until BERR is read. However BERR is not emitted even after 8MB of data is read (should be maximum buffer size). Increasing software buffer does not work, board does not give BERR when Ch1 enabled.
+Repair Location: CAEN Repair Center c/o CAEN S.p.A. - Via Vetraia, 11 - 55049 Viareggio (LU) - Italy
+
+Product # 2 - PRN W7349
+--------------------------
+Product Description:
+Model Name: V1724
+Model Serial Number: 1163
+Experiment: XENON1T
+
+Failure Description:
+Module runs fine if channel 01 is disabled with channel mask register. If channel 1 is enabled, reading data from buffer fails. Buffer is set to read until BERR is read. However BERR is not emitted even after 8MB of data is read (should be maximum buffer size). Increasing software buffer does not work, board does not give BERR when Ch1 enabled.
+Repair Location: CAEN Repair Center c/o CAEN S.p.A. - Via Vetraia, 11 - 55049 Viareggio (LU) - Italy
+
+Comment:
+--------------------------
+Test program available on request to reproduce issue.  
+
+Attach Document to Question:
+--------------------------
+None
+
+--------------------------
+Automatic confirmation e-mail: Please do not reply.
+
+--------------------------
+
+
