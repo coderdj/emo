@@ -23,12 +23,14 @@ from pandas import DataFrame
 from bokeh.properties import value
 import dateutil
 import snappy
-
+import collections
+import scipy.ndimage as spi
+import math
 import logging
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
-#logger = logging.getLogger("emo")
+#logger = logging.getLogger(__name__)
+logger = logging.getLogger("emo")
 
 # Connect to pymongo
 client = MongoClient(settings.MONITOR_DB_ADDR)
@@ -36,6 +38,161 @@ db = client[settings.MONITOR_DB_NAME]
 
 # Connect to buffer DB
 bufferclient = MongoClient( settings.BUFFER_DB_ADDR)
+
+"""TRIGGER SECTION"""
+#triggerClients = ["eb2:27001", "eb0:27017", "eb1:27017", "master:27017"]
+triggerClients = ["master:27017"]
+@login_required
+def trigger_get_run_list(request):
+    
+    available_runs = []
+    for client in triggerClients:
+        
+        mongoClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
+                                  settings.GEN_PW+"@"+client+"/"
+                                  +settings.GEN_DB)        
+        mongoDB = mongoClient["trigger_monitor"]
+        runsClient = MongoClient(settings.RUNS_DB_ADDR)
+        runsDB = runsClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
+        collections = list(mongoDB.collection_names())
+        collections.sort(reverse=True)
+        for collection in collections:
+
+            rundoc = runsDB.find_one({"name": collection})
+            run_number = 0
+            if "number" in rundoc:
+                run_number = rundoc['number']
+            available_runs.append({
+                "number": run_number,
+                "client": client,
+                "collection": collection,
+                "count": mongoDB[collection].find({
+                    "data_type":"trigger_signals_histogram"
+                }).count()
+            })
+    return HttpResponse(dumps({"runs": available_runs}), 
+                        content_type="application/json")
+
+def resize_arrs(data, max_size):
+    
+    xbin = 1
+    fields = ["count_of_lone_pulses", "count_of_all_pulses"]
+    for field in fields:
+        
+        if len(data[field]) < max_size:
+            continue
+
+        resize_factor = math.ceil(len(data[field]) / max_size)
+        xbin = resize_factor
+        newdata = []
+        current_iter = 0
+        newrow = [0]*len(data[field][0])
+        for row in data[field]:
+            
+            if current_iter == resize_factor:                
+                for i in range(0, len(newrow)):
+                    newrow[i] = newrow[i] / current_iter
+                newdata.append(newrow)
+                newrow = [0]*len(data[field][0])
+                current_iter = 0
+            for i in range(0, len(newrow)):
+                newrow[i] += (1/resize_factor)*row[i]
+            current_iter+=1
+            
+        data[field] = newdata
+    return xbin
+
+#from jelle
+def _flatten_trigger_monitor_data(data):
+
+    matrix_fields = ['trigger_signals_histogram', 'count_of_2pmt_coincidences']
+
+    for k in data.keys():
+        if not len(data[k]):
+            continue
+
+        #if isinstance(data[k][0], dict):                                             
+        # Dictionaries describing data                                                
+        #    data[k] = pd.DataFrame(data['batch_info'])                               
+        #data[k]                                                                      
+
+        if k == 'trigger_signals':
+            data[k] = np.concatenate(data[k])
+        else:
+            data[k] = np.vstack(data[k])
+
+            if k in matrix_fields:
+                n = np.sqrt(data[k].shape[1]).astype('int')
+                data[k] = data[k].reshape((-1, n, n))
+
+
+@login_required
+def trigger_get_data(request):
+
+    ret = {}
+    matrix_fields = ['trigger_signals_histogram', 'count_of_2pmt_coincidences']
+    data_types = {
+        #'trigger_signals': datastructure.TriggerSignal.get_dtype(),                  
+            'trigger_signals_histogram': np.float,
+    }
+    if request.method == "GET" and "run" in request.GET and "client" in request.GET:
+
+        run = request.GET['run']
+        client=request.GET['client']
+
+        mongoClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
+                                  settings.GEN_PW+"@"+client+"/"
+                                  +settings.GEN_DB)
+        mongoDB = mongoClient["trigger_monitor"]
+        mongoCollection = mongoDB[run]
+
+        total_data = collections.defaultdict(list)
+
+        logger.error("START QUERY")
+        for data_type in mongoCollection.distinct('data_type'):
+
+            for d in mongoCollection.find({"data_type": data_type}):
+                if 'data' in d:
+                    d = np.fromstring(d['data'],
+                                      dtype=data_types.get(data_type, np.int))
+                total_data[data_type].append(d)
+        logger.error("FINISHED CLEARING")
+        _flatten_trigger_monitor_data(total_data)
+        logger.error("FINISHED FLATTEN")
+
+        # ADD HISTOGRAMS                                                              
+        if len(total_data['count_of_2pmt_coincidences']) > 1:
+            for i in range(1, len(total_data['count_of_2pmt_coincidences'])):
+                total_data['count_of_2pmt_coincidences'][0] = (
+                    np.add(total_data['count_of_2pmt_coincidences'][0],
+                           total_data['count_of_2pmt_coincidences'][i]))
+            total_data['count_of_2pmt_coincidences'] = [ total_data['count_of_2pmt_coincidences'][0] ]
+        if len(total_data['trigger_signals_histogram']) > 1:
+            for i in range(1, len(total_data['trigger_signals_histogram'])):
+                total_data['trigger_signals_histogram'][0] = (
+                    np.add(total_data['trigger_signals_histogram'][0],
+                           total_data['trigger_signals_histogram'][i]))
+            total_data['trigger_signals_histogram'] = [ total_data['trigger_signals_histogram'][0] ]
+
+        # Rebin big stuff              
+        max_size=1000.        
+        xbin = resize_arrs(total_data, max_size)
+
+        # Convert np types
+        for key in total_data:
+            if isinstance(total_data[key], np.ndarray):
+                total_data[key] = total_data[key].tolist()
+            if len(total_data[key])>0 and isinstance(total_data[key][0], np.ndarray):
+                for x in range(0, len(total_data[key])):
+                    total_data[key][x] = total_data[key][x].tolist()
+            if key =="batch_info":
+                total_data[key]=[]
+        ret = total_data
+    return HttpResponse(dumps({"xbin": xbin, "data": ret}), 
+                        content_type="application/json")
+
+
+"""END TRIGGER SECTION"""
 
 @login_required
 def get_waveform_run_list(request):

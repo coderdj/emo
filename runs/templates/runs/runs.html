@@ -87,16 +87,18 @@
 
 <div class="row" id="main_row" style="margin-top:30px;">
   <div class="col-sm-7 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
-    <table class="table table-bordered" id="runstable" style="background-color:white">
+    <table class="table table-bordered" id="runstable" style="background-color:white;table-layout: fixed;word-wrap:break-word;">
       <thead>
 	<tr>
-	  <th>Detail</th>
+	  <th></th>
 	  <th>Num.</th>	  
 	  <th>Date</th>
 	  <th>Source</th>
-	  <th>Trigger</th>
-	  <th>Tags</th>
-	  <th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>
+	  <th>Events</th>
+	  <th>Status</th>
+	  <th style="width:30px">Tags</th>
+	  <!--<th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>-->
+	  <th style="width:100px">Top Comment</th>
 	</tr>
       </thead>
       <tbody>
@@ -106,9 +108,12 @@
 	  <td></td>
 	  <td></td>
 	  <td></td>
-	  <td style="pull-right"> 
+	  <td style="width:30px"></td>
+	  <td style="width:30px"></td>
+	  <td></td>
+	  <!--<td style="pull-right"> 
 	    <span class="glyphicon glyphicon-comment">&nbsp</span>
-	  </td>
+	  </td>-->
 	</tr>
       </tbody> 
     </table>
@@ -127,6 +132,9 @@
                 <td style="min-width:40px;padding-left:15px;"><strong>Starting User</strong></td><td style="padding-left:5px" id="detail_user"></td></tr>
                 <tr><td style="min-width:40px;padding-left:5px;"><strong>Start Date</strong></td><td style="padding-left:5px" id="detail_sdate"></td>
                 <td style="min-width:40px;padding-left:15px;"><strong>End Date</strong></td><td style="padding-left:5px" id="detail_edate"></td></tr>
+		<tr><td style="min-width:40px;padding-left:5px;"><strong>Events</strong></td><td style="padding-left:5px" id="detail_events"></td>
+		</tr>
+
               </tbody>
             </table>
             <h4 style="margin-bottom:2px">Tags</h4>
@@ -143,8 +151,6 @@
 	<!-- Tab panes -->
 	<div class="tab-content">
 	  <div role="tabpanel" class="tab-pane active" id="locations_tab" style="height:60vh;overflow-y:scroll;">
-	    <h4 style="margin-bottom:2px">Locations</h4>
-            <hr style="margin-top:0px;margin-bottom:4px;">
             <div id="detail_locations">No storage sites registered for this run.</div>
 	  </div>
 	  <div role="tabpanel" class="tab-pane" id="comments_tab" style="height:60vh;overflow-y:scroll;">
@@ -206,6 +212,11 @@ function NewTag(form){
      else if(arr[x]["name"]=="id")
        id=arr[x]["value"];
   }
+  if( content.indexOf(' ') >= 0 ){
+    alert("Tags should be one word. Please use the comments tab for more extensive comments.");
+    return false;
+  }
+
   if(id!="" && content !=""){
       URL="newtag?id="+id+";tagname="+content;
       console.log(URL);
@@ -292,7 +303,6 @@ $(document).ready(function(){
   var selected = [];
   var thedata = {{ runs_list|safe }};
   table = $('#runstable').DataTable({
-//		"dom": 'T<"clear">lfrtip',		    
         "dom": '<"toolbar">frtip',
 		    
  
@@ -312,7 +322,7 @@ $(document).ready(function(){
       },
       {
         "data": null,//"number",
-		    "width": '30px',
+		    "width": '35px',
 	"render": function(data){
              if(data['detector']=='muon_veto') return data['name'];
 		return data['number'];
@@ -323,7 +333,7 @@ $(document).ready(function(){
 //      },
       {
          "data":    "start",
-//         "width":   "15%",
+         "width":   "50px",
          "render":  function(data){
                       var m = new Date(data['$date']);
                       var dateString = ("0"+m.getUTCFullYear()).slice(-2) + "/" +
@@ -337,16 +347,74 @@ $(document).ready(function(){
        },
        {
           "data":    "source.type",
+	  "width": '50px',
        },
-       {
+/*       {
           "data": "reader.self_trigger",
           "render": function(data){
                   if(data) return "Self";
                   return "External";
           }
        },
+*/
+       {
+          "data": null,
+	  "width": '35px',
+        "render": function(data){
+             if(("trigger" in data) && ("events_built" in data['trigger']))
+               return data['trigger']['events_built'];
+              return 0;
+
+        }
+      },
+
+	{
+	     "data": "data",
+            "defaultContent": "none",
+	   "width": '50px',
+           "render": function(data){
+              console.log(data);
+	      if(data == null || data.length == 0)
+                 return "none";
+              status = "untriggered";
+              level = 0;  // 0-trigger, 1-transfer, 2-processing
+              // possible: untriggered, triggered, transferring, transfered, processing, processed
+              for(x=0;x<data.length;x+=1){
+                 if(data[x]['type'] == "untriggered" && level == 0 && data[x]['status'] == "transferred")
+                   status = "untriggered";
+                 else if(data[x]['type'] == "untriggered" && level == 0 && status =="untriggered" && data[x]['status'] == "transferring")
+                   status = "acquisition";
+                 else if(data[x]['type'] == "raw" && level < 2){
+                    if(level == 0 && (data[x]['status'] == "transferring" || data[x]['status'] == "verifying" ) 
+                        && status != "transferred"){
+                       level = 1;
+                       status = "triggering";
+                    }
+                    else if(data[x]['status'] == "transferred"){
+                       level = 1;
+                       status = "transferred";
+                    }
+                 }       
+                 else if(data[x]['type'] == "processed"){                    
+                    if((data[x]['status'] == "transferring" || data[x]['status'] == "verifying") && status != "processed"){
+                       level = 2;
+                       status = "processing";
+                    }
+                    else if(data[x]['status'] == "transferred"){
+                       level = 2;
+                       status = "processed";
+                    }
+                 }
+              }// for
+              colors = { "processed": "#189429", "processing": "#84a789", "transferred": "#2f43bd", "triggering": "#7e88c4",
+							     "acquisition": "#ab20c4", "triggering": "#d70d11", "untriggered": "#a2a2a2"};
+              retstring = "<strong style='color:"+colors[status]+"'>"+status+"</strong>";
+              return retstring;
+            }// function
+	},
        {
           "data": "tags",
+          "width": '70px',
           "render": function(data){
              if(data==null) return "";
 	     var ret="";
@@ -358,10 +426,10 @@ $(document).ready(function(){
        },
        {
           "data":    "comments",
-          "width":   '10px',
+	   "width":   '200px',
           "render":  function(data){
-                        if(data==null) return 0;
-                        return data.length;
+                        if(data==null || data.length==0) return "";
+                        return data[0]['text'];
                      }
         }
      ],
@@ -370,7 +438,7 @@ $(document).ready(function(){
         [ 50, 100, 200, 500, -1],
         [ 50, 100, 200, 500, "All"]
 	],
-     "order":     [[ 2, "desc" ]],
+     "order":     [[ 1, "desc" ]],
      "iDisplayLength": 100,
 
     }); // end table declaration
@@ -392,6 +460,11 @@ $(document).ready(function(){
       RUNURL = "/runs/get_run/?detector="+data['detector']+";name="+data['name'];
        UpdateDetail(0)
    }); // End expand click listener
+			
+   //setInterval( function () {
+   //  table.ajax.reload( null, false ); // user paging is not reset on reload
+   // }, 30000 );
+
 
        function UpdateDetail(docallback){
          console.log(RUNURL);
@@ -405,6 +478,12 @@ $(document).ready(function(){
                     document.getElementById("detail_detector").innerHTML=data.detector;
                     document.getElementById("detail_source").innerHTML=data.source.type;
                     document.getElementById("detail_user").innerHTML=data.user;
+
+                    var events_built = "0";
+                    if("trigger" in data && "events_built" in data.trigger){
+                       events_built = data.trigger.events_built.toString();
+                    }
+                    document.getElementById("detail_events").innerHTML = events_built;
 
                     // dates
                     var start = new Date(data.start['$date']);
@@ -474,11 +553,34 @@ $(document).ready(function(){
 
     if('data' in data){
      if(data['data'].length == 0)ret2+="No storage sites registered for this run.";
+     var untriggered = [];
+     var raw = [];
+     var processed = [];
      for(var x=0;x<data['data'].length;x+=1){
-         ret2+="<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div><div class='col-xs-12'><strong style='padding-left:15px'>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
-
-
+         var htmel = "<div class='row'><div class='col-xs-12'><h5><strong>"+data['data'][x]['host']+"</strong></h5></div><div class='col-xs-12'><strong style='padding-left:15px;'>Type: </strong>   "+data['data'][x]['type'] + "<strong style='padding-left:15px';>Status: </strong><strong style='padding-left:15px;color:"+GetColor(data['data'][x]['status'])+"'>"+data['data'][x]['status']+"</strong></div>";
+		     if(data['data'][x]['type'] == 'processed' 
+		     && 'pax_version' in data['data'][x])
+		     htmel+="<div class='col-xs-12'><strong style='padding-left:15px'>Pax version: </strong>&nbsp;"+data['data'][x]['pax_version']+"</div></div>";
+		     htmel+="<div class='col-xs-12'><strong>Location: </strong>&nbsp;" + data['data'][x]['location']+"</div></div>";
+         if(data['data'][x]['type'] == 'raw')
+            raw.push(htmel);
+         else if(data['data'][x]['type'] == 'processed')
+            processed.push(htmel);
+         else
+            untriggered.push(htmel);
      }
+     if(processed.length>0)
+        ret2 += "<h4 style='margin-bottom:2px;'>Processed data</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+     for(var x=0; x<processed.length; x+=1)
+         ret2+=processed[x];
+     if(raw.length>0)
+	ret2 += "<h4 style='margin-bottom:2px;'>Raw data</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+     for(var x=0; x<raw.length;x+=1)
+         ret2+=raw[x];
+     if(untriggered.length>0)
+        ret2 += "<h4 style='margin-bottom:2px;'>Other data</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+     for(var x=0;x<untriggered.length;x+=1)
+         ret2+=untriggered[x];
 }
 else
 ret2+="No storage sites registered for this run.";
@@ -516,9 +618,9 @@ ret2+="</table>";
 
 
 function GetColor(string){
-if (string=="transferred")
+if (string=="transferred" || string=="processing")
 return "#36bc98";
-if(string=="tranferring" || string=="checking" || string=="verifying")
+if(string=="transferring" || string=="checking" || string=="verifying")
 return "#f9a100";
 else
 return "#ec2c35";

@@ -125,7 +125,34 @@ def runs(request):
         filter_form = run_search_form( fieldslist )
     #logger.error(filter_query)
     retset = collection.find( filter_query ).sort( "start", -1 )
-    return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
+    
+    retdocs = []
+    for doc in retset:
+        row = { "detector": doc['detector'],
+                "name": doc['name'],
+                "start": doc['start'],
+                "source": {"type": doc['source']['type']},
+                "data": [],
+                "tags": [],
+                "comments": [],
+            }
+        if "trigger" in doc and "events_built" in doc['trigger']:
+            row['trigger'] = {"events_built": doc['trigger']['events_built']}
+        if "number" in doc:
+            row['number'] = doc['number']
+        if "tags" in doc:
+            row['tags'] = doc['tags']
+        if "data" in doc:
+            row['data'] = doc['data']
+        if "comments" in doc:
+            row['comments'] = doc['comments']
+        if "reader" in doc and "self_trigger" in doc['reader']:
+            row['reader'] = {"self_trigger": doc['reader']['self_trigger']}
+        else:
+            row['reader'] = {"self_trigger": False}
+        retdocs.append(row)
+
+    return render( request, 'runs/runs.html', {"runs_list": dumps(retdocs), 
                                                "form" : filter_form,
                                                "query": filter_query} )
 
@@ -142,8 +169,8 @@ def addTag(request):
 
     client = MongoClient(settings.RUNS_DB_ADDR)
     if (request.method == "GET" and "tagname" in request.GET and
-        "id" in request.GET):
-        logger.error(request.GET)                      
+        "id" in request.GET and ' ' not in request.GET['tagname']):
+        #logger.error(request.GET)                      
         db = client[settings.RUNS_DB_NAME]
         coll = db[settings.RUNS_DB_COLLECTION]
         search = {"_id": ObjectId(request.GET['id'])}

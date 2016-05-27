@@ -19,6 +19,8 @@ import math
 import dateutil
 import logging
 from django.contrib.auth import authenticate, login
+from django.utils.timezone import localtime
+from datetime import date, timedelta
 
 # Get an instance of a logger                                                                                     
 logger = logging.getLogger('emo')
@@ -164,6 +166,29 @@ def GetShifts(request):
         })
     return HttpResponse(dumps(retdoc), content_type="application/json")
 
+@login_required
+def GetCurrentShifter(request):
+    now = datetime.datetime.now()
+
+    docs =[]
+    try:
+        docs = db['shifts'].find({
+            "start": {"$lte": now},
+            "end": {"$gte": now}
+        })
+    except:
+        return HttpResponse({}, content_type="application/json")
+
+    ret = {"shifters": [], "run_coordinator": []}
+    for shift in docs:
+        if shift['type'] == 'shifter':
+            ret['shifters'].append(shift['shifter'])
+        elif shift['type'] == 'run coordinator':
+            ret['run_coordinator'].append(shift['shifter'])
+
+        
+    return HttpResponse(dumps(ret),
+                        content_type = 'application/json')
 
 @login_required
 def GetShiftStats(request):
@@ -228,7 +253,7 @@ def CreateShiftTemplate(doc):
         for i in range(0, shifts_per_week):
             shift_type="shifter"
             if i==0:
-                shift_type="responsible"
+                shift_type="run coordinator"
             
             doc = {
                 "year": year,
@@ -314,11 +339,18 @@ def shift_calendar(request):
     if our_user is None:
         return render(request, "management/shift_calendar.html", retdict)
 
-    if our_user['position'] == "PI":
-        user_cursor = (db['users'].find({"institute": our_user['institute'],
-                                         "username": {"$exists": True},
-                                         "last_name": {"$exists": True},
-                                         "first_name": {"$exists": True},
+    if our_user['position'] == "PI" or request.user.username=="coderre":
+        if request.user.username=="coderre":
+            user_cursor = (db['users'].find({
+                "username": {"$exists": True},
+                "last_name": {"$exists": True},
+                "first_name": {"$exists": True},
+            }))
+        else:
+            user_cursor = (db['users'].find({"institute": our_user['institute'],
+                                             "username": {"$exists": True},
+                                             "last_name": {"$exists": True},
+                                             "first_name": {"$exists": True},
                                          }))
         user_list = {}
         for iuser in user_cursor:
@@ -338,22 +370,30 @@ def shift_calendar(request):
         }]}
     signup_form = ShiftSignUp()
     if request.method == "POST":
-        logger.error("post request")
-        logger.error(request.POST)
+        #logger.error("post request")
+        #logger.error(request.POST)
         signup_form = ShiftSignUp(request.POST)
         if signup_form.is_valid():
-            logger.error(signup_form)
+            #logger.error(signup_form)
             # Update doc
             start = datetime.datetime.combine(signup_form.cleaned_data['start_date'],
                                               datetime.datetime.min.time())
             end = datetime.datetime.combine(signup_form.cleaned_data['end_date'],
                                             datetime.datetime.min.time())
+            start_minus_one = start - timedelta(days=1)
+            start_plus_one = start + timedelta(days=1)
+
             query = {
-                "start": start,
+                "start": {
+                    "$gte": start_minus_one,
+                    "$lte": start_plus_one,
+                },
+                #"available": True,
                 "type": signup_form.cleaned_data["shift_type"]
             }            
             if signup_form.cleaned_data['shift_type'] != "training":
                 if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove']==True:                    
+                    query['shifter'] = signup_form.cleaned_data['user']
                     db['shifts'].update(query,
                                         {"$set": { "available": True,
                                                    "institute": "none",
@@ -361,16 +401,21 @@ def shift_calendar(request):
                                                }}, upsert=False)
                     
                 else:
+                    query['available'] = True
+                    update_dict = {
+                        "available": False,
+                        "institute": signup_form.cleaned_data['institute'],
+                        "shifter": signup_form.cleaned_data['user']
+                    }
+                    #logger.error("THIS IS THE QUERY")
+                    #logger.error(query)
+                    #logger.error(update_dict)
                     db['shifts'].update(query, 
                                         {"$set": 
-                                         { "available": False,
-                                           "institute": 
-                                           signup_form.cleaned_data['institute'],
-                                           "shifter": 
-                                           signup_form.cleaned_data['user']
-                                       }}, upsert=False)
+                                         update_dict}, upsert=False)
             else:
                 if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove'] == True:
+                    query['shifter'] = signup_form.cleaned_data['user']
                     db['shifts'].remove(query)
                 else:
                     doc = {
@@ -384,6 +429,8 @@ def shift_calendar(request):
                     }
                     logger.error(doc)
                     db['shifts'].insert(doc)
+        else:
+            logger.error("Invalid signup form")
     if signup_form.is_valid() and "remove" in signup_form.cleaned_data:
         signup_form.cleaned_data['remove']=False
     retdict={"signup_form": signup_form, 
@@ -429,7 +476,7 @@ def update_user(request):
                     doc['responsible']=True
             else:
                 doc['responsible'] = False
-
+                        
             extra_fields = ['skype_id', 'github_id', 'cell', 'nickname']
             for extra in extra_fields:
                 if extra in profile_update.cleaned_data.keys():

@@ -33,7 +33,9 @@ background-color:white;
     <h3>User Management</h3>
   </div>
   <div class="col-xs-1 col-sm-1 col-xs-offset-8">
+    {% if request.user.username == "messina" or request.user.username == "coderre" %}
     <button data-toggle="modal" onclick="NewUser()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewUser </button>
+    {% endif %}
   </div>
 </div>
 
@@ -48,6 +50,7 @@ background-color:white;
       <th>Email</th>
       <th>Training</th>
       <th>Member Since</th>
+      <th>Status</th>
       <th>Edit</th>
     </tr>
   </thead>
@@ -60,6 +63,7 @@ background-color:white;
       <td style="color:black"></td>
       <td style="color:black"></td>
       <td style="color:black"></td>
+      <td style="width:100px"></td>
       <td style="width:100px"></td>
       <td style="width:10px" class="details-edit"></td>
     </tr>
@@ -190,11 +194,18 @@ console.log(table_data[0]);
                  "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " ";           
              return dateString;
             }},
+            { "data": null,
+              "defaultContent": "active",
+            },
             {
                 "className":      'details-edit',
                 "orderable":      false,
                 "data":           null,
+                {% if request.user.username == "messina" or request.user.username == "coderre" %}
                 "defaultContent": '<button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this)">Edit</button>'
+               {% else %}
+               "defaultContent": '<button class="btn btn-default disabled">Edit</button>'
+               {% endif %}
             },],
            "iDisplayLength": 50,
 "order": [[3, 'asc'], [4, 'asc']],

@@ -12,6 +12,12 @@ urlpatterns = [
     url(r'^diagnostics', login_required(TemplateView.as_view(template_name="monitor/diagnostics.html"))),
     url(r'^runstats_uptime', views.get_uptime, name='get_uptime'),
     url(r'^runstats', login_required(TemplateView.as_view(template_name="monitor/runstats.html"))),
+    url(r'^trigger_diagnostics', login_required(TemplateView.as_view(template_name="monitor/trigger_diagnostics.html"))),
+    url(r'^trigger_get_run_list', views.trigger_get_run_list,
+        name="trigger_get_run_list"),
+    url(r'^trigger_get_data', views.trigger_get_data,
+                name="trigger_get_data"),
+
     #url(r'^get_aggregate_list', login_required(views.get_aggregate_list), name="get_aggregate_list"),
     #url(r'^get_aggregate_plot', login_required(views.get_aggregate_plot), name="get_aggregate_plot"),
     url(r'^get_available_plots', views.get_available_plots, name="get_available_plots"),

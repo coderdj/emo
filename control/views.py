@@ -32,7 +32,8 @@ def GetStatusUpdate(request):
     
     collection = db[ "daq_status" ]
 
-    detectors = collection.distinct("detector")
+    detectors = ["tpc","muon_veto"]
+    #detectors = collection.distinct("detector")
     ret = []
     for det in detectors:
         ret_doc = collection.find_one({"detector":det}, sort= [ ("_id", -1) ] )
@@ -69,7 +70,8 @@ def GetNodeUpdates(request):
 
     collection = db[ "daq_rates" ]
 
-    nodes = collection.distinct('node')
+    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5"]
+    #nodes = collection.distinct('node')
 
     ret = []
     for node in nodes:
@@ -115,7 +117,9 @@ def GetNodeHistory(request):
                                           timezone.utc ) - datetime.timedelta(
                                               seconds=nseconds)
     
-    nodes = collection.distinct('node')    
+    #nodes = collection.distinct('node')    
+    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5"]
+
     dataframe = pd.DataFrame(list(collection.find({"createdAt": 
                                                    {"$gt": created_time}})))
     dataframe['datetime'] = pd.to_datetime(dataframe['timeseconds'], unit='s')
