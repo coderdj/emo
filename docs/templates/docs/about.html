@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load staticfiles%}
+
 {% block content %}
 <br>
 <h3>About</h3>
@@ -78,5 +80,6 @@ This project is a combination of many free, open-source packages. Therefore this
     Project github: http://www.github.com/coderdj/emo
 </textarea>
 </p>
-
+<p>
+<strong>This site powered by: <img src="{% static "emo/emo.png" %}" alt="Experimental Monitor" height="62" width="112"></strong>
 {% endblock %}

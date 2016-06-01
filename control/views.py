@@ -1,6 +1,7 @@
 from django.shortcuts import HttpResponse
 from pymongo import MongoClient
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
+import json
 from django.contrib.auth.decorators import login_required
 from control.models import RunStartForm, RunStopForm
 import datetime
@@ -10,6 +11,7 @@ import numpy as np
 import pandas as pd
 from django.conf import settings
 import logging
+import requests
 
 # Get an instance of a logger
 logger = logging.getLogger('emo')
@@ -188,7 +190,17 @@ def GetDispatcherReply(request):
             retdict['messages'].append({"message": doc["message"],
                                         "replyenum": doc["replyenum"]})
             collection.delete_one({"_id": doc['_id']})
-
+            
+            if (doc['replyenum'] == 19 and hasattr(settings, 'GITTER_URL') 
+                and settings.GITTER_URL is not None):
+                url = settings.GITTER_URL
+                payload = {'message': doc['message']}
+                headers = {'content-type': 'application/json', 
+                           'Accept-Charset': 'UTF-8'}
+                try:
+                    r = requests.post(url, data=json.dumps(payload), headers=headers)
+                except:
+                    print("Logging to gitter failed")
     return HttpResponse(dumps(retdict), content_type="application/json")
 
     
