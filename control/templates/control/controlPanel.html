@@ -12,6 +12,11 @@
 
 <link href="{% static "jquery-hashtags-master/css/jquery.hashtags.css" %}" rel="stylesheet">
 <script src="{% static "jquery/js/jquery_timeago.js" %}"></script>
+<script src="{% static "js/progressbar.min.js" %}"></script>
+
+<script src="{% static "emo/js/playlist.js" %}"></script>
+<link href="{% static "emo/css/playlist.css" %}" rel="stylesheet">
+
 
 
 
@@ -87,8 +92,8 @@
 <p class="bg-info" style="width:100%;padding-left:20px">Hint: To control the DAQ go to your profile and request permission <a href="/profile" style="font-weight:bold;color:#DDDDDD">here</a> </p>
 {% endif %}
 
-<div class="row" style="height:20px;margin:0px;margin-top:15px;margin-bottom:15px;">
-  <div class="col-sm-6 col-xs-12">
+<div class="row" style="height:20px;margin:0px;margin-top:15px;">
+  <div class="col-sm-8 col-xs-12">
     <div style="clear: both">
       <h3 style="display:inline"><strong>DAQ Control Panel</strong></h3>
       &nbsp;
@@ -97,7 +102,7 @@
 <!--    <h5>Current shifter: <span id="superman"></span></h5> -->
   </div>
   {% if request.user.profile.canstartruns %}
-  <div class="col-sm-6 col-xs-12 pull-right">
+  <div class="col-sm-4 col-xs-12 pull-right">
     <ul class="pull-right" style="padding:3px;margin-top:3px;">
       <button data-toggle="modal" class="btn btn-success" href="#startRunModal">Start Run</button>
       <button class="btn btn-danger" data-toggle="modal" href="#runStopModal">Stop Run</button>
@@ -106,9 +111,17 @@
   </div>
   {% endif %}
 </div><!-- end row -->
-<div class="col-xs-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;max-height:30%;">
+<div class="row">
+  <div class="col-xs-12" id="rs_progress" style="height:10px;width:100%;margin:0;padding:0"></div>
+  <div class="col-xs-12" style="height:20px" id="start_run_modal_content">
+  </div>
+<!--  <div class="col-xs-12 col-sm-3" style="min-height:200px;margin-top:18px;padding-left:15px;padding-right:0;">
+    <div id="start_run_modal_content" style="height:200px;background-color:white;border-width:1px;border-type:solid;border:color:'#222222';overflow-y:hidden;overflow-x:hidden"></div>    
+</div>  -->
+  <div class="col-xs-12 col-sm-12" id="rates_panel" style="position:relative;height:20%;min-height:200px;max-height:30%;">
+  </div>
 </div>
-    <div class="row" style="margin-top:5px;">
+<div class="row" style="margin-top:5px;">
         <div class="col-xs-12">
 	  <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:15px" title="I can't even...">Help</a>
 
@@ -131,19 +144,67 @@
     </div>
 <!--<br>-->
 <div class="col-xs-12">
-  <div class="col-xs-12 emobox" id="message_wrapper">
-    <form id="new_log_entry" action="/log/new_log_entry" method='post'>{% csrf_token %}
-      <p style="margin-bottom:0">
-	<input type='text' id='new_comment_text' name='message' class='form-control'  placeholder='Make a log entry...' style="display:inline-block"></input>
-	<input class='btn btn-info btn-lg' style="display:inline-block;width:120px;margin-bottom:0" type=submit value='New log entry'/>
-      </p>
-      <input type="hidden" name="redirect" value="none"/>
-    </form>
-  
-<div class="col-xs-12" id="message_panel" style="height:85px;margin-top:5px;overflow-y:scroll;margin-bottom:5px;">
-<div class="fadeout"></div>
-</div>
-</div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-6" id="message_wrapper" style="padding-right:0">
+      <form id="new_log_entry" action="/log/new_log_entry" method='post'>{% csrf_token %}
+	<p style="margin-bottom:0">
+	  <input type='text' id='new_comment_text' name='message' class='form-control'  placeholder='Make a log entry...' style="display:inline-block">
+	  <input class='btn btn-info btn-lg' style="display:inline-block;width:120px;margin-bottom:0" type=submit value='New log entry'/>
+	</p>
+	<input type="hidden" name="redirect" value="none"/>
+      </form>
+      
+      <div class="col-xs-12" id="message_panel" style="height:185px;margin-top:5px;overflow-y:scroll;margin-bottom:5px;">
+	<div class="fadeout"></div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xs-12">
+      <div class="emobox" style="margin-top:0;min-height:220px;max-height:220px;overflow-y:scroll;overflow-x:hidden">  
+      <div class="row">                                                              
+	<div class="col-xs-6">                                                      
+          <h3 style="margin-top:0;margin-bottom:3px;padding-left:10px">
+	    DAQ Run Queue
+	  </h3>                                                                         
+	</div>              
+	<div class="col-xs-5">
+          <div class="edit_mode" id="run_queue_edit_mode" style="display:none">
+	  <button class="btn btn-info" onclick="SaveTable(this)">
+            Save Changes</button>                                                 
+          &nbsp;
+          <button class="btn btn-default" onclick="DiscardChanges(this)">
+            Discard Changes</button>          
+
+	  </div>
+	</div>
+	<div class="col-xs-1">                                                       
+          <span class="glyphicon glyphicon-refresh"                                  
+		style="cursor:pointer"                                               
+		onclick="LoadFromScratch()"></span>                                  
+	</div>                                                                       
+      </div>                                                                         
+      <table class="table table-hover rounded">                                      
+	<thead>   
+	  <tr class="edit_mode" style="display:none">                                             <td>                                                                                    <b>Edit mode</b>                                                                  </td>                                                                      
+            <td>                                                                                    <button class="btn btn-info" onclick="SaveTable(this)">                 
+		Save Changes</button>                                                           </td>                                                                      
+            <td>                                                                      
+              <button class="btn btn-default" onclick="DiscardChanges(this)">         
+              Discard Changes</button>                                               
+            </td>                                                                     
+          </tr>                                                                       
+          <tr>                                                                        
+            <th class="col-md-3 col-xs-3">Run mode</th>                               
+            <th class="col-md-2 col-xs-2">Detector</th>                               
+            <th class="col-md-2 col-xs-2">Started by</th>                             
+            <th class="col-md-2 col-xs-2">(hh:mm)</th>                  
+            <th class="th_right col-md-3 col-xs-3" style="min-width:150px">Options</th>                
+          </tr>                                                                        
+	</thead>                                                                       
+	<tbody id="queue_table_body">                                                  
+	</tbody>                                                                       
+      </table>                                                                        </div> 
+    </div>   
+  </div>
 </div>
 <div class="row" id="text_panel">
   <div class="col-xs-12" id="info_panel" style="min-width:350px;">
@@ -185,9 +246,12 @@
 	      <input type="hidden" name="detector" value="all" id="input_detector">
             </ul>
           </div>
-	  <p><hr></p>
-          <div class="col-xs-12" style="margin-top:20px;" id="global-options">
-            <div class="row">
+
+
+          <div class="col-xs-12" id="global-options">
+	    <p><hr></p>
+	    <i>Hint: Hover over an option for more info</i>
+            <div class="row" style="margin-top:10px">
               <div class="col-xs-6"><strong>Starting user:</strong></div>
               <div class="col-xs-6">{{ request.user.username }}</div>
               <input class="hidden" name="user" value="{{ request.user.username }}">
@@ -196,13 +260,30 @@
 	      <div class="col-xs-6">
 		<strong data-toggle="tooltip" 
 			title="This allows you to override any warnings. It is recommended to only check this option if you know what the warnings are, why they are there, and why you can safely override them." 
-			data-placement="bottom">Force this run to start:
+			data-placement="right">Force this run to start:
 		</strong>
 	      </div>
 	      <div class="col-xs-6"><input type="checkbox" name="override">
 		&nbsp; (Not recommended)</div>
 	    </div>
-            <div class="row">
+	    <div class="row" style="margin-top:2px">
+	      <div class="col-xs-6">
+		<strong data-toggle="tooltip"
+			title="If you want the run to stop automatically you can put the number of minutes the run should go in this line. If you leave it at zero the run will go until you stop it." data-placement="right">Stop after minutes (0 to not stop):</strong>
+	      </div>
+	      <div class="col-xs-6">
+		<input type="number" step="1" min="0" max="1440" value="0" name="stop_after_minutes"></div>
+	    </div>
+	    <div class="row" style="margin-top:2px">
+              <div class="col-xs-6">
+                <strong data-toggle="tooltip"
+                        title="If you want to run the same type of run several times in a row, use this input. Note that it only makes sense if you set 'stop after minutes' above. If the run is manually stopped it will not restart"
+			data-placement="right">Repeat n times:</strong>
+              </div>
+	      <div class="col-xs-6">
+		<input type="number" step="1" name="repeat_n_times" value="1" min="1" max="10"></div>
+            </div>	    
+            <div class="row" style="margin-top:2px">
               <div class="col-xs-6"><strong>Comment:</strong></div>
               <div class="col-xs-6"><textarea form="run_start_form" rows="4" name="comment"></textarea></div>
             </div>
@@ -216,10 +297,10 @@
 	      </div>
             </div>
             <div class="row">
-              <div class="col-xs-6"><strong>Do baselines:</strong></div>
+              <div class="col-xs-6"><strong data-toggle="tooltip" title="Automatically adjust the DAC offset for each channel to optimize the dynamic range. Recommended to leave this on." data-placement="right">Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
-                  <div class="col-xs-6"><input type="checkbox" name="baselines_tpc">
+                  <div class="col-xs-6"><input type="checkbox" checked name="baselines_tpc">
 		  </div>
                 </label>
               </div>
@@ -244,7 +325,7 @@
               <div class="col-xs-6"><select id="run_mode_mv" name="run_mode_mv"></select></div>
             </div>
             <div class="row">
-              <div class="col-xs-6"><strong>Do baselines:</strong></div>
+              <div class="col-xs-6"><strong data-toggle="tooltip" title="Automatically adjust the DAC offset for each channel to optimize the dynamic range. Recommended to leave this on." data-placement="right">Do baselines:</strong></div>
               <div class='col-xs-6'>
                 <label>
                   <div class="col-xs-6"><input type="checkbox" name="baselines_mv">
@@ -290,7 +371,7 @@
 	<br>
 
 <!--	<div style="display:block;margin-left:auto;margin-right:auto;" id="loading_bar"></div>-->
-	<div id="start_run_modal_content">
+	<div id="start_run_modal_content0">
 	</div>
       </div>
       <div class="modal-footer">
@@ -438,7 +519,10 @@
   var feedback_count = 0;
   var feedbackURL = "/control/run_start_feedback";
   var feedback_html = "";
-
+  var table_div = "queue_table_body";
+  var queueURL="/control/get_queue_list";
+  var queue_update_url="/control/set_queue_list";
+  var display_counter=0;
   
   /*$("#run_stop_form").submit(function(){
      document.getElementById("deleted").pause();
@@ -449,49 +533,77 @@
 
   // Run feedback function
   function FeedbackLoop(){
+    var currentdate = new Date(); 
+    var time = ("0" + currentdate.getUTCHours()).slice(-2) + ":"  
+                + ("0" + currentdate.getUTCMinutes()).slice(-2);
+               
+
     $.getJSON(feedbackURL, function(data){
+       display_counter+=1;
       if("messages" in data){
-
-      
+          display_counter=-10;  
       for( x=0; x<data['messages'].length; x+=1 ){
-
+    
         // Put messages into feedback modal
-	if(data['messages'][x]['replyenum'] == 11)
-	  feedback_html += "<p><strong>Received affirmation: </strong>" + 
-		           data['messages'][x]['message'] + "</p>";
-        else if( data['messages'][x]['replyenum'] == 12)
-	  feedback_html += "<p><strong>Action taken: </strong>" +
-                           data['messages'][x]['message'] + "</p>";
-	else if( data['messages'][x]['replyenum'] == 13)
-          feedback_html += "<p><strong>Start: </strong>" +
-                           data['messages'][x]['message'] + "</p>";
+	if(data['messages'][x]['replyenum'] == 11){
+	  feedback_html = "<p>"+time+"<strong> Received affirmation: </strong>" + 
+		           data['messages'][x]['message'] + "</p>";// + feedback_html;
+	  rs_bar.animate(.2);
+        }
+        else if( data['messages'][x]['replyenum'] == 12 || 
+                 data['messages'][x]['replyenum'] == 22 ){
+	  feedback_html = "<p>"+time+"<strong> Action taken: </strong>" +
+                           data['messages'][x]['message'] + "</p>";// + feedback_html;
+          if(data['messages'][x]['replyenum']==12)
+	     rs_bar.animate(.4);
+          else
+	     rs_bar.animate(.7);
+        }
+	else if( data['messages'][x]['replyenum'] == 13){
+          feedback_html = "<p>"+time+"<strong> Start: </strong>" +
+                           data['messages'][x]['message'] + "</p>";// + feedback_html;
+//           rs_bar.animate(1.);
+        }
         else if( data['messages'][x]['replyenum'] == 19){
-          feedback_html += "<p><strong>Finish: </strong>" +
-                           data['messages'][x]['message'] + "</p>";
+          feedback_html = "<p>"+time+"<strong> Finish: </strong>" +
+                           data['messages'][x]['message'] + "</p>";// + feedback_html;
 	  feedback_count = 10000;
           document.getElementById("loading_bar").innerHTML="";
+            rs_bar.animate(1.);
+
         }
         else if( data['messages'][x]['replyenum'] == 18){
-          feedback_html += "<p><strong style='color:red'>ERROR: </strong>" +
-                           data['messages'][x]['message'] + "</p>";
+          feedback_html = "<p>"+time+"<strong style='color:red'> ERROR: </strong>" +
+                           data['messages'][x]['message'] + "</p>";// + feedback_html;
           feedback_count = 10000;
           document.getElementById("loading_bar").innerHTML="";
+                       rs_bar.animate(0);
+
         }
         else
-          feedback_html += "<p><strong style='color:blue'>Unknown: </strong>" +
-                           data['messages'][x]['message'] + "</p>";
+          feedback_html = "<p>"+time+"<strong style='color:blue'> Unknown: </strong>" +
+                           data['messages'][x]['message'] + "</p>";// + feedback_html;
 
         document.getElementById("start_run_modal_content").innerHTML=feedback_html; 
       }// end for
       }
+else if(display_counter>0){
+          feedback_html = "<p>"+time+" Polling for DAQ live updates...</p>";// + 
+             rs_bar.animate(0);
+}
+					  // feedback_html;
+
     });
-    feedback_count += 1;
-    if(feedback_count < 60)
-       setTimeout(function() { FeedbackLoop(); }, 500 );
-    else if(feedback_count < 10000) {
-       feedback_html += "<p><strong>TIMED OUT </strong></p>";
-       document.getElementById("loading_bar").innerHTML="";
-    }
+
+//feedback_count += 1;
+//    if(feedback_count < 60)
+//       setTimeout(function() { FeedbackLoop(); }, 500 );
+//    else if(feedback_count < 10000) {
+	//feedback_html += "<p><strong>TIMED OUT </strong></p>";
+//       feedback_html += "<p>"+time+" Polling for DAQ live updates...</p>";
+//       document.getElementById("loading_bar").innerHTML="";
+  //  }
+    if(display_counter == -10 || display_counter>0)
     document.getElementById("start_run_modal_content").innerHTML=feedback_html;
 
   }
@@ -505,7 +617,9 @@
         // of course you can do something more fancy with your respone
    });
    $("#startRunModal").modal("hide")
+
     e.preventDefault();
+return false;
     $("#runFeedbackModal").modal('show');
     feedback_count = 0;
     feedback_html = "";
@@ -516,17 +630,24 @@
   // Submit run stop form
   $('#run_stop_form').submit(function(e){
      $.post('/control/stop_run', $(this).serialize(), function(data){
-        console.log("Stopped the run");
+			     console.log("Stopped the run");
    });
    $("#runStopModal").modal("hide")
       e.preventDefault();
 
    });
-
+   function LoadFromScratch(){
+          LoadTable(table_div, queueURL, queue_update_url, '{{ csrf_token }}');
+      };                      
 
   // Page update poll
   function UpdatePage( thechart ){
 			     
+	LoadTable(table_div, queueURL, queue_update_url, '{{ csrf_token }}');                                                        
+                     FeedbackLoop();
+                                                                      
+                                		
+	     
      $.getJSON(currentShifterUrl, function(data){
 	document.getElementById("superman").innerHTML = data['starting_user'];
      });
@@ -560,9 +681,9 @@ return "#";
       $.getJSON(Url, function(data){
           var html_string = "<table class='table table-striped table-condensed borderless'><tbody>";
           for ( x=0; x<data.length; x+=1 ){
-console.log(data[x]);
-                html_string += "<tr><td style='width:200px'>" + (new Date(data[x]['time']['$date'])).toISOString().slice(0,16) + "</td>" +
-                                "<td style='width:200px'><strong>" + data[x]['sender'] + "</strong></td>" +
+//console.log(data[x]);
+                html_string += "<tr><td style='width:150px'>" + (new Date(data[x]['time']['$date'])).toISOString().slice(0,16) + "</td>" +
+                                "<td style='width:100px'><strong>" + data[x]['sender'] + "</strong></td>" +
                                 "<td class='hashes'>" + data[x]['message'] + "</td></tr>";
             }
           html_string += "</tbody></table>"
@@ -608,10 +729,17 @@ console.log(data[x]);
     }
 
   // Load page function
-  $( function() {
+  $( function() {				    				 
+       rs_bar = new ProgressBar.Line('#rs_progress', {easing: 'easeInOut',
+				    strokeWidth: 1,				 
+				    duration: 1400,
+				    color: '#5992c2',
+                                    svgStyle: {width: '100%', height: '100%'},
+				    });
+
 	$("textarea").hashtags();
 	$("#content").resize(function()
-		{console.log("HERE");
+		{//console.log("HERE");
  $('#rates_panel').highcharts().setSize($("#rates_panel").width(), 200, false); 
 });
      // Submit function for log form

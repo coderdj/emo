@@ -593,7 +593,9 @@ ret2+="</table>";
     // NEW TAG FORM
     ret3 = AddTagHTML(data);
     ret3 += "<form class='new_tag_form' method='get' onsubmit='return NewTag(this)'>" +
-		     '<div class="row"><div class="col-xs-9"><input type="text" id="' + data._id['$oid'] + '_formtext" style="width:100%" name="content"></input></div>' +
+		     '<div class="row">'+
+'<div class="col-xs-12 text-info"><emph>Please avoid redundant tags, i.e. re-stating the source type as well as overly specific tags like the I-Belt position (this goes in comments). There does not have to be a tag for each run.</emph></div>'
+		     +'<div class="col-xs-9"><input type="text" id="' + data._id['$oid'] + '_formtext" style="width:100%" name="content"></input></div>' +
       '<div class="col-xs-3">' +
       '<input type="hidden" name="id" value="' + data._id['$oid'] + '"/>' +
       '<button class="btn btn-info" type="submit" style="margin-bottom:15px;">New Tag</button></div></div>';

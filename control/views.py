@@ -1,8 +1,10 @@
 from django.shortcuts import HttpResponse
 from pymongo import MongoClient
+import pymongo
 from bson.json_util import dumps, loads
 import json
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from control.models import RunStartForm, RunStopForm
 import datetime
 import pytz
@@ -12,6 +14,7 @@ import pandas as pd
 from django.conf import settings
 import logging
 import requests
+import urllib
 
 # Get an instance of a logger
 logger = logging.getLogger('emo')
@@ -19,6 +22,75 @@ logger = logging.getLogger('emo')
 
 client = MongoClient(settings.ONLINE_DB_ADDR)
 logclient = MongoClient(settings.LOG_DB_ADDR)
+
+@login_required
+def GetQueueList(request):
+    """
+    Gets the queue as a json list
+    """
+    # Get currently running run
+
+    # Connect to pymongo                                                              
+    db = client[ settings.ONLINE_DB_NAME ]
+    collection_status = db[ "daq_status" ]
+    detectors = ["tpc","muon_veto"]
+
+    queue = []
+    pos = -1
+    for det in detectors:        
+        ret_doc = collection_status.find_one({"detector":det}, sort= [ ("_id", -1) ] )
+        if ret_doc['state'] == "Running":
+            queue.append({
+                "running": 1,
+                "detector": ret_doc['detector'],
+                'user': ret_doc['startedBy'],
+                'run_mode_'+det: ret_doc['mode'],
+                'stop_after_minutes': -1,
+                'position': pos
+            })
+            pos -= 1
+
+
+    # Connect to pymongo  
+    collection = db['daq_queue']
+    #queue = []
+    try:
+        cursor = collection.find().sort("position", pymongo.ASCENDING)
+        for doc in cursor:
+            doc['running'] = 0
+            queue.append(doc)
+    except:
+        HttpResponse( dumps([]), content_type = 'application/json')
+    
+    return HttpResponse( dumps(queue), content_type = 'application/json')
+
+@login_required
+@csrf_exempt
+def UpdateQueueList(request):
+    
+    if request.method != "POST":
+        return HttpResponse({})
+
+    # Connect to pymongo                                                              
+    db = client[ settings.ONLINE_DB_NAME ]
+    collection = db['daq_queue']
+    
+    # Drop current collection
+    try:
+        collection.drop()
+    except:
+        return HttpResponse({})
+
+    # Had to disable csrf because couldn't figure out how to put in json
+    pythondict = loads( request.body.decode('utf-8') )
+    
+    n=0
+    for doc in pythondict['queue']:
+        doc['position'] = n
+        collection.insert_one(doc)
+        n+=1
+    return HttpResponse({})
+
 
 @login_required
 def GetStatusUpdate(request):
@@ -304,9 +376,31 @@ def start_run(request):
 
 
         collection = db[ "daq_control" ]
-        collection.insert_one(insert_doc)
-
+        #collection.insert_one(insert_doc)
+        
+        # Here you want to query to get the position ID (to put this one at end)
+        queue = db['daq_queue']        
+        
+        # Find the largest position in the queue
+        cursor = queue.find()
+        largest_pos = 0
+        for doc in cursor:
+            if doc['position'] > largest_pos:
+                largest_pos = doc['position']
+        largest_pos+=1
+        for i in range(0, insert_doc['repeat_n_times']):
+            newdoc = CopyDoc(insert_doc)
+            newdoc['position'] = largest_pos+i
+            queue.insert_one(newdoc)
+        
 
         return HttpResponse({})
         
     return HttpResponse({})
+
+def CopyDoc(doc):
+    newdoc = {}
+    for field in doc:
+        if field != "_id":
+            newdoc[field] = doc[field]
+    return newdoc

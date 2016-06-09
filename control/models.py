@@ -7,6 +7,9 @@ class RunStartForm(forms.Form):
     user = forms.CharField(label="User", max_length=100)
     force = forms.BooleanField(required=False)
     comment = forms.CharField(required=False, max_length=5000)
+
+    stop_after_minutes = forms.IntegerField(required=False)
+    repeat_n_times = forms.IntegerField(required=False)
     
     run_mode_tpc = forms.CharField(max_length=200, required=False)
     baselines_tpc = forms.BooleanField(required=False)

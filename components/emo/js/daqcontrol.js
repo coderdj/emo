@@ -81,7 +81,7 @@ function updateData( chart, updateUrl )
     $.getJSON(updateUrl,function(data){
 	var detlist = ['reader00', 'reader01', 'reader02', 'reader03', 'reader04', 'muon_veto'];
         var idlist = ['reader00','reader01','reader02','reader03', 'reader04', 'reader05'];        
-	console.log(data);
+	//console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;
             // do progress bar                                                 
@@ -147,12 +147,12 @@ function GetTimeString(startdate){
     return "...started "+jQuery.timeago(startdate);
     var nowdate = ConvertDateUTC(new Date());
     //startdate = ConvertDateUTC(startdate);
-    console.log("!!!!");
-    console.log((startdate));
-    console.log(nowdate.toString());
+    //console.log("!!!!");
+    //console.log((startdate));
+    //console.log(nowdate.toString());
     var diff = nowdate-startdate;
-    console.log(nowdate);
-    console.log(startdate);
+    //console.log(nowdate);
+    //console.log(startdate);
     if(diff<0)
         diff=0;
     var hours = Math.floor(((diff)/1000)/3600);
@@ -172,9 +172,9 @@ function GetTimeString(startdate){
         else
             timestring += ( minutes.toString() + " minutes.");
     }
-    console.log(hours);
-    console.log(minutes);
-    console.log("?");
+    //console.log(hours);
+    //console.log(minutes);
+    //console.log("?");
     if(hours==0 && minutes==0)
         timestring="...just started";
     return timestring;
@@ -276,9 +276,9 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    display_name = aliases[display_name];
 		
 		if ($('#'+div_id).find('#'+det_name+"_header").length) {
-		    console.log("Found header");
+		    //console.log("Found header");
 		    var startdate = detector_data['status'][status_id]['startTime'];
-		    console.log(detector_data['status'][status_id]);
+		    //console.log(detector_data['status'][status_id]);
 		    document.getElementById(det_name+"_status").innerHTML = GetStateHtml(detector_data,status_id);
 		    document.getElementById(det_name+"_runname").innerHTML = detector_data['status'][status_id]['currentRun'];
 		    document.getElementById(det_name+"_startedby").innerHTML = detector_data['status'][status_id]['startedBy'];
@@ -311,11 +311,11 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			appstring+=nodeInfo[det_name][index];
 			
 		    }
-		    console.log(appstring);
+		    //console.log(appstring);
 		    document.getElementById(det_name+"_node_div").innerHTML = appstring;
 		}
 		else{ // append a new header
-		    console.log(detector_data);
+		    //console.log(detector_data);
 		    var timestring="";
 		    if(detector_data['status'][status_id].startTime!=""){
 			thedatestring = detector_data['status'][status_id].startTime;
@@ -369,7 +369,7 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 			appstring+= nodeInfo[det_name][index];
 		    //appstring+= "</div></div>";
 		    appstring += "</tbody></table></div>"
-		    console.log(appstring);
+		    //console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
 		    UpdateDetectorTextNew(dataUrl, nodesUrl, div_id);
 	    }
