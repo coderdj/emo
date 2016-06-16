@@ -427,7 +427,7 @@ def shift_calendar(request):
                         "institute": signup_form.cleaned_data['institute'],
                         "shifter": signup_form.cleaned_data['user']
                     }
-                    logger.error(doc)
+                    #logger.error(doc)
                     db['shifts'].insert(doc)
         else:
             logger.error("Invalid signup form")

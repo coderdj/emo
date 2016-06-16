@@ -144,7 +144,7 @@ def GetNodeUpdates(request):
 
     collection = db[ "daq_rates" ]
 
-    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5"]
+    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5", "reader6", "reader7"]
     #nodes = collection.distinct('node')
 
     ret = []
@@ -192,7 +192,7 @@ def GetNodeHistory(request):
                                               seconds=nseconds)
     
     #nodes = collection.distinct('node')    
-    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5"]
+    nodes = ["reader0", "reader1", "reader2", "reader3", "reader4", "reader5", "reader6", "reader7"]
 
     dataframe = pd.DataFrame(list(collection.find({"createdAt": 
                                                    {"$gt": created_time}})))

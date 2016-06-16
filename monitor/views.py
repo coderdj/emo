@@ -148,7 +148,7 @@ def trigger_get_data(request):
 
         total_data = collections.defaultdict(list)
 
-        logger.error("START QUERY")
+        #logger.error("START QUERY")
         for data_type in mongoCollection.distinct('data_type'):
 
             for d in mongoCollection.find({"data_type": data_type}):
@@ -156,9 +156,9 @@ def trigger_get_data(request):
                     d = np.fromstring(d['data'],
                                       dtype=data_types.get(data_type, np.int))
                 total_data[data_type].append(d)
-        logger.error("FINISHED CLEARING")
+        #logger.error("FINISHED CLEARING")
         _flatten_trigger_monitor_data(total_data)
-        logger.error("FINISHED FLATTEN")
+        #logger.error("FINISHED FLATTEN")
 
         # ADD HISTOGRAMS                                                              
         if len(total_data['count_of_2pmt_coincidences']) > 1:
@@ -1075,12 +1075,12 @@ def get_uptime(request):
             incval = (endtime-doc['start']).seconds/(3600*24)
             bin_no = (doc['start']-datetime.datetime.combine(d,datetime.datetime.min.time())).days
 
-            logger.error(bin_no)
+            #logger.error(bin_no)
             if doc['detector'] == 'tpc':
                 while bin_no >= len(day_hist_tpc):
                     day_hist_tpc.append({})
-                logger.error(bin_no)
-                logger.error(len(day_hist_tpc))
+                #logger.error(bin_no)
+                #logger.error(len(day_hist_tpc))
                 if doc['source']['type'] in day_hist_tpc[bin_no]:
                     day_hist_tpc[bin_no][doc['source']['type']]+=incval
                 else:
@@ -1340,7 +1340,7 @@ def getCollection(request):
                                     content_type='application/json')
             except:
                 print("Can't connect to server")
-                logger.error("Can't connect to " + settings.BUFFER_DB_ADDR + " at " + settings.BUFFER_DB_REPL)
+                #logger.error("Can't connect to " + settings.BUFFER_DB_ADDR + " at " + settings.BUFFER_DB_REPL)
                 return HttpResponse(["error"], content_type="application/json")
         try:
             client = MongoClient(server)
@@ -1463,7 +1463,7 @@ def getOccurrences(request):
             searchdict["channel"] = int(request.GET['channel'])
 
         print("In get occurrences")
-        logger.error("In getOccurrences")
+        #logger.error("In getOccurrences")
         if server == "eb0" or server=="eb2":
             try:
                 if database == "untriggered" and server=="eb0":
@@ -1480,7 +1480,7 @@ def getOccurrences(request):
 
                 #db = client[database]                
                 client.close()
-                logger.error(retlist)
+                #logger.error(retlist)
                 print(retlist)
                 return HttpResponse(json_util.dumps(retlist),
                                     content_type='application/json')

@@ -79,8 +79,9 @@ function updateData( chart, updateUrl )
 // Once the chart is loaded you can call this to update the data
 {
     $.getJSON(updateUrl,function(data){
-	var detlist = ['reader00', 'reader01', 'reader02', 'reader03', 'reader04', 'muon_veto'];
-        var idlist = ['reader00','reader01','reader02','reader03', 'reader04', 'reader05'];        
+	var detlist = ['reader0', 'reader1', 'reader2', 'reader3', 'reader4', 'reader5', 'reader6', 'reader7'];
+        var idlist = ['reader0', 'reader1', 'reader2', 'reader3', 'reader4', 'reader5', 'reader6', 'reader7'];
+
 	//console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;

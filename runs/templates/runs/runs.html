@@ -197,7 +197,6 @@ function AddStrongTags(text){
 function RemoveTag(id, name){
   if(id!="" && name !=""){
       URL="newtag?remove=true;id="+id+";tagname="+name;
-      console.log(URL);
       $.get(URL,function(){return false;});
   }
   return false;
@@ -219,7 +218,6 @@ function NewTag(form){
 
   if(id!="" && content !=""){
       URL="newtag?id="+id+";tagname="+content;
-      console.log(URL);
       
      $.get(URL,function(){return false;});
   }
@@ -373,7 +371,6 @@ $(document).ready(function(){
             "defaultContent": "none",
 	   "width": '50px',
            "render": function(data){
-              console.log(data);
 	      if(data == null || data.length == 0)
                  return "none";
               status = "untriggered";
@@ -386,14 +383,22 @@ $(document).ready(function(){
                    status = "acquisition";
                  else if(data[x]['type'] == "raw" && level < 2){
                     if(level == 0 && (data[x]['status'] == "transferring" || data[x]['status'] == "verifying" ) 
-                        && status != "transferred"){
+                        && status == "transferring"){
                        level = 1;
                        status = "triggering";
                     }
                     else if(data[x]['status'] == "transferred"){
-                       level = 1;
-                       status = "transferred";
+		       if(level == 1)
+                       status = "triggered";
+                       else
+			status = "transferred";
+//                       level = 1;
                     }
+		   else if(data[x]['status'] == "verifying"){
+  //                     level = 1;
+                       status = "verifying";
+                    }
+
                  }       
                  else if(data[x]['type'] == "processed"){                    
                     if((data[x]['status'] == "transferring" || data[x]['status'] == "verifying") && status != "processed"){
@@ -455,7 +460,6 @@ $(document).ready(function(){
             table.$('tr.selected').removeClass('selected');
             tr.addClass('selected');
 
-      console.log(row.data());
       data = row.data();
       RUNURL = "/runs/get_run/?detector="+data['detector']+";name="+data['name'];
        UpdateDetail(0)
@@ -467,12 +471,10 @@ $(document).ready(function(){
 
 
        function UpdateDetail(docallback){
-         console.log(RUNURL);
          if(RUNURL!=""){
               $.getJSON(RUNURL, function(data){
 		    if(cache_data == {})
 		    cache_data = data;
- 		    console.log(data);
                     document.getElementById("run_detail_head").innerHTML = "Detail for run " + data.number.toString();
                     document.getElementById("detail_name").innerHTML=data.name;
                     document.getElementById("detail_detector").innerHTML=data.detector;
