@@ -220,7 +220,7 @@ function GetRateString(rate){
     }
     return (rate.toFixed(2) + " MB/s");
 }
-function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
+function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback){
   
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
@@ -252,16 +252,16 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
                     "<td>" + node_data[node_id]['runmode'] + "</td>" +
                     "<td>" + node_data[node_id]['nboards']+ "</td>" +
                     "<td>" + node_data[node_id]['bltrate']+ "</td>" +
-                    "<td>" + node_data[node_id]['datarate']+ "</td>" +
+                    "<td>" + node_data[node_id][graphic_var]+ "</td>" +
                     "<td>" + update_seconds.toString()+ "</td></tr>";
 
 		if(node_data[node_id]['node']!='reader5'){ // as in 'reader0x'
 		    nodeInfo['tpc'].push(html_string);
-		    tpc_rate+=node_data[node_id]['datarate']
+		    tpc_rate+=node_data[node_id][graphic_var]
 		}
 		else{
 		    nodeInfo['muon_veto'].push(html_string);
-		    muon_veto_rate+=node_data[node_id]['datarate'];
+		    muon_veto_rate+=node_data[node_id][graphic_var];
 		}
 		
 	    }
@@ -372,11 +372,12 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id){
 		    appstring += "</tbody></table></div>"
 		    //console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
-		    UpdateDetectorTextNew(dataUrl, nodesUrl, div_id);
+		   // UpdateDetectorTextNew(dataUrl, nodesUrl, div_id);
+
 	    }
 
 	}
-
+	    callback();
 	//$.getJSON( nodesUrl, function(nodes_data){
     //});
 	});

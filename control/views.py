@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from control.models import RunStartForm, RunStopForm
 import datetime
+from pytz import timezone
 import pytz
 import math
 import numpy as np
@@ -175,11 +176,14 @@ def GetNodeHistory(request):
     nseconds = 48 * 60 * 60
     resolution = 100
 
+    variable = 'datarate'
     if request.method == "GET":
         if 'range' in request.GET.keys():
             nseconds = int(request.GET['range'])
         if 'bin' in request.GET.keys():
             resolution = int(request.GET['bin'])
+        if 'var' in request.GET.keys():
+            variable = str(request.GET['var'])
 
     # Get size of bins
     bin_size = resolution
@@ -203,7 +207,7 @@ def GetNodeHistory(request):
         subtable = subtable.resample(str(bin_size)+'s', how='mean')
         subtable['timeseconds'] = subtable['timeseconds'].multiply(1000)
         thelist = []
-        for item in subtable[['timeseconds','datarate']].values.tolist():
+        for item in subtable[['timeseconds',variable]].values.tolist():
             if math.isnan(item[0]) or not item[0]>=0:
                 continue
             thelist.append(item)
@@ -261,7 +265,9 @@ def GetDispatcherReply(request):
         for doc in cursor:
             retdict['messages'].append({"message": doc["message"],
                                         "replyenum": doc["replyenum"]})
-            collection.delete_one({"_id": doc['_id']})
+            if (datetime.datetime.now(datetime.timezone.utc) - 
+                doc['_id'].generation_time.replace(tzinfo=pytz.utc)).seconds > 15:
+                collection.delete_one({"_id": doc['_id']})
             
             if (doc['replyenum'] == 19 and hasattr(settings, 'GITTER_URL') 
                 and settings.GITTER_URL is not None):

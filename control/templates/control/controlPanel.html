@@ -126,7 +126,14 @@
 </div>
 <div class="row" style="margin-top:5px;">
         <div class="col-xs-12">
-	  <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:15px" title="I can't even...">Help</a>
+	  <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:15px" title="I can't even...">Help</a>&nbsp;
+	   <div class="btn-group" id="graphic_var_selector" role="group" 
+		aria-label="...">
+	     <button type="button btn-range" value="datarate" 
+		     class="btn btn-default var active">Data Rate</button>
+             <button type="button btn-range" value="bltrate" 
+		     class="btn btn-default var">BLT Rate</button>
+	   </div>
 
             <div class="pull-right" style="padding-right:15px;">
             <div class="btn-group" id="time_range_selector" role="group" aria-label="...">
@@ -519,6 +526,7 @@
   var chart;
   var graphic_range = (24*60*60).toString();
   var graphic_bin = "600";
+  var graphic_var = "datarate";
   var feedback_count = 0;
   var feedbackURL = "/control/run_start_feedback";
   var feedback_html = "";
@@ -664,22 +672,36 @@ return false;
         document.getElementById('run_start_form').style.display = 'none';
         document.getElementById('no_start_runs').style.display = 'block';
      }
+			  
 
-      UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header");
-      DrawLogWindow( "message_panel", logUrl);			     
-	update_graphic(function(){
+/*UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header", graphic_var);
+      DrawLogWindow( "message_panel", logUrl);
+        update_graphic(function(){
              $("#Loading").hide();
-             setTimeout( function(){ 
+             setTimeout( function(){
+                             UpdatePage( thechart );
+                             }, updateFreq );
+        });
+*/
+
+
+      UpdateDetectorTextNew(dataUrl, pointUpdateUrl, "info_panel_header", graphic_var,
+          function(){ 
+               DrawLogWindow( "message_panel", logUrl, 			     
+                  function(){ 
+               	update_graphic(function(){
+                    $("#Loading").hide();
+                     setTimeout( function(){ 
 			     UpdatePage( thechart );			  
 			     }, updateFreq );
-	});
+	})})});
 }
 function toHashtagUrl(hashtag) {
 return "#";
 //  return "http://myservice.com?q=" + hashtag;
 }
 
-  function DrawLogWindow( logdiv, Url ) {
+  function DrawLogWindow( logdiv, Url, callback ) {
 
       $.getJSON(Url, function(data){
           var html_string = "<table class='table table-striped table-condensed borderless'><tbody>";
@@ -692,12 +714,13 @@ return "#";
           html_string += "</tbody></table>"
           document.getElementById( logdiv).innerHTML = html_string;
 	          $(".hashes").linkify(toHashtagUrl);
+          callback();
 
       });
   }        
     function update_graphic(callback){
        // update points if needed
-       var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
+       var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin+"&var="+graphic_var;
        $.getJSON( historyUrlWithOptions, function(data) {
           var thechart=$("#rates_panel").highcharts();
           if(thechart.series.length != data.length){		
@@ -721,7 +744,7 @@ return "#";
         while( thechart.series.length > 0 ) {
             thechart.series[0].remove( false );
         }
-        var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin;
+        var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin+"&var="+graphic_var;
 	if(data == null)
         $.getJSON( historyUrlWithOptions, function(newdata) {
             loadData(thechart, newdata, function(thechart){});
@@ -734,10 +757,10 @@ return "#";
   // Load page function
   $( function() {				    				 
        rs_bar = new ProgressBar.Line('#rs_progress', {easing: 'easeInOut',
-				    strokeWidth: 1,				 
+				    strokeWidth: .3,				 
 				    duration: 1400,
 				    color: '#5992c2',
-                                    svgStyle: {width: '100%', height: '100%'},
+                                    //svgStyle: {width:'100%', height: '20%'},
 				    });
 
 	$("textarea").hashtags();
@@ -830,6 +853,8 @@ $(".btn-group button").on("click", function() {
     $(this).blur();
     if ($(this).hasClass("range"))
         graphic_range = $(this)[0].value;
+    else if($(this).hasClass("var"))
+	graphic_var = $(this)[0].value;
     else
         graphic_bin = $(this)[0].value;
     //console.log($(this)[0].value);
