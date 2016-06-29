@@ -20,6 +20,10 @@ from django.views.generic.base import TemplateView
 from management import views
 from django.contrib.auth.decorators import login_required
 
+from tastypie.api import Api
+from api.api.resources import StatusResource
+daqapi = Api(api_name="daq")
+daqapi.register(StatusResource())
 
 urlpatterns = [
  
@@ -49,5 +53,5 @@ urlpatterns = [
     url(r'^equipment/', include('equipment.urls')),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         kwargs={'template_name': 'login.html'}, name='login'),
-
+    url(r'^api/', include(daqapi.urls))
 ]

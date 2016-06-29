@@ -5,11 +5,12 @@ function ExpanderClick(button) {
 	button.innerHTML="Expand";
 };
 
-function drawChart( chart, chartdiv, callback )
+function drawChart( chart, chartdiv, graphic_var, callback )
 // Draws a chart at the chart div
 // Only have to call once
 {
     // Make dictionary of options
+    var units = {"datarate": "MB/s", "bltrate": "blt/s", "cpu": "%CPU","ram": "MB in buffer"};
     var waveformOptions = {
         global: {
             useUTC: false,
@@ -213,15 +214,17 @@ function FillOutRunInfo(det_name, det_data, status_id){
     document.getElementById(det_name + "_runname");
 }
 
-function GetRateString(rate){
-    if(rate < 1.){
-	rate = rate*1000.;
+function GetRateString(rate, unit){
+    if(rate < 1. && unit == "MB/s"){
+	rate = rate*1000.;	
 	return (rate.toFixed(2) + " kB/s");
     }
-    return (rate.toFixed(2) + " MB/s");
+    else
+	return (rate.toFixed(2) + " " + unit);
 }
 function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback){
   
+    var units = {"datarate": "MB/s", "bltrate": "blt/s", "cpu": "%CPU","ram": "MB in buffer"};
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
     $.getJSON( dataUrl, function(detector_data){
@@ -239,6 +242,8 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback)
 	    // Put node data in this dictionary
 	    tpc_rate = 0.;
 	    muon_veto_rate = 0.;
+	    console.log("NODES");
+console.log(node_data);
 	    for( var node_id = 0; node_id < node_data.length; node_id += 1){
 	    
 		var docdate = new Date(node_data[node_id]['createdAt']['$date']);
@@ -252,7 +257,9 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback)
                     "<td>" + node_data[node_id]['runmode'] + "</td>" +
                     "<td>" + node_data[node_id]['nboards']+ "</td>" +
                     "<td>" + node_data[node_id]['bltrate']+ "</td>" +
-                    "<td>" + node_data[node_id][graphic_var]+ "</td>" +
+                    "<td>" + node_data[node_id]['datarate']+ "</td>" +
+		    "<td>" + node_data[node_id]['ram']+"/"+node_data[node_id]['ramtot']+ "</td>" +
+		    "<td>" + node_data[node_id]['cpu'].toFixed(2)+ "</td>" +
                     "<td>" + update_seconds.toString()+ "</td></tr>";
 
 		if(node_data[node_id]['node']!='reader5'){ // as in 'reader0x'
@@ -297,9 +304,9 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback)
                     if(detector_data['status'][status_id]['state'] == "Running"){
 			timestring = GetTimeString( startdate );
 			if(det_name == 'tpc')
-			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(tpc_rate);
+			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(tpc_rate, units[graphic_var]);
 			else
-			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(muon_veto_rate);
+			    document.getElementById(det_name+"_rate_div").innerHTML = GetRateString(muon_veto_rate, units[graphic_var]);
 		    }
 		    else 
 			document.getElementById(det_name+"_rate_div").innerHTML="";
@@ -353,7 +360,7 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback)
 		    $('#'+div_id).append(html_str);
 		    if( detector_data['status'][status_id]['state'] == "Running")
                         FillOutRunInfo(det_name, detector_data, status_id);
-		    var appstring = "<div class='row col-xs-12 collapse' id='"+det_name+"_collapse' style='padding:0'><table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLT rate (Hz)</th><th>Data rate (MB/s)</th><th>Updates(s)</th></tr></thead>";
+		    var appstring = "<div class='row col-xs-12 collapse' id='"+det_name+"_collapse' style='padding:0'><table class='table table-condensed'><thead class='emo-node-header'><tr><th>Slave node</th><th>Run mode</th><th>Digitizers</th><th>BLTs (Hz)</th><th>Raw Data (MB/s)</th><th>RAM (MB)</th><th>CPU frac</th><th>Updates(s)</th></tr></thead>";
 /*		    var header_html = "<strong><div class='row emo-node-header' style='border-width:1px;border-style:solid;'>" +
                         "<div class='col-xs-2'>Slave node</div>"+
                         "<div class='col-xs-2'>Run mode</div>"+
@@ -477,6 +484,8 @@ function UpdateNodes( nodes_div, nodesUrl ){
 		    "<td>" + data[x]['nboards']+ "</td>" +
 		    "<td>" + data[x]['bltrate']+ "</td>" +
 		    "<td>" + data[x]['datarate']+ "</td>" +
+		    "<td>" + data[x]['ram']+"</td>"+
+		    "<td>" + data[x]['cpu'] + "</td>"+
 		    "<td>" + update_seconds.toString()+ "</td></tr>";
 
 /*                html_string += "<div class='row emo-node-line' style='color:" + color + "'>" +

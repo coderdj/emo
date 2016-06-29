@@ -133,6 +133,11 @@
 		     class="btn btn-default var active">Data Rate</button>
              <button type="button btn-range" value="bltrate" 
 		     class="btn btn-default var">BLT Rate</button>
+	     <button type="button btn-range" value="cpu"
+                     class="btn btn-default var">CPU Usage</button>
+	     <button type="button btn-range" value="ram"
+		     class="btn btn-default var">RAM Usage</button>
+
 	   </div>
 
             <div class="pull-right" style="padding-right:15px;">
@@ -727,6 +732,9 @@ return "#";
              redraw_graphic(data);
              return;
           }
+          var units = {"datarate": "MB/s", "bltrate": "blt/s"};
+          thechart.yAxis[0].setTitle({ text: "rate ("+units[graphic_var]+")" });
+
           for( x=0; x<data.length; x++ ){
               thechart.series[x].update({
 		data: data[x]["data"],		
@@ -744,6 +752,10 @@ return "#";
         while( thechart.series.length > 0 ) {
             thechart.series[0].remove( false );
         }
+	var units = {"datarate": "MB/s", "bltrate": "blt/s"};
+				    console.log(graphic_var);
+        thechart.yAxis[0].setTitle({ text: "rate ("+units[graphic_var]+")" });
+	
         var historyUrlWithOptions = historyUrl + "?range=" + graphic_range + "&bin=" + graphic_bin+"&var="+graphic_var;
 	if(data == null)
         $.getJSON( historyUrlWithOptions, function(newdata) {
@@ -779,7 +791,7 @@ return "#";
             data: frm.serialize(),
            success: function(data)
            {
-               DrawLogWindow("message_panel", logUrl); 
+               DrawLogWindow("message_panel", logUrl, function(){}); 
            }
          });
 	document.getElementById("new_comment_text").value="";
@@ -787,9 +799,9 @@ return "#";
      });
       $("#Loading").show();
 
-      DrawLogWindow( "message_panel", logUrl );
+      DrawLogWindow( "message_panel", logUrl, function(){} );
       var chart = null;
-      drawChart( chart, chartdiv, function(thechart) {
+      drawChart( chart, chartdiv, graphic_var, function(thechart) {
                  UpdatePage( thechart );
       });
       $.getJSON(run_mode_list_url, function(data){

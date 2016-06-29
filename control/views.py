@@ -208,7 +208,7 @@ def GetNodeHistory(request):
         subtable['timeseconds'] = subtable['timeseconds'].multiply(1000)
         thelist = []
         for item in subtable[['timeseconds',variable]].values.tolist():
-            if math.isnan(item[0]) or not item[0]>=0:
+            if math.isnan(item[0]) or not item[0]>=0 or math.isnan(item[1]):
                 continue
             thelist.append(item)
         #ret.append({ "node": node, "data": 

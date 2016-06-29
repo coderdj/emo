@@ -1191,83 +1191,86 @@ def get_calendar_events(request):
 
     return HttpResponse(dumps(retdoc), content_type="application/json")
 
+#SCOPE BELOW
+
+
 @login_required
 def getWaveform(request):
     
-    if ( request.method == 'GET' and 'server' in request.GET and 
-         'database' in request.GET and 'collection' in request.GET and 'id' in request.GET ):  
-        server = request.GET['server']  
-        database = request.GET['database']  
-        collection = request.GET['collection']  
-        doc_id = objectid.ObjectId(request.GET['id'])
+    searchdict = {}
+    if ( request.method == "GET" ):
+        if "channel" in request.GET:
+            for listing in settings.PMT_MAPPING:
+                if listing['pmt_position'] == int(request.GET['channel']):
+                    searchdict = {"module": listing['digitizer']['module'],
+                                  "channel": listing['digitizer']['channel']}
+    
+    try:
+        server = MongoClient(settings.BUFFER_DB_ADDR)
+        database = server['untriggered']
+    except:
+        return HttpResponse({"ret": 
+                             "ERROR: Database not found, is the server running?"}, 
+                            content_type="application/json")
+    
+    # Find most recent collection
+    logger.error(len(database.collection_names()))
+    collections=list(database.collection_names())
+    collections.sort()
+    logger.error(collections)    
+    collections = list(reversed(collections))
+    if len(collections) == 0:
+        return HttpResponse({"ret":
+                             "ERROR: No collections found!"},
+                            content_type="application/json")
+    cl = collections[0].split("_")
+    current_run = cl[0]+"_"+cl[1]
+    highest_coll = int(cl[2])
 
-        searchdict = {"_id": doc_id}  
-        if "module" in request.GET:  
-            searchdict["module"] = int(request.GET['module'])  
-        if "channel" in request.GET:  
-            searchdict["channel"] = int(request.GET['channel'])  
-  
+    for coll in reversed(range(highest_coll)):
+        collection = current_run + "_" + str(coll)
+        cursor = database[collection].find(searchdict).limit(10)
+        if cursor.count() < 10:
+            continue
+        
+        # Found something, fill ret dictionary
+        retdict = {"collection": collection, "waveforms": [],
+                   "ret": 'success'}
+        for doc in cursor:
+            # Get PMT position
+            pmt=-1
+            for listing in settings.PMT_MAPPING:
+                if ( listing['digitizer']['module'] == doc['module'] and 
+                     listing['digitizer']['channel'] == doc['channel'] ):
+                    pmt = listing['pmt_position']
 
-        if server == "eb0" or server=="eb2":
-            try:
-                if database == "untriggered" and server=='eb0':
-                    client = MongoClient(settings.BUFFER_DB_ADDR)
-                    db = client[settings.BUFFER_DB_REPL]
-                elif database=="untriggered" and server=="eb2":
-                    client=MongoClient("mongodb://"+
-                                       settings.MONGO_ADMIN + ":" +
-                                       settings.MONGO_ADMIN_PASS + "@eb2:27001/admin")
-                    db=client["untriggered"]
-                else:
-                    client = MongoClient(settings.MV_DB_ADDR)
-                    db = client[settings.MV_BUFFER_REPL]
-                retdoc = db[collection].find_one(searchdict)
-                retjson = {}
+            # Get time reset counter
+            arr = collection.split("_")
+            counter = int(arr[len(arr)-1])
+            ttime = (counter * 2147483647) + doc['time'];
 
-                if retdoc is not None:
-                    data = snappy.decompress(retdoc['data'])
-                    intformat = np.frombuffer(data,np.int16)
-                    bins = []
-                    print(bins)
-                    for i in range(0, len(intformat)):
-                        bins.append([i, int(intformat[i])])
-                        #bins.append([i, 0x3fff-int(intformat[i])])                                       
-                    retjson = { "adc_value": bins, "time": retdoc['time']}
+            # Put bins into dygraphs format
+            intformat = np.frombuffer(doc['data'],np.int16)
+            bins = []
+            for i in range(0, len(intformat)):
+                bins.append([i, int(intformat[i])])
 
-                    client.close()
-                return HttpResponse(dumps(retjson),
-                                    content_type='application/json')
-            except:
-                print("Can't connect to server")
-                return HttpResponse([], content_type="application/json")
-        try:  
-            client = MongoClient(server)
-        except:  
-            print("Can't connect to server")  
-            return HttpResponse([], content_type="application/json")  
+            waveform = {"module": doc['module'],
+                        "channel": doc['channel'],
+                        "pmt": pmt,
+                        "data": bins,
+                        "time": ttime,
+                        "rawtime": doc['time']
+                    }
+            retdict['waveforms'].append(waveform)
+        return HttpResponse(json_util.dumps(retdict), content_type="application/json")
 
-        if database in client.database_names() and collection in client[database].collection_names():  
-            retdoc = client[database][collection].find_one(searchdict)
-            retjson = {}
-            if retdoc is not None:
-                data = snappy.decompress(retdoc['data'])
-                intformat = np.frombuffer(data,np.int16)
-                bins = []
-                print(bins)
-                for i in range(0, len(intformat)):
-                    bins.append([i, int(intformat[i])])
-                    #bins.append([i, 0x3fff-int(intformat[i])])
-                retjson = { "adc_value": bins, "time": retdoc['time']}
-                
-            client.close()
-            return HttpResponse(dumps(retjson),
-                                content_type='application/json')
+    # Found nothing, failed
+    return HttpResponse({"ret":
+                         "ERROR: No data found. Is the DAQ running?"},
+                        content_type="application/json")
 
-        client.close()  
-
-    return HttpResponse([], content_type="application/json")  
-
-
+'''
 @login_required
 def getDatabase(request):    
 
@@ -1295,7 +1298,8 @@ def getDatabase(request):
 
     
     return HttpResponse([], content_type="application/json")
-
+'''
+'''
 @login_required
 def getCollection(request):
 
@@ -1359,7 +1363,8 @@ def getCollection(request):
         client.close()
     
     return HttpResponse([], content_type="application/json")
-
+'''
+'''
 @login_required
 def getModules(request):
     
@@ -1400,7 +1405,8 @@ def getModules(request):
         client.close()
     
     return HttpResponse([], content_type="application/json")
-
+'''
+'''
 @login_required
 def getChannels(request):
 
@@ -1447,7 +1453,8 @@ def getChannels(request):
         #client.close()
     
     return HttpResponse([], content_type="application/json")
-
+'''
+'''
 @login_required
 def getOccurrences(request):
     
@@ -1503,3 +1510,4 @@ def getOccurrences(request):
         client.close()
     
     return HttpResponse([], content_type="application/json")
+'''

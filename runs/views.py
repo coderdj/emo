@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponsePermanentRedirect
 import datetime
 from bson.json_util import dumps, loads
+import simplejson
 from django.conf import settings
 from django.conf import settings
 import logging
@@ -28,9 +29,10 @@ def get_run(request):
         if "number" in request.GET:
             search["number"] = int(request.GET['number'])
         doc = coll.find_one(search)
-        
+                
         if doc is not None:
-            return HttpResponse(dumps(doc), content_type="application/json")
+            docstring = dumps(doc)            
+            return HttpResponse(simplejson.dumps(simplejson.loads(docstring), ignore_nan=True), content_type="application/json")
     return HttpResponse({}, content_type="application/json")
         
 @login_required
