@@ -26,7 +26,7 @@ def get_dispatcher_log(request):
 
     mongo_collection = d['log']
     
-    mongo_query = {"priority": 0}
+    mongo_query = {"priority": {"$in": [0, 2, 3, 4, 7, 8, 9, 10]}}
     log_list = mongo_collection.find(mongo_query).sort("_id", -1)[:20]
 
     return HttpResponse(dumps(log_list), content_type="application/json")
@@ -61,7 +61,11 @@ def log(request):
                 mongo_query['detector'] = search_form.cleaned_data['detector']
             if search_form.cleaned_data['run_name'] != "":
                 mongo_query['run'] = search_form.cleaned_data['run_name']
-            if search_form.cleaned_data['priority'] != "" and search_form.cleaned_data['priority'] != '-1':
+            if ( search_form.cleaned_data['priority'] == "" or 
+                 search_form.cleaned_data['priority'] == -3 ):
+                mongo_query['priority'] = {"$in": [0, 2, 3, 4, 7, 8, 9, 10]}
+            elif search_form.cleaned_data['priority'] != '-1':
+
                 if search_form.cleaned_data['priority'] == '-2':
                     mongo_query['priority'] = {"$gt": 1, "$lt": 5}
                 else:

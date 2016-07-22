@@ -16,6 +16,7 @@ class LogEntryForm(forms.Form):
     redirect = forms.CharField(max_length=200, initial="", required=False)
 
 PRIORITY_CHOICES = (    
+    (-2, "Default"),
     (-1, "All"),
     (0, "User Messages"),
     (1, "Info"),
@@ -25,6 +26,7 @@ PRIORITY_CHOICES = (
     (7, "Closed Warnings"),
     (8, "Closed Errors"),
     (9, "Closed Fatal Errors"),
+    (10, "Slow Control Alarms"),
     (99, "Debug Output"),
     (-2, "Open issues"),
 )

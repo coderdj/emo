@@ -272,12 +272,12 @@ def get_hash_tags(comment):
             if x != ' ':
                 openTag+=x
             else: 
-                openT = false
+                openT = False
                 tags.append(openTag)
                 openTag = ""
         elif x == '#':
             openT = True            
-    if openT and len(openTag)>0:
+    if openT and len(openTag)>0 and not openTag.isdigit():
         tags.append(openTag)
     
     return tags

@@ -28,7 +28,7 @@ function drawChart( chart, chartdiv, graphic_var, callback )
             spacingLeft: 10,
            spacingRight: 10,
             spacingBottom: 10,
-        borderWidth:1,
+        borderWidth:0,
 	    borderColor: "#D5D5D5",
         },
 	legend: {align: 'left', verticalAlign: 'middle',layout: 'vertical',enabled: true, itemMarginBottom: 5},
@@ -53,14 +53,14 @@ function drawChart( chart, chartdiv, graphic_var, callback )
         },
         plotOptions: {
             area: {
-		fillColor: {
-                    linearGradient: {
-                        x1: 0,
-			y1: 0,
-                        x2: 0,
-                        y2: 1
-                    },
-                },          
+		fillColor: null,
+  //                  linearGradient: {
+    //                    x1: 0,
+//			y1: 0,
+  //                      x2: 0,
+    //                    y2: 1
+      //              },
+        //        },          
                 pointPadding: 0,
                 borderWidth: 0,
                 stacking : false,
@@ -123,18 +123,17 @@ function loadData( chart, data, callback )
     
     for( x=0; x<data.length; x++ ){
 	var dict = {};
-	if( x< 5 )
-            dict = {
-		color: colors[x],
-		fillColor: fillColors[x],
-		data: data[x]['data'],
-		name: data[x]['node'],
-            };
-	else
-            dict = { data: data[x]['data'], name: data[x]['node']};
+//	if( x< 5 )
+  //          dict = {
+////		color: colors[x],
+//		fillColor: fillColors[x],
+//		data: data[x]['data'],
+//		name: data[x]['node'],
+  //          };
+//	else
+            dict = { type: "line", data: data[x]['data'], name: data[x]['node'], fillColor: null};
 	chart.addSeries(dict, false);
     }
-    
     chart.redraw();
     callback(chart);
 }
@@ -221,6 +220,111 @@ function GetRateString(rate, unit){
     }
     else
 	return (rate.toFixed(2) + " " + unit);
+}
+function GetCPURAMDiv(cpu, ram, ramtot){
+    cpu_int = Math.floor(cpu);
+    ram_int = Math.floor((ram/ramtot)*100);
+    html = "<div style='display:table-cell;width:35%;padding-right:3px'>"+
+	"<div style='padding:0;margin-bottom:2;width:100%;height:20px;font-size:10px'>"
+	+"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+ 
+	"aria-valuenow='"+cpu_int+"' aria-valuemin='0' aria-valuemax='100'"+ 
+	"style='width:"+cpu_int+"%;'>";
+    if(cpu_int>40) html+="CPU: "+cpu.toFixed(2)+"%</div>;"
+    else html+="</div>CPU: "+cpu.toFixed(2)+"%";
+     html+="</div></div>"+	
+	"<div style='padding:0;width:100%;height:20px;font-size:10px'>"+
+    "<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
+	"aria-valuenow='"+ram_int+"' aria-valuemin='0' aria-valuemax='100'"+
+        "style='width:"+ram_int+"%;'>";
+    if(ram_int>40) html+="RAM: "+ram+" / "+ramtot+" MB</div>";
+    else html+= "</div>RAM: "+ram+" / "+ramtot+" MB";
+    html+="</div></div>"+
+	"</div>"
+
+return html;
+}
+function GetRateBTLDiv(rate, blt){
+    rate_int = Math.floor(rate/90.);
+    blt_int = Math.floor(blt/10000);
+    html = "<div style='display:table-cell;width:35%;margin-left:3px'>"+
+        "<div style='padding:0;margin-bottom:2;width:100%;height:20px;font-size:10px'>"
+        +"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
+        "aria-valuenow='"+rate_int+"' aria-valuemin='0' aria-valuemax='100'"+
+        "style='width:"+rate_int+"%;'>";
+    if(rate_int>40) html+="Data: "+rate.toFixed(2)+" MB/s</div>;"
+    else html+="</div>Data: "+rate.toFixed(2)+" MB/s";
+     html+="</div></div>"+
+        "<div style='padding:0;width:100%;height:20px;font-size:10px'>"+
+	"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
+        "aria-valuenow='"+blt_int+"' aria-valuemin='0' aria-valuemax='100'"+
+	"style='width:"+blt_int+"%;'>";
+    if(blt_int>40) html+="BLT: "+blt+" blk/s</div>";
+    else html+= "</div>BLT: "+blt+" blk/s";
+    html+="</div></div>"+
+        "</div>"
+
+return html;
+
+
+}
+function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, callback){
+    var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
+
+    // Get detector and node data
+    $.getJSON( dataUrl, function(detector_data){
+        $.getJSON( nodesUrl, function(node_data) {
+	    var currentTime = new Date().getTime();
+            if(node_data.length>0)
+                currentTime = new Date(node_data[0]['date']['$date']);
+            var nodeInfo = {"tpc": [], "muon_veto": []};
+
+	    tpc_rate = 0.;
+            muon_veto_rate = 0.;
+	    // Loop through node data to get total data rate
+            for( var node_id = 0; node_id < node_data.length; node_id += 1){
+
+                var docdate = new Date(node_data[node_id]['createdAt']['$date']);
+                var update_seconds = Math.round( (currentTime - docdate)/1000 );
+                var color = "black";
+                if (update_seconds > 60 )
+                    color = "#AAAAAA";
+
+		var html_string ="<div style='display:table;max-height:40px;border-width:1px;border-color:#d3d3d3;border-style:solid;width:100%'>"+
+		    "<div style='display:table-cell;'>"+
+		    "<strong style='height:15px'>"+node_data[node_id]['node']+
+		    " ("+update_seconds.toString()+")</strong>"+
+		    "<div style='height:15px;font-size:12px;'>"+node_data[node_id]['nboards']+" digitizer(s)</div></div>"+
+		    GetCPURAMDiv(node_data[node_id]['cpu'], 
+				 node_data[node_id]['ram'], 
+				 node_data[node_id]['ramtot'])+
+		    GetRateBTLDiv(node_data[node_id]['datarate'], 
+				  node_data[node_id]['bltrate'])+
+		    
+		    "</div>";
+		    
+		if(node_data[node_id]['node']!='reader5'){
+                    nodeInfo['tpc'].push(html_string);
+                    tpc_rate+=node_data[node_id][graphic_var]
+		}
+                else{
+                    nodeInfo['muon_veto'].push(html_string);
+                    muon_veto_rate+=node_data[node_id][graphic_var];
+		}
+		
+            }// End for through nodes
+	    var tpcstr="";
+	    var mvstr = "";
+	    for(var x=0;x<nodeInfo['tpc'].length;x+=1)
+		tpcstr+=nodeInfo['tpc'][x];
+	    for(var x=0;x<nodeInfo['muon_veto'].length;x+=1)
+		mvstr+=nodeInfo['muon_veto'][x];
+	    document.getElementById(tpc_div).innerHTML = tpcstr;
+	    document.getElementById(mv_div).innerHTML = mvstr;
+
+	    callback();
+	});//end getJSON nodes
+    });//end getJSON detector
+
 }
 function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback){
   

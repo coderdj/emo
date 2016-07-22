@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from bson.json_util import dumps
 import datetime
 import logging
+import math
+import pytz
 logger = logging.getLogger('emo')
 
 # This should later go in the DB itself
@@ -21,8 +23,86 @@ descriptions = {
     "baking_pt100_3": "Cooling water temperature for He compressor",
 }
 
+PASSWORD = "slowControlSuperSecretPasswordOhYeah!"
+scc = MongoClient('mongodb://slow_control_extractor:%s@'
+                'zenigata.uchicago.edu:27020/slow_control' % PASSWORD)
+scd = scc['slow_control']
 c = MongoClient(settings.SC_DB_ADDR)
 d = c[settings.SC_DB_NAME]
+
+@login_required
+def get_water_level(request):
+    sccol = scd['measurements']
+    doc = sccol.find({"name": "XE1T.WLP_INDLEVL_H20_1.PI"}).sort("_id", -1).limit(1)
+    if doc.count() == 0:
+        return HttpResponse(dumps({"value": -1}), content_type="application/json")
+    return HttpResponse(dumps({"value":doc[0]['value']}), content_type="application/json")
+
+@login_required
+def get_sc_info(request):
+    
+    sccol = scd['measurements']
+    pmts_on = 0
+    pmts_tot = 0
+    meas_date = None
+
+    cathode = 0.
+    catcur = (sccol.find({"name": "XE1T.GEN_HEINZVMON.PI"}).sort("_id", -1).limit(1))
+    if catcur.count()>0:
+        cathode = catcur[0]['value']
+        if meas_date == None or catcur[0]['request_time'] < meas_date:
+            meas_date = catcur[0]['request_time']
+
+
+    cursor = (sccol.find({"name": {"$regex": "XE1T.CTPC.BOARD.*VMON"}}).
+              sort("_id", -1).limit(1000))
+    
+    # Need list we can cycle multiple times
+    sensors = {}
+    anode = -1.
+    for doc in cursor:
+        if doc['name'] not in sensors:
+            sensors[doc['name']] = {'value': doc['value'], 
+                                    'request_time': doc['request_time']}
+        if doc['name'] == "XE1T.CTPC.BOARD14.CHAN000.VMON" and anode<0:
+            anode = doc['value']
+    
+    pmts_found = [0]*254
+    for pmt in settings.PMT_MAPPING:
+        sboard = int(pmt['high_voltage']['connector'].split('.')[0])
+        sboard += 3
+        board = str(sboard)
+        channel = (pmt['high_voltage']['connector'].split('.')[1])
+        
+        sensor = ('XE1T.CTPC.BOARD'+board.zfill(2)+".CHAN"+
+                  channel.zfill(3)+".VMON")
+                
+        if sensor in sensors.keys():
+            sen = sensors[sensor]
+        
+            if sen['value'] > 500. and pmts_found[pmt['pmt_position']]==0:
+                pmts_on +=1
+                pmts_found[pmt['pmt_position']] = 1.
+            
+                if meas_date == None or sen['request_time'] < meas_date:
+                    meas_date = sen['request_time']
+            pmts_tot += 1
+    
+    pmts_off = []
+    for i in range(0, 254):
+        if pmts_found[i] == 0:
+            pmts_off.append(i)
+    ret = {"pmts": {"on": pmts_on, "tot": pmts_tot, "date": meas_date},
+           "anode": anode, "cathode": cathode, "pmts_off": pmts_off}
+    
+    tz_stupid_slowcontrol = pytz.utc#pytz.timezone("Europe/Zurich")
+    meas_utc = tz_stupid_slowcontrol.localize(meas_date)
+    meas_utc = meas_utc.astimezone(pytz.utc)
+    ret['date'] = meas_utc
+    now_utc = pytz.utc.localize(datetime.datetime.now())
+    ret['now'] = now_utc
+    ret['staleness'] = math.floor((now_utc - meas_utc).seconds/60)
+    return HttpResponse(dumps(ret), content_type="application/json")
 
 @login_required
 def get_sensor_newest(request):
@@ -31,8 +111,10 @@ def get_sensor_newest(request):
     if request.method=="GET" and "detector" in request.GET:
         detector = request.GET['detector']        
     mongo_collection = d['slow_control']
+    #mongo_collection = d['measurements']
 
     cur = mongo_collection.find({"detector": detector}, sort= [ ("_id", -1) ], limit=1)
+
     if cur.count() >= 1:
         newest = cur[0]
         #newest['key'] = descriptions
@@ -50,7 +132,8 @@ def get_sensor_newest(request):
 @login_required
 def get_hv_newest(request):
     detector = 'xenon1t'
-    mongo_collection = d['slow_control']
+    #mongo_collection = d['slow_control']
+    mongo_collection = d['measurements']
     cur = mongo_collection.find({"detector": detector}, sort= [ ("_id", -1) ], limit=1)              
     channels = []
     time=None    
@@ -108,6 +191,7 @@ def get_hv_newest(request):
 def get_hv_history(request):
     max_points = 500
     mongo_collection = d['slow_control']
+    #mongo_collection = d['measurements']
 
     if request.method=="GET" and 'module' in request.GET and 'channel' in request.GET:
         module = request.GET['module']
@@ -148,6 +232,7 @@ def get_sensor_history(request):
         if 'detector' in request.GET:
             detector = request.GET['detector']
     mongo_collection = d['slow_control']
+    #mongo_collection = d['measurements']
     cursor = mongo_collection.find({"detector": detector}, 
                                    sort= [ ("_id", -1) ], limit=max_points)
     retdoc = {}

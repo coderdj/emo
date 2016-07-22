@@ -143,24 +143,24 @@ min-height:150px;
 <script type="text/javascript">
   
   var base_url = "/slow_control/";
-  var point_url = base_url + "get_sensor_newest/?detector=xenon100";
-  var history_url = base_url + "get_sensor_history/?detector=xenon100";
-  var detector="XENON100";
-  //var point_url="/slow_control/get_sensor_newest/?detector=XENON1T";
-  //var history_url="/slow_control/get_sensor_history/?detector=XENON1T";
-  //var detector = "XENON1T";
+  //var point_url = base_url + "get_sensor_newest/?detector=xenon100";
+  //var history_url = base_url + "get_sensor_history/?detector=xenon100";
+  //var detector="XENON100";
+  var point_url="/slow_control/get_sensor_newest/?detector=xenon1t";
+  var history_url="/slow_control/get_sensor_history/?detector=xenon1t";
+  var detector = "XENON1000";
   var plot_1 = null;
   var plot_2 = null;
   var plot_3 = null;
   var plot_4 = null;
-  var default_name="p1";
-  var default_name_2="p2";
-  var default_name_3="cryostat_vacuum";
-  var default_name_4="heater";
-  //var default_name="TILTMETERA_AI";//tilt_axis_a;
-  //var default_name_2="TILTMETERB_AI";//tilt_axis_b;
-  //var default_name_3="TILTMETERT_AI";//tilt_temp;
-  //var default_name_4="INDLEVL_H20_1";
+  //var default_name="p1";
+  //var default_name_2="p2";
+  //var default_name_3="cryostat_vacuum";
+  //var default_name_4="heater";
+  var default_name="TILTMETERA_AI";//tilt_axis_a;
+  var default_name_2="TILTMETERB_AI";//tilt_axis_b;
+  var default_name_3="TILTMETERT_AI";//tilt_temp;
+  var default_name_4="INDLEVL_H20_1";
   var gcallback=null;
   var n_events=5000;
   function ToggleDetector(){

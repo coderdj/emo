@@ -75,6 +75,7 @@
       <div class="col-xs-8 col-sm-7" style="padding-left:130px;">Query: {{ form.custom }} </div>
       <div class="col-xs-1">
         <button class="btn btn-info btn-sm" type="submit" name="submit" style="height:30%;padding-left:50px;padding-right:50px;margin:8px;">Search</button>
+	<a class="btn btn-warning btn-sm" href="/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22data.status%22+%3A+%22error%22%2C+%22number%22+%3A+%7B%22%24gt%22+%3A+1000%7D%7D&submit=">Show Transfer Errors</a>
       </div>
     </div>
   </form>
@@ -95,7 +96,7 @@
 	  <th>Date</th>
 	  <th>Source</th>
 	  <th>Events</th>
-	  <th>Status</th>
+	  <th>Status <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:3px" title="Help">?</a></th>
 	  <th style="width:30px">Tags</th>
 	  <!--<th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>-->
 	  <th style="width:100px">Top Comment</th>
@@ -166,6 +167,37 @@
   </div>
 </div>
 
+<div class="modal" id="helpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+	Close</button>
+        <h4 class="modal-title">Help</h4>
+      </div>
+      <div class="model-body" style="padding:10px;">
+        <p>
+          These little boxes indicate the status at each analysis site. Remember you can also see a detailed status by clicking the run and looking at the storage tab.
+
+	  Each column is a data site:
+	  <ul>
+	    <li><strong>Column 0: </strong> DAQ</li>
+	    <li><strong>Column 1: </strong> XENON1T-DataManager. This is the surface buffer at LNGS. The DAQ has finished acquiring a run once this site shows 'transferred'.</li>
+	    <li><strong>Column 2: </strong> Chicago Midway. Gets both raw and processed data automatically transferred by cax.</li>
+	    <li><strong>Column 3: </strong> Stockholm PDC. Gets both raw and processed data automatically transferred by cax.</li>
+	  </ul>
+        </p>
+	<p>
+	  The color of the boxes indicates the status of that site for this run. The colors are as follows.
+	  (and now I am boarding a flight and will finish later...)
+	</p>
+</div>
+      <div class="modal-footer">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>
+    </div><!-- end content -->
+  </div> <!-- end dialog -->
+</div> <!-- end modal -->
 
 <script>
 function AddStrongTags(text){
@@ -293,7 +325,7 @@ function AddTagHTML(data){
 function GetDataState(data){
 
    // Hosts
-   hosts = {"xenon1t-daq": 0,
+   hosts = {"reader": 0,
             "xe1t-datamanager": 0,
             "midway-login1": 0,
             "tegner-login-1": 0};
@@ -302,10 +334,9 @@ function GetDataState(data){
    for(i=0; i<data.length; i+=1){
       if(!(data[i]['host'] in hosts))
          continue;
-      // Special case: DAQ is done as soon as xe1t-datamanager has data
       if(data[i]['status'] == 'error' || hosts[data[i]['host']] == 5)
         hosts[data[i]['host']] = 5;
-      else if(data[i]['type'] == 'raw'){
+      else if(data[i]['type'] == 'raw' || data[i]['type'] == 'untriggered'){
         if((data[i]['status'] == 'transferring' || data[i]['status']=='verifying')
            && hosts[data[i]['host']]==0)
            hosts[data[i]['host']] = 1;
@@ -321,8 +352,8 @@ function GetDataState(data){
      }// end for
 
     // Adjust DAQ 
-    if(hosts['xe1t-datamanager']==2 || (hosts['xe1t-datamanager']==1 && hosts['xenon1t-daq'] == 0))
-       hosts['xenon1t-daq'] = 2;
+    if(hosts['xe1t-datamanager']==2 || (hosts['xe1t-datamanager']==1 && hosts['reader'] == 0))
+       hosts['reader'] = 2;
 
    // Now create the html glyphicon glyphicon-stop
    html = "";
@@ -333,7 +364,7 @@ function GetDataState(data){
                          "Error"];
    for(host in hosts){
      status = genstatus[hosts[host]];
-     if(host == "xenon1t-daq")
+     if(host == "reader")
        status = daqstatus[hosts[host]];
      type="glyphicon-stop";
      if(status=="Error")

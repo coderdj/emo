@@ -1,7 +1,49 @@
 {% load staticfiles %}
+<script src="{% static "js/highcharts.4.2.5.js" %}" type="text/javascript"></script>
+<script src="{% static "js/highcharts.4.2.5.exporting.js" %}" type="text/javascript"></script>
+<script src="{% static "js/highcharts.4.2.5.offline-exporting.js" %}" type="text/javascript"></script>
 
 <script src="{% static "jquery/js/jquery_timeago.js" %}"></script>
 <style>
+.Water {
+pointer-events:none;      
+
+position:   fixed;
+z-index:    100;
+bottom:        0;
+left:       0;
+height:     0%;
+width:      100%;
+/*background: rgba(89,146,194,.55);
+      opacity: 0.8;*/
+  }
+.bluewater{
+background: rgba(89,146,194,.55);
+opacity: 0.8;
+position:absolute;
+#bottom:0;
+height:97%;
+width:10px;
+margin-top:3%;
+-webkit-animation-name: wave;
+-webkit-animation-duration: 3s;
+-webkit-animation-iteration-count: infinite;
+-webkit-transition-timing-function: ease-in-out;
+}
+@-webkit-keyframes wave{
+0%{
+height:97%;
+margin-top:3%;
+}
+50%{
+height:100%;
+margin-top:0%;
+}
+100%{
+height:97%;
+margin-top:3%;
+}}
+
 .calbox{
 background-color: white;
 border-width: 1px;
@@ -27,7 +69,8 @@ border-width:1px;
 width: calc(100% - 150px);
 }
 </style>
-<h3 style="margin-top:10px">Welcome back <span id="username_span">{{ user.username }}</span></h3>
+<div id="water" class="Water"></div>
+<h3 style="margin-top:10px">Welcome back <span id="username_span">{{ user.username }}</span> &nbsp;<span id="watertext" style="color:white;background-color:red"></span></h3>
 {% if user.username == "tunnelll" %}
 <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?list=FLaIRNaoirM9sfcsl5fiUwgA;autoplay=1" frameborder="0" allowfullscreen></iframe>
 
@@ -180,6 +223,45 @@ width: calc(100% - 150px);
   var startedURL = "/runs/runs_started";
   var uptimeURL = "/monitor/runstats_uptime/?this_month=true";
 
+  function get_water_level(){ return;
+                                                   console.log("water1");
+wavecount= Math.floor(window.innerWidth/10);
+docFrag = document.createDocumentFragment();
+var offset = $("#content").offset()['left'];
+offset=0;
+//console.log(offset);
+//console.log("offset");
+for(var i=0; i<wavecount; i+=1){
+var wave =document.createElement("div");
+wave.className += "bluewater";
+docFrag.appendChild(wave);
+wave.style.left = (offset+i*10)+"px";
+wave.style.webkitAnimationDelay = (i/100)+"s";
+}
+document.getElementById("water").appendChild(docFrag);
+     $.getJSON("/slow_control/get_water_level", function(data){
+       console.log("Water");
+       console.log(data['value']);
+       pct = (Math.floor(100*(data['value']/10))).toString();
+console.log(pct);
+console.log(window.innerHeight);
+windowheight = window.innerHeight;
+  pct = (Math.floor(windowheight*(data['value']/9))).toString();
+
+divheight = $("#content").innerHeight();
+console.log(divheight);
+bottomstr = (divheight-windowheight).toString()+"px";
+console.log(bottomstr);
+//$('#water').css("bottom", bottomstr);
+       $('#water').animate({
+
+        height: pct+"px"
+    }, 5000, function(){document.getElementById("watertext").innerHTML="Water level is already " + data['value'].toFixed(2) + " meters!";})
+     });
+
+
+  }
+
   function toHashtagUrl(hashtag) {
 return "#";
 //  return "http://myservice.com?q=" + hashtag;
@@ -201,6 +283,7 @@ return "#";
   }
 
   $( function() {
+				get_water_level();
 	$.getJSON(startedURL, function(data){
 				console.log("RUNS");
 				console.log(data);

@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from slow_control import views
 
 urlpatterns = [
+    url(r'^get_water_level', views.get_water_level, name='get_water_level'),
+    url(r'^get_sc_info', views.get_sc_info, name='get_sc_info'),
     url(r'^get_sensor_newest',views.get_sensor_newest,name='get_sensor_newest'),
     url(r'^get_sensor_history',views.get_sensor_history,name='get_sensor_history'),
     url(r'^get_hv_newest', views.get_hv_newest, name='get_hv_newest'),
