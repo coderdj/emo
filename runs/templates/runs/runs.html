@@ -290,6 +290,61 @@ function AddTagHTML(data){
   return rhtml;
 
 }
+function GetDataState(data){
+
+   // Hosts
+   hosts = {"xenon1t-daq": 0,
+            "xe1t-datamanager": 0,
+            "midway-login1": 0,
+            "tegner-login-1": 0};
+   // status 0: none, 1: transferring/triggering, 2: transferred/triggered 
+   // 3: processing, 4: processed
+   for(i=0; i<data.length; i+=1){
+      if(!(data[i]['host'] in hosts))
+         continue;
+      // Special case: DAQ is done as soon as xe1t-datamanager has data
+      if(data[i]['status'] == 'error' || hosts[data[i]['host']] == 5)
+        hosts[data[i]['host']] = 5;
+      else if(data[i]['type'] == 'raw'){
+        if((data[i]['status'] == 'transferring' || data[i]['status']=='verifying')
+           && hosts[data[i]['host']]==0)
+           hosts[data[i]['host']] = 1;
+        else if(data[i]['status'] == 'transferred' && (hosts[data[i]['host']] < 2))
+           hosts[data[i]['host']] = 2;
+      }
+      else if(data[i]['type'] == 'processed'){
+        if(data[i]['status'] == 'transferring' || data[i]['status']=='verifying')
+           hosts[data[i]['host']] = 3;
+        else if(data[i]['status'] == 'transferred')
+           hosts[data[i]['host']] = 4;
+                   }
+     }// end for
+
+    // Adjust DAQ 
+    if(hosts['xe1t-datamanager']==2 || (hosts['xe1t-datamanager']==1 && hosts['xenon1t-daq'] == 0))
+       hosts['xenon1t-daq'] = 2;
+
+   // Now create the html glyphicon glyphicon-stop
+   html = "";
+   colors= ["#ff0000", "#ffcc00", "#006600", "#000099", "#3399ff", "#ff6600"];
+   genstatus=["No data", "Transferring", "Transferred", "Processing", "Processed", 
+			"Error"];
+   daqstatus=["Untriggered", "Triggering", "Triggered", "Processing", "Processed", 
+                         "Error"];
+   for(host in hosts){
+     status = genstatus[hosts[host]];
+     if(host == "xenon1t-daq")
+       status = daqstatus[hosts[host]];
+     type="glyphicon-stop";
+     if(status=="Error")
+       type="glyphicon-exclamation-sign";
+     html+="<span class='glyphicon "+type+"'"+
+           " title='"+host+": "+status+"' style='color:"+colors[hosts[host]]+";margin-right:1px'></span>"
+  
+   }
+   return html;
+}
+
 $(document).ready(function(){
 
   var height = window.innerHeight;
@@ -373,7 +428,8 @@ $(document).ready(function(){
            "render": function(data){
 	      if(data == null || data.length == 0)
                  return "none";
-              status = "untriggered";
+              return GetDataState(data);
+        /*      status = "untriggered";
               level = 0;  // 0-trigger, 1-transfer, 2-processing
               // possible: untriggered, triggered, transferring, transfered, processing, processed
               for(x=0;x<data.length;x+=1){
@@ -414,7 +470,7 @@ $(document).ready(function(){
               colors = { "processed": "#189429", "processing": "#84a789", "transferred": "#2f43bd", "triggering": "#7e88c4",
 							     "acquisition": "#ab20c4", "triggering": "#d70d11", "untriggered": "#a2a2a2"};
               retstring = "<strong style='color:"+colors[status]+"'>"+status+"</strong>";
-              return retstring;
+              return retstring;*/
             }// function
 	},
        {
@@ -473,8 +529,10 @@ $(document).ready(function(){
        function UpdateDetail(docallback){
          if(RUNURL!=""){
               $.getJSON(RUNURL, function(data){
+console.log("HI");
+console.log(data);
 		    if(cache_data == {})
-		    cache_data = data;
+         		    cache_data = data;
                     document.getElementById("run_detail_head").innerHTML = "Detail for run " + data.number.toString();
                     document.getElementById("detail_name").innerHTML=data.name;
                     document.getElementById("detail_detector").innerHTML=data.detector;
@@ -613,7 +671,10 @@ ret2+="</table>";
 //	$("#run_comment").hashtags();
         $("textarea").hashtags();
 }
-   }); // end getjson
+   }).error(function(jqXHR, textStatus, errorThrown) {
+        console.log("error " + textStatus);
+        console.log("incoming Text " + jqXHR.responseText);
+    }); // end getjson
    }
     if(docallback==1)
        setTimeout(function() { UpdateDetail(1); }, 5000 );

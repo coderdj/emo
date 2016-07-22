@@ -15,60 +15,46 @@
 {% endblock %}
 {% block content %}
 <div class="container" style="width:100%;padding-left:20px;padding-right:10px;"> 
-  <p class="bg-info" style="width:100%;padding-left:20px">Hint: This app allows you to browse any data stored in a MongoDB buffer (i.e. the trigger input buffer) and can be used for DAQ diagnostics. If you don't choose a collection with DAQ data in it then no plot will be displayed. If you want to look at complete triggered events, use the waveform display. </p> 
+  <p class="bg-info" style="width:100%;padding-left:20px">This can be thought of as a live scope. It's under construction. It will try to pull the newest data from the buffer database (pre-trigger) and plot it. It pulls 10 occurrences at a time. To get new ones hit the green button. If the DAQ isn't running it will just keep pulling the 10 newest and they will be the same (or there will be none).</p>
   
   <div class="row">       
-    <div class="col-md-9"> 
+    <div class="col-md-9 col-xs-12"> 
       <div class="panel panel-default"> 
         <div id="scope_panel" class="panel-body" style="width:95%;height:400px;">
 	</div>   
       </div>   <!-- end panel -->
-    </div> <!-- end col-md-9 -->
-    <div class="col-md-3">  
-      <div id="channelPanel" class="panel pandel-default">
-	<div class="panel-heading"><h4> Data Selection </h4> </div>
+    </div> <!-- end col-md-9 -->    
+    <div class="col-md-3 col-xs-12">  
+      <div id="channelPanel" class="panel panel-default">
+	<div class="panel-heading"><h4>Info </h4> </div>
 	<div class="list-group"> 	  
 	  <span class="list-group-item">
-	    <strong>Server: </strong>
-	    <select name="serverList" id="serverList" onchange="getData(this, 'server');">
-	      <option value="none">Choose a server</option>
-	      <option value="eb0">Event builder</option>
-	      <option value="eb2">Ersatz event builder</option>
-	      <option value="172.17.15.71">Test PC</option>
-	    </select>
-	    <span id="server_confirm"><i style="color:red;" class="fa fa-exclamation-circle"></i></span>
+	    <strong>Collection: </strong>
+	    <span id="info_collection"></span>
           </span>
 	  <span class="list-group-item">
-            <strong>Database: </strong>
-            <select name="databaseList" id="databaseList" onChange="getData(this, 'database');">
-              <option value="none">----</option>
-            </select>
-            <span id="database_confirm"></span>
+            <strong>PMT: </strong>
+            <span id="info_pmt"></span>
           </span>
 	  <span class="list-group-item">
-            <strong>Collection: </strong>
-            <select name="collectionList" id="collectionList" onChange="getData(this, 'collection');">
-              <option value="none">----</option>
-            </select>
-            <span id="collection_confirm"></span>
+            <strong>Module: </strong>
+            <span id="info_module"></span>
           </span>
 	  <span class="list-group-item">
-	    <strong>Module (optional): </strong>
-	    <select name="moduleList" id="moduleList" onChange="getData(this, 'module');">
-              <option value="none">----</option>
-            </select>
-            <span id="module_confirm"></span>
-	  </span>
+            <strong>Channel: </strong>
+            <span id="info_channel"></span>
+          </span>
 	  <span class="list-group-item">
-	    <strong>Channel (optional): </strong>
-            <select name="channelList" id="channelList" onChange="getData(this, 'channel');">
-              <option value="none">----</option>
-            </select>
-            <span id="channel_confirm"></span>
-	  </span>
-	  
-	  
+            <strong>Time in run: </strong>
+            <span id="info_time"></span>
+          </span>
 	  <span class="list-group-item">
+            <strong>Time in cycle: </strong>
+            <span id="info_rawtime"></span>
+          </span>
+	  <span class="list-group-item">
+	    <strong>Channel: </strong><input placeholder="Channel" type="number" min="0" max="254" id="channel_selection"></input>
+	    <button class="btn btn-success" onclick="GetEvents()">Get new data</button>
 	    <div class="btn-group btn-group-justified"> 
 	      <div class="btn-group"> 
 		<button type="button" class="btn btn-info" onClick="getPrevNext(0);">
@@ -77,12 +63,14 @@
 	      </div>
 	      <div class="btn-group">
 		<button type="button" class="btn btn-info" onClick="getPrevNext(1);">
-		  <span class="glyphicon glyphicon-chevron-right"></span> Next </button> 
+		  <span class="glyphicon glyphicon-chevron-right"></span> Next 
+		</button> 
 	      </div>	      
-	    </div>
-	 
-	    <button class="btn btn-default" onclick="SavePlotAs()">Save as PNG</button>
+	    </div>	    
+	    <button class="btn btn-default" onclick="SavePlotAs()">Save as PNG
+	    </button>
 	  </span>
+	  
 	</div>
       </div>
     </div>
@@ -94,11 +82,10 @@
   <thead>
     <tr>
 <!--      <th> Show </th> -->
-      <th> Start time [sample, 10 ns]</th>
-      <th> End time [sample, 10 ns]</th>
+      <th> PMT </th>
+      <th> Time [sample, 10 ns]</th>
       <th> Module </th>
       <th> Channel </th>
-      <th> ID </th>
     </tr>
   </thead>
   <tbody>
@@ -107,8 +94,7 @@
       <td style="color:black;"></td>
       <td style="color:black;"></td>
       <td style="color:black;"></td>
-      <td style="pull-right"> </span></td>
-      <td></td>
+      <td style="color:black;"></td>
     </tr>
   </tbody>
 </table>
@@ -119,6 +105,7 @@
   var chart = null;
   var selected_row = 0;
   var title_str = "waveform";
+  var current_data = {};
 
   function SavePlotAs(){
       if (chart==null)
@@ -128,35 +115,48 @@
       window.location.href = imgExport.src.replace('image/png','image/octet-stream');
   }
 
-  function DrawElement(row, search){
-    console.log("draw el");
-    console.log(table.page.info().recordsDisplay);
-    if(table == null) return;
-    if(row < 0 || row > table.page.info().recordsDisplay)
-      return;
-    console.log("TABLE");
-    console.log(table);
-    doc_id = table.row(row).data()['_id']["$oid"];
-    console.log(doc_id);
-    chartDataUrl = "/monitor/scope/getWaveform/" + search;
-    chartDataUrl += ";id=";
-    chartDataUrl += doc_id;
-    
-    $(table.rows().nodes()).removeClass('selected');
-
-    $.getJSON(chartDataUrl,function(data){
-    console.log(row);
+  function GetEvents(){
+     var fetchDataUrl = "/monitor/scope/getWaveform";
+  console.log(document.getElementById("channel_selection").value);
+      channel = document.getElementById("channel_selection").value;
+      if(channel!="")
+        fetchDataUrl+="?channel="+channel;
+     $.getJSON(fetchDataUrl,function(data){
+         if(data['ret']!="success"){
+           console.log(data['ret']);
+           return;
+         }
+         current_data = data;
+         selected_row = 0;
+         fillOccurrenceList();
+  //UpdateChart();
+         DrawPlot();
+     });
+  }
+  function HighlightRow(row){
+       if(table == null)
+         return;
+       $(table.rows().nodes()).removeClass('selected');
       $(table.row(row).nodes()).addClass('selected');
-    console.log(table.row(row).nodes());
-      console.log(table.row(row).data());      
-      title_str = "Channel: " + table.row(row).data()['module'] + "." +
-                  table.row(row).data()['channel'] + " at " + 
-                  table.row(row).data()['time'] + " samples";
-    
+  }
+
+  function DrawPlot(){
+     row = selected_row;
+     HighlightRow(row);
+     title_str = "PMT: " + current_data['waveforms'][row]['pmt'] + " at " +
+                  current_data['waveforms'][row]['time'] + " samples";
+
+    // Set text
+    document.getElementById("info_pmt").innerHTML = current_data['waveforms'][row]['pmt'];
+    document.getElementById("info_module").innerHTML = current_data['waveforms'][row]['module'];
+    document.getElementById("info_channel").innerHTML = current_data['waveforms'][row]['channel'];
+    document.getElementById("info_time").innerHTML = current_data['waveforms'][row]['time'];
+    document.getElementById("info_rawtime").innerHTML = current_data['waveforms'][row]['rawtime'];
+    document.getElementById("info_collection").innerHTML = current_data['collection'];
+
+
       if( chart == null ){
-    console.log("Chart redraw");
-          chart = new Dygraph(scope_panel, data['adc_value'], {
-  //legend: 'always',
+          chart = new Dygraph(scope_panel, current_data['waveforms'][row]['data'], {
           legend: 'follow',
           title: title_str,
           showRoller: true,
@@ -169,190 +169,66 @@
 
       });
     }
-      if(data['adc_value'].length > 0){
+      if(current_data['waveforms'][row]['data'].length > 0){
       x_min = chart.xAxisRange()[0];
       x_max = chart.xAxisRange()[1];
       y_min = chart.yAxisRange()[0];
       y_max = chart.yAxisRange()[1];
-    if(data['adc_value'][0].length == 2){
+    if(current_data['waveforms'][row]['data'][0].length == 2){
         chart.updateOptions({isZoomedIgnoreProgrammaticZoom: true, "labels": ["bin (10ns)","channel a"],
-     "file": data['adc_value'], "title": title_str});
+     "file": current_data['waveforms'][row]['data'], "title": title_str});
     }
     else{
         chart.updateOptions({"labels":["bin (10ns)","channel a", "channel b"],
-     "file": data['adc_value'], "title": title_str, "isZoomedIgnoreProgrammaticZoom": true});
+     "file": current_data['waveforms'][row]['data'], "title": title_str, "isZoomedIgnoreProgrammaticZoom": true});
     }
   }
-    }); //end getJSON
-  
-    return;
   }
   
   function getPrevNext(pn){
      if(table == null ) return;
-  
-     if(pn == 0)
+     if(current_data == {}) return;
+     if(pn == 0){
         selected_row-=1;
-     else if(pn == 1)
+        if(selected_row<0)
+          selected_row = current_data['waveforms'].length-1;
+    }
+     else if(pn == 1){
         selected_row +=1;
-     console.log(selected_row);
-        if(selected_row<0 || selected_row>=50){
-           console.log("Getting data");
-	   if(document.getElementById("channelList").value != "none")
-	      getData(document.getElementById("channelList"), 'channel');
-	   else if(document.getElementById("moduleList").value != "none")
-	      getData(document.getElementById("moduleList"), "module");
-           else
-	      getData(document.getElementById("collectionList"), "collection"); 
-         return;
-       }
-
-    query_end = "?";
-    if( document.getElementById("serverList").value != "none" )
-       query_end += ("server=" + document.getElementById("serverList").value + ";");
-    if( document.getElementById("databaseList").value != "none" )
-       query_end += ("database=" + document.getElementById("databaseList").value + ";");
-    if( document.getElementById("collectionList").value != "none" )
-       query_end += ("collection=" + document.getElementById("collectionList").value + ";");
-    if( document.getElementById("moduleList").value != "none" )
-       query_end += ("module=" + document.getElementById("moduleList").value + ";");
-    if( document.getElementById("channelList").value != "none" )
-       query_end += ("channel=" + document.getElementById("channelList").value + ";");
-       DrawElement(selected_row, query_end);
+        if(selected_row >= current_data['waveforms'].length)
+          selected_row=0;
+    }
+     DrawPlot();  
   }
 
-  function fillOccurrenceList(searchstring, callback){
-     query_url = "/monitor/scope/getOccurrences/";
-     query_url += searchstring;
-     console.log(query_url);
-     $.getJSON(query_url,function(data){
-        console.log(data);
-        if(table == null){
-         table = $("#doctable").DataTable({
-          "data": data,
-          "columns": [
-            /* {
-                "className":      'details-control',
-                "orderable":      false,
-                "data":           null,
-                "defaultContent": ''
-            },*/
+  function fillOccurrenceList(){
+      if(table == null){
+        console.log(current_data['waveforms']);
+        table = $("#doctable").DataTable({
+          "data": current_data['waveforms'],
+          "columns": [      
+            { "data": "pmt"},          
             { "data": "time" },
-            { "data": "endtime" },
             { "data": "module" },
-            { "data": "channel" },
-            { "data": "_id" }],
-            "order": [[ 0, "desc" ]],
-          "iDisplayLength": 500,
+            { "data": "channel" },      
+           ],
+
+          "iDisplayLength": 100,
       "paging":   false,
       "bFilter": false,
-      "order": [[0, "asc"]],
-      
-            });
-        }
-        else{
+      "order": [[1, "asc"]],      
+      }); // end datatable
+      }
+      else{
             table.clear();
-            table.rows.add(data);
+            table.rows.add(current_data['waveforms']);
             table.draw();
-         }
-         callback(searchstring);
-
-     });
+      }      
+      
+    
 
   };
-  function getData(dropdown, level){
 
-    if(dropdown.value == "none")
-       return;
-    selected_row = 0;
-
-    var query_end="?";
-    if( document.getElementById("serverList").value != "none" )
-       query_end += ("server=" + document.getElementById("serverList").value + ";");
-    if( document.getElementById("databaseList").value != "none" )
-       query_end += ("database=" + document.getElementById("databaseList").value + ";");
-    if( document.getElementById("collectionList").value != "none" )
-       query_end += ("collection=" + document.getElementById("collectionList").value + ";");
-    if( document.getElementById("moduleList").value != "none" )
-       query_end += ("module=" + document.getElementById("moduleList").value + ";");
-    if( document.getElementById("channelList").value != "none" )
-       query_end += ("channel=" + document.getElementById("channelList").value + ";");
-
-    var query_url = "/monitor/scope/";
-    if( level == 'server' ){
-       query_url = "/monitor/scope/getDatabase/";
-       query_url += query_end;
-      console.log(query_url);
-       $.getJSON(query_url,function(data){
-           console.log(data);
-           if( data.length != 0 ){
-               rstr = '<option value="none">Choose a database</option>';
-               for( x=0; x<data.length; x+=1)
-                   rstr += '<option value="' + data[x] + '">' + data[x] + '</option>';
-               document.getElementById("databaseList").innerHTML = rstr;
-	       document.getElementById("collectionList").innerHTML = '<option value="none">----</option>';
-               document.getElementById("moduleList").innerHTML = '<option value="none">----</option>';
-               document.getElementById("channelList").innerHTML = '<option value="none">----</option>';               
-               document.getElementById("server_confirm").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-               document.getElementById("database_confirm").innerHTML = '<i style="color:red;" class="fa fa-exclamatio\
-n-circle"></i>';
-           }
-       });
-    }
-    else if( level == "database" ){
-       query_url = "/monitor/scope/getCollection/";
-       query_url += query_end;
-       $.getJSON(query_url,function(data){
-           if( data.length != 0 ){
-               rstr = '<option value="none">Choose a collection</option>';
-               for( x=0; x<data.length; x+=1)
-	           rstr += '<option value="' + data[x] + '">' + data[x] + '</option>';
-	       document.getElementById("collectionList").innerHTML = rstr;
-               document.getElementById("channelList").innerHTML = '<option value="none">----</option>';
-               document.getElementById("moduleList").innerHTML = '<option value="none">----</option>';
-               document.getElementById("database_confirm").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-	       document.getElementById("collection_confirm").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
-          }
-       });
-    }
-    else if( level == "collection" ){
-       query_url = "/monitor/scope/getModules/";
-       query_url += query_end;
-       $.getJSON(query_url,function(data){
-           if( data.length != 0 ){
-               rstr = '<option value="none">Choose a module</option>';
-               for( x=0; x<data.length; x+=1)
-                   rstr += '<option value="' + data[x] + '">' + data[x] + '</option>';
-               document.getElementById("moduleList").innerHTML = rstr;
-               document.getElementById("channelList").innerHTML = '<option value="none">----</option>';
-               document.getElementById("collection_confirm").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-               document.getElementById("module_confirm").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
-          }
-       });
-    }
-    else if( level == "module" ){
-       query_url = "/monitor/scope/getChannels/";
-       query_url += query_end;
-       $.getJSON(query_url,function(data){
-           if( data.length != 0 ){
-               rstr = '<option value="none">Choose a channel</option>';
-               for( x=0; x<data.length; x+=1)
-                   rstr += '<option value="' + data[x] + '">' + data[x] + '</option>';
-               document.getElementById("channelList").innerHTML = rstr;
-               document.getElementById("module_confirm").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
-          }
-       });
-    }
-
-    // If we have some data selected then fill it
-    if( level == "collection" || level == "module" || level == "channel"){
-       selected_row = 0;
-       fillOccurrenceList(query_end, function(search){    
-       DrawElement(selected_row, search);
-       });
-    }
-
-  }; 
     
 
 

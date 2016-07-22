@@ -602,4 +602,5 @@ def profile(request):
         ret_mdb=user_doc
     retdict['mdb'] = ret_mdb
     retdict['form'] = profile_update
+
     return render_to_response("management/profile.html", retdict, context_instance = RequestContext(request))
