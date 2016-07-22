@@ -178,7 +178,7 @@ def addTag(request):
         search = {"_id": ObjectId(request.GET['id'])}
         doc = coll.find_one(search)
 
-        if doc is not None:
+        if doc is not None and request.GET['tagname'][0]!="_":
             
             # Add tag
             update = {}
@@ -277,7 +277,7 @@ def get_hash_tags(comment):
                 openTag = ""
         elif x == '#':
             openT = True            
-    if openT and len(openTag)>0 and not openTag.isdigit():
+    if openT and len(openTag)>0 and not openTag.isdigit() and openTag[0]!="_":
         tags.append(openTag)
     
     return tags

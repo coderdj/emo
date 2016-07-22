@@ -314,7 +314,8 @@ function AddTagHTML(data){
   var rhtml = "<br style='margin:1px'><div style='width:100%'>";
   for(var x=0;x<data['tags'].length;x+=1){
      rhtml += '<span class="tagButton"><a style="color:white" href='+"'"+'/runs/?startdate=&enddate=&detector=tpc&custom=%7B"tags"%3A+%7B"%24elemMatch"%3A+%7B"name"%3A+"'+data['tags'][x]['name']+'"%7D%7D%7D&submit='+"'>"+data['tags'][x]['name']+"</a>";
-     if(data['user'] == "{{ request.user.username }}")
+
+     if(data['tags'][x]['user'] == "{{ request.user.username }}")
         rhtml += '&nbsp;&nbsp;<span class="badge" style="cursor:hand;cursor:pointer;" onclick="RemoveTag(' +"'"+data['_id']['$oid']+"', '"+data['tags'][x]['name']+"'"+')">x</span>';
      rhtml += '</span>&nbsp;';
   }
