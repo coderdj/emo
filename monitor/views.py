@@ -188,7 +188,7 @@ def trigger_get_data(request):
             if key =="batch_info":
                 total_data[key]=[]
         ret = total_data
-    return HttpResponse(dumps({"xbin": xbin, "data": ret}), 
+    return HttpResponse(json_util.dumps({"xbin": xbin, "data": ret}), 
                         content_type="application/json")
 
 

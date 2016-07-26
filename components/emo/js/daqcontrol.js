@@ -267,19 +267,19 @@ return html;
 
 
 }
-function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, callback){
+function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title, mv_title, tpc_title_2, mv_title_2, callback){
     var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 
     // Get detector and node data
     $.getJSON( dataUrl, function(detector_data){
+	var tpc_rate = 0.;
+        var muon_veto_rate = 0.;
         $.getJSON( nodesUrl, function(node_data) {
 	    var currentTime = new Date().getTime();
             if(node_data.length>0)
                 currentTime = new Date(node_data[0]['date']['$date']);
             var nodeInfo = {"tpc": [], "muon_veto": []};
 
-	    tpc_rate = 0.;
-            muon_veto_rate = 0.;
 	    // Loop through node data to get total data rate
             for( var node_id = 0; node_id < node_data.length; node_id += 1){
 
@@ -320,9 +320,47 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, callback){
 		mvstr+=nodeInfo['muon_veto'][x];
 	    document.getElementById(tpc_div).innerHTML = tpcstr;
 	    document.getElementById(mv_div).innerHTML = mvstr;
+	    
 
-	    callback();
-	});//end getJSON nodes
+	// Update general info 	    
+	var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
+	for ( var status_id = 0; status_id < detector_data['status'].length; 
+	      status_id += 1){
+
+            // If we have a nicer name to display set it                           
+	    var display_name = detector_data['status'][status_id]['detector'];
+            var det_name = display_name;
+	    if( display_name in aliases)
+                display_name = aliases[display_name];
+
+	    var rate = tpc_rate;
+	    if(display_name=="Muon Veto")
+		rate = muon_veto_rate;
+
+	    var mode = detector_data['status'][status_id]['mode'];
+	    if (mode == "None")
+		mode = "";
+	    title_str = 
+		"<div class='row' style='padding-left:15px;padding-right:18px;'>"+
+		"<h3 style='display:inline-block'>"+
+		display_name+"</h3>&nbsp;<h4 style='display:inline-block'>is "
+		+GetStateHtml(detector_data,status_id)+" at "+
+		GetRateString(rate, "MB/s")+"</h4>"+
+		"<h4 class='pull-right' style='display:inline-block;color:#656565'>"+
+		mode+"</h4></div>";
+	    	    
+	    var title_2_str = "<div class='row'><div class='col-xs-6";
+	    
+	    if(display_name=="TPC")
+		document.getElementById(tpc_title).innerHTML=title_str;
+	    else
+		document.getElementById(mv_title).innerHTML=title_str;
+
+	    
+	}
+	callback();
+
+	});//end getJSON nodes                 
     });//end getJSON detector
 
 }

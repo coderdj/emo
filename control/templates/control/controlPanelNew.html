@@ -27,7 +27,8 @@
     <!-- THIS IS THE RATES WINDOW -->   
     <div class="grid-stack-item"
 	 data-gs-x="0" data-gs-y="0"
-	 data-gs-width="12" data-gs-height="1"> 
+	 data-gs-width="12" data-gs-height="4" data-gs-min-height="4"
+	 data-gs-max-height="4">
       <div class="grid-stack-item-content gridbox" style="overflow-y:hidden">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" id="rates_content">               
@@ -96,8 +97,8 @@
     
     <!-- THIS IS THE LOG WINDOW -->                                              
     <div class="grid-stack-item"
-         data-gs-x="0" data-gs-y="2"
-         data-gs-width="6" data-gs-height="1">
+         data-gs-x="0" data-gs-y="6"
+         data-gs-width="6" data-gs-height="4">
       <div class="grid-stack-item-content gridbox" id="logwindowgs">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" style="overflow-y:hidden">
@@ -125,7 +126,7 @@
     <!-- END LOG WINDOW -->   
     <!-- THIS IS THE PLAYLIST WINDOW -->                                         
     <div class="grid-stack-item"
-         data-gs-x="7" data-gs-y="2"
+         data-gs-x="7" data-gs-y="5"
          data-gs-width="6" data-gs-height="1">
       <div class="grid-stack-item-content gridbox">	
 	<div class="window-handle"></div>                                          
@@ -136,14 +137,16 @@
 
     <!-- THIS IS THE TPC WINDOW -->
     <div class="grid-stack-item"
-         data-gs-x="0" data-gs-y="3"
-         data-gs-width="6" data-gs-height="1">
+         data-gs-x="0" data-gs-y="9"
+         data-gs-width="6" data-gs-height="3" data-gs-min-width="4">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
 	<div class="window-content" style="overflow-y:hidden" id="tpc_window">
 	  <div class="window-title" id="tpc_title" style="padding-top:2px;">
 	    <h3>TPC</h3>
 	  </div>
+	  <div class="window-title" id="tpc_title_2" style="padding-top:2px;">       
+          </div>
 	  <div id="tpc_content" style="width:100%;overflow-y:scroll">
 	  </div>
 	</div>
@@ -152,14 +155,15 @@
     <!-- END TPC -->
     <!-- THIS IS THE MUON VETO WINDOW -->
     <div class="grid-stack-item"
-         data-gs-x="7" data-gs-y="3"
-         data-gs-width="6" data-gs-height="1">
+         data-gs-x="7" data-gs-y="9"
+         data-gs-width="6" data-gs-height="3" data-gs-min-width="4">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
 	<div class="window-content" style="overflow-y:hidden" id="mv_window">
 	  <div class="window-title" id="mv_title" style="padding-top:2px;">
             <h3>Muon Veto</h3>
           </div>
+	  <div class="window-title" id="mv_title_2" style="padding-top:2px;">
           <div id="mv_content"style="width:100%">
           </div>
 
@@ -253,7 +257,9 @@ console.log("made here");
   function UpdatePage( thechart ){
   update_graphic(function(){				   
     DrawLogWindow( "message_panel", logUrl, function(){
-       UpdateDetectorTextPretty(dataUrl, pointUpdateUrl, "tpc_content", "mv_content",
+       UpdateDetectorTextPretty(dataUrl, pointUpdateUrl, "tpc_content", "mv_content", 
+				   "tpc_title", "mv_title", "tpc_title_2", 
+				   "mv_title-2",
 	function(){
        var updatecounter=0;
        timerLoop(updatecounter, thechart);      
@@ -281,12 +287,13 @@ console.log(progress);
   console.log(gridsize);
   gridsize-=20;
   // GET HEIGHT
-  height = 240;
+  height = 50;
 				// Check rates
   ratesheight = $("#rates_panel").innerHeight() + $("#rates_title").innerHeight();
   if(ratesheight > height)
-    height = ratesheight;
-   height+=4; // for border
+    height = (ratesheight+4)/5;
+    //height+=4; // for border
+    //height = 50;
   $(".grid-stack").gridstack({                                                     
 
      cellHeight: height,
