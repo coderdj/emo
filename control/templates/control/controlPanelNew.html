@@ -9,11 +9,20 @@
 <script src="{% static "js/highcharts.4.2.5.js" %}" type="text/javascript"></script>
 <script src="{% static "js/highcharts.4.2.5.exporting.js" %}" type="text/javascript"></script>
 <script src="{% static "js/highcharts.4.2.5.offline-exporting.js" %}" type="text/javascript"></script>
+<script src="{% static "js/Sortable.min.js" %}" type="text/javascript"></script>
+<script src="{% static "js/Ply.min.js" %}" type="text/javascript"></script>
+
+<script src="{% static "js/bootstrap-switch.min.js" %}" type="text/javascript"></script>
+<script src="{% static "emo/js/playlist_sortable.js" %}" type="text/javascript"></script>
 
 
 <link href="{% static "emo/css/control.css" %}" rel="stylesheet">
 <link href="{% static "css/jquery-ui.min.css" %}" rel="stylesheet">
 <link href="{% static "css/gridstack.min.css" %}" rel="stylesheet">
+<link href="{% static "css/bootstrap-switch.min.css" %}" rel="stylesheet">
+<link href="{% static "css/ply.css" %}" rel="stylesheet">
+
+<link href="{% static "emo/css/playlist_sortable.css" %}" rel="stylesheet">
 
 
 {% endblock %}
@@ -127,10 +136,18 @@
     <!-- THIS IS THE PLAYLIST WINDOW -->                                         
     <div class="grid-stack-item"
          data-gs-x="7" data-gs-y="5"
-         data-gs-width="6" data-gs-height="1">
+         data-gs-width="6" data-gs-height="1" data-gs-min-width="4"
+	 data-gs-min-height="4">
       <div class="grid-stack-item-content gridbox">	
 	<div class="window-handle"></div>                                          
-	<div class="window-content"></div>                                         
+	<div class="window-content" id="playlist_content">
+	  <div class="window-title" id="playlist_title" style="padding-top:2px;position:relative;">
+            <h3>Runs &nbsp;<span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-stop"></span>
+</h3>
+          </div>
+	  <div id="playlist_body"></div>
+
+	</div>                                         
       </div>
     </div>
     <!-- END PLAYLIST -->                                                        
@@ -299,10 +316,13 @@ console.log(progress);
      cellHeight: height,
      handle: ".window-handle",
 
+
   });                                                                              
   }
   
     $(function(){ //DOM Ready
+
+    InitializePlaylist("playlist_title", "playlist_body", "playlist_content");
 
 var frm = $('#new_log_entry');
      frm.submit(function(){
@@ -322,15 +342,17 @@ var frm = $('#new_log_entry');
      });
 
   MakeGrid();
-    ResizeDetailWindows();
-  drawChart( chart, chartdiv, graphic_var, function(thechart) {
+      ResizeDetailWindows();
+      drawChart( chart, chartdiv, graphic_var, function(thechart) {
                  UpdatePage( thechart );
-$('.grid-stack').on('resizestop', function(event, ui) {
+
+      $('.grid-stack').on('resizestop', function(event, ui) {
    ResizeLogWindow();
     ResizeDetailWindows();
 });    
-  });                                                                              
 
+  });                                                                              
+        InitializePlaylist("playlist_title", "playlist_body", "playlist_content");
 });
 
 $(".nav a").on("click", function(){

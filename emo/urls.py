@@ -21,9 +21,13 @@ from management import views
 from django.contrib.auth.decorators import login_required
 
 from tastypie.api import Api
-from api.api.resources import StatusResource
+from api.api.resources import StatusResource, SlowControlResource, RunsResource
 daqapi = Api(api_name="daq")
 daqapi.register(StatusResource())
+scapi = Api(api_name="history")
+scapi.register(SlowControlResource())
+runapi = Api(api_name="runs")
+runapi.register(RunsResource())
 
 urlpatterns = [
  
@@ -53,5 +57,7 @@ urlpatterns = [
     url(r'^equipment/', include('equipment.urls')),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         kwargs={'template_name': 'login.html'}, name='login'),
-    url(r'^api/', include(daqapi.urls))
+    url(r'^api/', include(daqapi.urls)),
+    url(r'^sc_api/', include(scapi.urls)),
+    url(r'^runs_api/',include(runapi.urls)),
 ]

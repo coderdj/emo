@@ -41,11 +41,18 @@ bufferclient = MongoClient( settings.BUFFER_DB_ADDR)
 
 """TRIGGER SECTION"""
 #triggerClients = ["eb2:27001", "eb0:27017", "eb1:27017", "master:27017"]
-triggerClients = ["master:27017"]
+triggerClients = ["gw:27018"]
 @login_required
 def trigger_get_run_list(request):
     
     available_runs = []
+    start = 0
+    end = 20
+    if 'start' in request.GET:
+        start = request.GET['start']
+    if 'end' in request.GET:
+        end = request.GET['end']
+
     for client in triggerClients:
         
         mongoClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
@@ -56,8 +63,15 @@ def trigger_get_run_list(request):
         runsDB = runsClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
         collections = list(mongoDB.collection_names())
         collections.sort(reverse=True)
-        for collection in collections:
 
+        if len(collections) <= start:
+            return HttpResponse({"runs": []}, content_type="application/json")
+
+        for i in range(start, end):
+            #for collection in collections:
+            if i >= len(collections):
+                break
+            collection = collections[i]
             rundoc = runsDB.find_one({"name": collection})
             run_number = 0
             if "number" in rundoc:
@@ -137,8 +151,24 @@ def trigger_get_data(request):
     }
     if request.method == "GET" and "run" in request.GET and "client" in request.GET:
 
-        run = request.GET['run']
+        run = request.GET['run']        
         client=request.GET['client']
+
+        # Check if run is number. If so check if run exists
+        if '_' not in run:
+            try:
+                runClient = MongoClient(settings.RUNS_DB_ADDR)
+                doc = runClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION].find_one(
+                    { "number": int(run) })
+                logger.error(doc)
+                if doc is None:
+                    return HttpResponse(json_util.dumps({"xbin": 0, "data": [], "error": "Invalid run"}),
+                                        content_type="application/json")
+                else:
+                    run = doc['name']
+            except:
+                return HttpResponse(json_util.dumps({"xbin": 0, "data": [], "error": "Can't reach runs DB"}),
+                                    content_type="application/json")
 
         mongoClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
                                   settings.GEN_PW+"@"+client+"/"

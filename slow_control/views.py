@@ -30,6 +30,14 @@ scd = scc['slow_control']
 c = MongoClient(settings.SC_DB_ADDR)
 d = c[settings.SC_DB_NAME]
 
+#BUTTON
+import requests
+@login_required
+def button_click(request):
+    web = requests.get('https://172.16.2.105:4040/WebService.asmx/GetSCLastValue?name=XE1T.CTPC.BOARD14.CHAN000.VMON;&username=slowcontrolwebserver;&api_key=ssn1sslkvdhittoywjk88w9cmbxf4fmprn68r8hm', verify=False);
+    #web = requests.get('https://172.16.2.105:4040/WebService.asmx/GetSCLastValue?name=XE1T.CRY_TIC111_TE111A_TCLDFNGA_AI.PI\&username=slowcontrolwebserver\&api_key=ssn1sslkvdhittoywjk88w9cmbxf4fmprn68r8hm', verify=False)
+    return HttpResponse(dumps(web.content), content_type="application/json")
+
 @login_required
 def get_water_level(request):
     sccol = scd['measurements']

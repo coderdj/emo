@@ -13,7 +13,16 @@ urlpatterns = [
     url(r'^get_hv_history', views.get_hv_history,name='get_hv_history'),
     url(r'^high_voltage', login_required( TemplateView.as_view( template_name=
                                                                 "slow_control/high_voltage.html"))),
+
+    url(r'^buttonclick', views.button_click, name="button_click"),
+    url(r'^button', login_required( 
+        TemplateView.as_view( template_name=
+                              "slow_control/button.html"))),
+
+
+
     url(r'$', login_required( TemplateView.as_view( template_name=
                                                     "slow_control/slow_control.html"))),                                                
-
+    
+    
 ]
