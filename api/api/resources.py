@@ -2,14 +2,16 @@ from django.db import models
 import pymongo
 from django.conf import settings
 from tastypie import fields
-from tastypie.authorization import ReadOnlyAuthorization
+from tastypie.authorization import ReadOnlyAuthorization, DjangoAuthorization, Authorization
 from tastypie.resources import Resource
 from tastypie.bundle import Bundle
 from tastypie.authentication import ApiKeyAuthentication
 from tastypie.throttle import CacheThrottle
 import requests
 import json
+import codecs
 from bson.json_util import dumps
+from bson.objectid import ObjectId
 
 import logging
 logger = logging.getLogger('emo')
@@ -179,7 +181,7 @@ class StatusResource(Resource):
         pass
 
 
-# The actual API resource                                                                                                                                                     
+# The actual API resource  
 class SlowControlResource(Resource):
 
     kpi = fields.CharField(attribute="kpi")
@@ -232,7 +234,8 @@ class SlowControlResource(Resource):
             if 'seconds' in bundle.request.GET:
                 s_past += int(bundle.request.GET['seconds'])
             if s_past != 0:
-                req['start'] = (datetime.datetime.utcnow()-epoch).total_seconds() - s_past
+                req['start'] = (datetime.datetime.utcnow()-
+                                epoch).total_seconds() - s_past
             if 'start' in bundle.request.GET:
                 req['start'] = bundle.request.GET['start']
             if 'end' in bundle.request.GET:
@@ -309,11 +312,15 @@ class SlowControlResource(Resource):
 class RunsResource(Resource):
 
     number = fields.IntegerField(attribute="number")    
-
+    _id = fields.CharField(attribute="_id")
+    detector = fields.CharField(attribute="detector")
+    name = fields.CharField(attribute="name")
+    doc = fields.DictField(attribute="doc")
     class Meta:
         resource_name = 'runs'
         object_class = rundoc
-        authorization = ReadOnlyAuthorization()
+        allowed_methods = ['get', 'post', 'put']
+        authorization = Authorization()
         authentication = ApiKeyAuthentication()
         throttle = CacheThrottle(throttle_at=60, timeframe=60)
         
@@ -327,15 +334,43 @@ class RunsResource(Resource):
     def detail_uri_kwargs(self, bundle_or_obj):
         kwargs = {}
         if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.number
+            kwargs['pk'] = bundle_or_obj.obj._id
         else:
-            kwargs['pk'] = bundle_or_obj.number
+            kwargs['pk'] = bundle_or_obj._id
         return kwargs
 
     def get_object_list(self, request):
+        # This will return a stripped down version of the run doc
+        # It includes _id, name, number (if applicable), and detector
         self.throttle_check(request)
         self.log_throttled_access(request)
-        return rundoc(initial={"error": "For now we only support searching for a run by number"})
+
+        query = {}
+        
+        if "number" in request.GET:
+            query['number'] = int(request.GET['number'])
+        if "detector" in request.GET:
+            query['detector'] = request.GET['detector']
+        if "name" in request.GET:
+            query['name'] = request.GET['name']
+        if "_id" in request.GET:
+            query['_id'] = request.GET['_id']
+            
+        cursor = self._db()[settings.RUNS_DB_COLLECTION].find(query).sort("_id", -1)
+
+        ret = []
+        for doc in cursor:
+            if 'number' in doc:
+                thedoc = {"number": doc['number'] }
+            else:
+                thedoc = {"number": -1}
+            thedoc['name'] = doc['name']
+            thedoc['_id'] = doc['_id']
+            thedoc['detector'] = doc['detector']
+            thedoc['doc'] = doc
+            ret.append(rundoc(initial=thedoc))
+
+        return ret
 
     def obj_get_list(self, bundle, **kwargs):
         return self.get_object_list(bundle.request)
@@ -346,31 +381,123 @@ class RunsResource(Resource):
         self.log_throttled_access(bundle.request)
         req = {}
         if 'pk' in kwargs:
-            req['number'] = kwargs['pk']
-
+            req['_id'] = kwargs['pk']
             return self._create_obj(req)
         return rundoc(initial={"error": "For now we only support searching for a run by number"})
 
     def _create_obj(self, req):
-
-        doc = self._db()[settings.RUNS_DB_COLLECTION].find_one({"number":
-                                                                int(req['number'])})
+        
+        doc = self._db()[settings.RUNS_DB_COLLECTION].find_one(
+            {"_id": 
+             ObjectId(req['_id'])})        
         if doc is None:
-            return {"error": "Couldn't find run with number " + str(req['number']),
-                    "number": req['number']
-                }
+            return 
+        
+        ret = {}
+        if 'number' in doc:
+            ret['number'] = doc['number']
+        else:
+            ret['number'] = -1
+        ret['detector'] = doc['detector']
+        ret['_id'] = doc['_id']
+        ret['name'] = doc['name']
+        ret['doc'] = doc
+        ret_obj = rundoc(initial=ret)
 
-            
-        #ret_obj = rundoc(initial=doc)
-        #ret_obj['number'] = doc['number']
-        return doc
+        return ret_obj
 
-
-    def obj_create(self, bundle, **kwargs):
-        pass
+    def obj_create(self, bundle, **kwargs):        
+        return self.obj_update(bundle, kwargs)
 
     def obj_update(self, bundle, **kwargs):
-        pass
+        self.throttle_check(bundle.request)
+        self.log_throttled_access(bundle.request)
+        searchDict = {}
+        ret = {}
+
+        reader = codecs.getreader("utf-8")        
+        request = (json.load(reader(bundle.request)))        
+        logger.error(request)
+        if 'pk' in kwargs:
+            searchDict['_id'] = ObjectId(kwargs['pk'])
+        elif 'number' in request:
+            searchDict['number'] = int(request['number'])
+        elif 'name' in request and 'detector' in request:
+            searchDict['name'] = request['name']
+            searchDict['detector'] = request['detector']
+
+        updateDict = {}
+        # need host, type, status, location and for processed pax_version
+        # in call cases we update the doc UNLESS the status is 'removed'
+        # in this case we will remove the entry from the doc if there is one
+        # matching the rest of the parameters
+        # for non-'removed' operations a checksum is also required
+        if ( 'status' not in request or 'host' not in request 
+             or 'location' not in request or 'type' not in request ):
+            logger.error("Bad request, required variables not found")
+            doc = self._default(
+                "ERROR", 
+                "Bad request. Require status, host, location, and type"
+            )
+            bundle.obj = rundoc(initial=doc)
+            bundle = self.full_hydrate(bundle)
+            return bundle.obj
+
+        updateDict = request
+
+        # For removal
+        if request['status'] == 'remove':
+            updateDict.pop('status')
+            returnvalue = self._db()[settings.RUNS_DB_COLLECTION].update_one(
+                searchDict,
+                {"$pull": 
+                 { "data": updateDict }})
+            doc = self._default(
+                "Success",
+                "Document updated",
+                returnvalue
+            )
+            bundle.obj = rundoc(initial=doc)
+            bundle = self.full_hydrate(bundle)
+            return bundle.obj
+
+        elif request['status'] == 'processed':
+            if 'pax_version' not in request:
+                return {"number": doc['number'], 
+                        "ERROR": "pax_version must be provided for processed data"}
+            updateDict['pax_version'] = request['pax_version']
+
+        # Status needed for new entry
+        updateDict['status'] = request['status']
+        updateDict['creation_time'] = datetime.datetime.utcnow(),                     
+
+        # Now add a new entry
+        res = self._db()[settings.RUNS_DB_COLLECTION].update_one(
+            searchDict, 
+            {"$push": {"data": updateDict}})
+        doc = self._default(
+            "Success",
+            "Document updated",
+            res
+        )
+        bundle.obj = rundoc(initial=doc)
+        bundle = self.full_hydrate(bundle)        
+
+        return rundoc(initial=doc)
+        
+    def _default(self, message, longer, return_value):
+        doc = {
+            "number": -1,
+            "_id": -1,
+            "detector": "ret",
+            "name": message,
+            "doc": {
+                "message": longer,
+                "success": message,
+                "ret": return_value
+                }
+        }
+        return doc
 
     def obj_delete_list(self, bundle, **kwargs):
         pass

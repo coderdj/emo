@@ -37,7 +37,7 @@
     <div class="grid-stack-item"
 	 data-gs-x="0" data-gs-y="0"
 	 data-gs-width="12" data-gs-height="4" data-gs-min-height="4"
-	 data-gs-max-height="4">
+	 data-gs-max-height="4" data-gs-min-width="8" id="rate-gridstack">
       <div class="grid-stack-item-content gridbox" style="overflow-y:hidden">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" id="rates_content">               
@@ -107,7 +107,8 @@
     <!-- THIS IS THE LOG WINDOW -->                                              
     <div class="grid-stack-item"
          data-gs-x="0" data-gs-y="6"
-         data-gs-width="6" data-gs-height="4">
+         data-gs-width="6" data-gs-height="4" id="log-gridstack" 
+	 data-gs-min-width="4" data-gs-min-height="4">
       <div class="grid-stack-item-content gridbox" id="logwindowgs">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" style="overflow-y:hidden">
@@ -115,13 +116,13 @@
 	    <form id="new_log_entry" class="form-inline" style="width:100%"
                   action="/log/new_log_entry" 
                   method='post'>{% csrf_token %}
-	      <div class="form-group" style="width:80%">
-		<label for="new_comment_text" style="width:20%;padding-left:5px;">Logbook: </label>
+	      <div class="form-group" style="width:80%;line-height:30px;">
+		<label for="new_comment_text" style="width:20%;padding-left:5px;">Log: </label>
 		<input type='text' id='new_comment_text' name='message' 
 		       class='form-control'  placeholder='Make a log entry...' style="width:75%">	
 	      </div>	      
 	      <button class='btn btn-default' 
-		      style="background-color:white;width:15%;min-width:50px;"
+		      style="background-color:white;width:15%;min-width:50px;line-height:30px;"
 		      type="submit" value='Submit'>Submit</button>   	 
 	      <input type="hidden" name="redirect" value="none"/>	  
 	    </form>	   
@@ -137,15 +138,15 @@
     <div class="grid-stack-item"
          data-gs-x="7" data-gs-y="5"
          data-gs-width="6" data-gs-height="1" data-gs-min-width="4"
-	 data-gs-min-height="4">
-      <div class="grid-stack-item-content gridbox">	
+	 data-gs-min-height="4" id="playlist-gridstack">
+      <div class="grid-stack-item-content gridbox" id="playlistwindowgs">	
 	<div class="window-handle"></div>                                          
-	<div class="window-content" id="playlist_content">
+	<div class="window-content" id="playlist_content" style="overflow:hidden">
 	  <div class="window-title" id="playlist_title" style="padding-top:2px;position:relative;">
             <h3>Runs &nbsp;<span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-stop"></span>
 </h3>
           </div>
-	  <div id="playlist_body"></div>
+	  <div id="playlist_body" style="overflow-y:scroll;overflow-x:hidden"></div>
 
 	</div>                                         
       </div>
@@ -155,10 +156,11 @@
     <!-- THIS IS THE TPC WINDOW -->
     <div class="grid-stack-item"
          data-gs-x="0" data-gs-y="9"
-         data-gs-width="6" data-gs-height="3" data-gs-min-width="4">
+         data-gs-width="6" data-gs-height="3" data-gs-min-width="4"
+	 id="tpc-gridstack">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
-	<div class="window-content" style="overflow-y:hidden" id="tpc_window">
+	<div class="window-content" style="overflow:hidden" id="tpc_window">
 	  <div class="window-title" id="tpc_title" style="padding-top:2px;">
 	    <h3>TPC</h3>
 	  </div>
@@ -173,10 +175,11 @@
     <!-- THIS IS THE MUON VETO WINDOW -->
     <div class="grid-stack-item"
          data-gs-x="7" data-gs-y="9"
-         data-gs-width="6" data-gs-height="3" data-gs-min-width="4">
+         data-gs-width="6" data-gs-height="3" data-gs-min-width="4"
+	 id="mv_gridstack">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
-	<div class="window-content" style="overflow-y:hidden" id="mv_window">
+	<div class="window-content" style="overflow:hidden" id="mv_window">
 	  <div class="window-title" id="mv_title" style="padding-top:2px;">
             <h3>Muon Veto</h3>
           </div>
@@ -318,12 +321,32 @@ console.log(progress);
 
 
   });                                                                              
+    $(".grid-stack").on('resizestop', function(event, ui) {
+       var grid = this;
+       var element = event.target;
+    // FIND FIRST CHILD OF CORRECT CLASS, GET ID, REDRAW CORRECT WINDOW
+    console.log( $("#"+element.id).find(".window-content").id);
+       if($("#"+element.id).find(".window-content").id == "playlist-gridstack")
+          RefreshPlaylist();
+    console.log(element);
+       console.log(element.id);
+    });
+
   }
   
     $(function(){ //DOM Ready
+    
+    // Save some info from template tags
+    document.user = "{{ request.user.username }}";
+    document.canstartruns = false;
+    {% if request.user.profile.canstartruns == True %}
+    document.canstartruns = true;
+    {% endif %}
+    {% if request.user.username == 'coderre' %}
+    document.canstartruns = true;
+    {% endif %}
 
-    InitializePlaylist("playlist_title", "playlist_body", "playlist_content");
-
+//    InitializePlaylist("playlist_title", "playlist_body", "playlist_content");
 var frm = $('#new_log_entry');
      frm.submit(function(){
         if(document.getElementById("new_comment_text").value == "")
@@ -341,18 +364,20 @@ var frm = $('#new_log_entry');
     return false;
      });
 
-  MakeGrid();
+    MakeGrid();
       ResizeDetailWindows();
       drawChart( chart, chartdiv, graphic_var, function(thechart) {
                  UpdatePage( thechart );
 
-      $('.grid-stack').on('resizestop', function(event, ui) {
-   ResizeLogWindow();
-    ResizeDetailWindows();
-});    
+          $('.grid-stack').on('resizestop', function(event, ui) {
+          ResizeLogWindow();
+          ResizePlaylistWindow();
+          ResizeDetailWindows();
+          });    
 
-  });                                                                              
+     });                                                                              
         InitializePlaylist("playlist_title", "playlist_body", "playlist_content");
+    ResizePlaylistWindow();
 });
 
 $(".nav a").on("click", function(){
@@ -379,6 +404,13 @@ var theight = $("#logwindowgs").height();
 var wantheight = theight - hheight;
 $("#message_panel").height(wantheight);
 }
+    function ResizePlaylistWindow(){
+var hheight = $("#playlist_title").height();
+var theight = $("#playlistwindowgs").height();
+var wantheight = theight - hheight;
+$("#playlist_body").height(wantheight);
+}
+
 function ResizeDetailWindows(){
     var hheight = $("#tpc_title").height();
     var theight = $("#tpc_window").height();

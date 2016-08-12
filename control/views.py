@@ -38,6 +38,8 @@ def GetQueueList(request):
 
     queue = []
     pos = -1
+    
+    '''
     for det in detectors:        
         ret_doc = collection_status.find_one({"detector":det}, sort= [ ("_id", -1) ] )
         if ret_doc['state'] == "Running":
@@ -50,7 +52,7 @@ def GetQueueList(request):
                 'position': pos
             })
             pos -= 1
-
+    '''
 
     # Connect to pymongo  
     collection = db['daq_queue']
@@ -58,7 +60,7 @@ def GetQueueList(request):
     try:
         cursor = collection.find().sort("position", pymongo.ASCENDING)
         for doc in cursor:
-            doc['running'] = 0
+            #doc['running'] = 0
             queue.append(doc)
     except:
         HttpResponse( dumps([]), content_type = 'application/json')

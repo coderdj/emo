@@ -75,7 +75,8 @@
       <div class="col-xs-8 col-sm-7" style="padding-left:130px;">Query: {{ form.custom }} </div>
       <div class="col-xs-1">
         <button class="btn btn-info btn-sm" type="submit" name="submit" style="height:30%;padding-left:50px;padding-right:50px;margin:8px;">Search</button>
-	<a class="btn btn-warning btn-sm" href="/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22data.status%22+%3A+%22error%22%2C+%22number%22+%3A+%7B%22%24gt%22+%3A+1000%7D%7D&submit=">Show Transfer Errors</a>
+	<a class="btn btn-warning btn-sm" href="/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22trigger.events_built%22%3A+%7B%22%24gt%22%3A+0%7D%2C+%22%24or%22%3A%09%5B%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22midway-login1%22%5D%7D%7D%2C%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22tegner-login-1%22%5D%7D%7D%2C+%7B%22data.status%22%3A+%22error%22%7D%5D%2C%22number%22%3A+%7B%22%24gt%22%3A+1000%7D%7D&submit=">Show transfer errors</a>
+	
       </div>
     </div>
   </form>
