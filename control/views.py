@@ -92,7 +92,7 @@ def UpdateQueueList(request):
         doc['position'] = n
         collection.insert_one(doc)
         n+=1
-    return HttpResponse({})
+    return HttpResponse(status=200)
 
 
 @login_required
@@ -223,6 +223,7 @@ def GetNodeHistory(request):
         return HttpResponse(dumps(ret), content_type="application/json")
 
 @login_required
+@csrf_exempt
 def stop_run(request):
 
     """
@@ -232,15 +233,19 @@ def stop_run(request):
     if request.method != "POST":
         return HttpResponse({})
 
-    rs_form = RunStopForm(request.POST)
-    if not rs_form.is_valid():
-        return HttpResponse({})
+    #rs_form = RunStopForm(request.POST)
+    #if not rs_form.is_valid():
+    #    return HttpResponse({})
 
+    pythondict = loads( request.body.decode('utf-8') )
+    logger.error(pythondict)
     insert_doc = {}
     insert_doc['command'] = "Stop"
-    insert_doc['detector'] = rs_form.cleaned_data['detector']
-    insert_doc['user'] = rs_form.cleaned_data['user']
-    insert_doc['comment'] = rs_form.cleaned_data['comment']
+    insert_doc['detector'] = pythondict['detector']#rs_form.cleaned_data['detector']
+    insert_doc['user'] = pythondict['user']#rs_form.cleaned_data['user']
+    if 'comment' in pythondict:
+        insert_doc['comment'] = pythondict['comment']
+    #insert_doc['comment'] = rs_form.cleaned_data['comment']
 
     # Connect to pymongo                                                         
     #client = MongoClient(settings.ONLINE_DB_ADDR)

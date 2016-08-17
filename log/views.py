@@ -119,7 +119,7 @@ def new_comment(request):
             date = pytz.utc.localize(datetime.datetime.now())
 
             # First close the issue if it's an issue closing request
-            if "close_issue" in comment.cleaned_data and comment.cleaned_data['close_issue'] is True:
+            if "close_issue" in comment.cleaned_data and comment.cleaned_data['close_issue'] == True:
                 mongo_collection.update({"_id": ObjectId(doc_id)}, 
                                         {"$inc": {"priority": 5},
                                          "$set": {"closed_user": user},

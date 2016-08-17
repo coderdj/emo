@@ -88,7 +88,9 @@
 </div>
 
 <div class="row" id="main_row" style="margin-top:30px;">
-  <div class="col-sm-7 col-xs-12" style="padding:5px;height:100%;overflow-y:scroll">
+  <!--<div class="col-sm-7 col-xs-12"-->
+  <div class="col-sm-12 col-xs-12" id="table_window"
+       style="padding:5px;height:100%;overflow-y:scroll">
     <table class="table table-bordered" id="runstable" style="background-color:white;table-layout: fixed;word-wrap:break-word;">
       <thead>
 	<tr>
@@ -120,12 +122,18 @@
       </tbody> 
     </table>
   </div>
-  <div class="col-sm-5 col-xs-12" style="padding:5px;">
+  <div class="col-sm-6 col-xs-12 hidden" id="detail_window" style="padding:5px;">
     <div class="emobox" id="tab_content" style="padding:10px;margin:0px;overflow-y:scroll;overflow-x:hidden;">
       <div style="height:100%;">
 
 	<h4 style="margin-bottom:2px" id="run_detail_head">Run detail: click a <img src="{%static "img/details_open.png" %}"/> to view</h4>
-            <hr style="margin-top:0px;margin-bottom:4px;">
+	<div style='position:absolute;right:50px;top:15px;'>
+	  <button class='btn btn-default' style='color:black;background-color:white'
+		  onclick="HideDetail()">
+	    Hide
+	    </button>
+	</div>
+            <hr style="margin-top:0px;margin-bottom:4px;">	    
             <table>
               <tbody>
 		<tr><td style="min-width:40px;padding-left:5px;"><strong>Run name</strong></td><td style="padding-left:5px" id="detail_name"></td>
@@ -200,7 +208,15 @@
   </div> <!-- end dialog -->
 </div> <!-- end modal -->
 
+
 <script>
+function HideDetail(){
+      $("#table_window").removeClass("col-sm-6");
+      $("#table_window").addClass("col-sm-12");
+        $("#detail_window").addClass("hidden");
+
+ };
+
 function AddStrongTags(text){
   var new_string = "";
   var last=0;
@@ -366,8 +382,8 @@ function GetDataState(data){
                          "Error"];
    for(host in hosts){
      status = genstatus[hosts[host]];
-     if(host == "reader")
-       status = daqstatus[hosts[host]];
+		//if(host == "reader")
+//       status = daqstatus[hosts[host]];
      type="glyphicon-stop";
      if(status=="Error")
        type="glyphicon-exclamation-sign";
@@ -380,6 +396,7 @@ function GetDataState(data){
 
 $(document).ready(function(){
 
+
   var height = window.innerHeight;
   var cache_data = {};
   var RUNURL="";
@@ -389,8 +406,8 @@ $(document).ready(function(){
   var selected = [];
   var thedata = {{ runs_list|safe }};
   table = $('#runstable').DataTable({
-        "dom": '<"toolbar">frtip',
-		    
+        "dom": '<"pull-left"p><"toolbar">frtip',
+//"dom": '<"top"i>rtp<"bottom"flp><"clear">',
  
   "autoWidth": false,
 "language": {
@@ -541,6 +558,11 @@ $(document).ready(function(){
   // Event listener for opening and closing details
   $('#runstable tbody').on('click', 'td.runs-expand', function(event){	
 
+      if($("#table_window").hasClass("col-sm-12")){
+          $("#table_window").removeClass("col-sm-12");
+          $("#detail_window").removeClass("hidden");
+          $("#table_window").addClass("col-sm-6");
+      }
       event.preventDefault();
 
       var tr = $(this).closest('tr');
@@ -551,19 +573,14 @@ $(document).ready(function(){
 
       data = row.data();
       RUNURL = "/runs/get_run/?detector="+data['detector']+";name="+data['name'];
-       UpdateDetail(0)
+       UpdateDetail(0);
    }); // End expand click listener
 			
-   //setInterval( function () {
-   //  table.ajax.reload( null, false ); // user paging is not reset on reload
-   // }, 30000 );
 
 
        function UpdateDetail(docallback){
          if(RUNURL!=""){
               $.getJSON(RUNURL, function(data){
-console.log("HI");
-console.log(data);
 		    if(cache_data == {})
          		    cache_data = data;
                     document.getElementById("run_detail_head").innerHTML = "Detail for run " + data.number.toString();
@@ -746,7 +763,7 @@ $('#download_as_runlist').click( function () {
   document.body.removeChild(element);
 } );
 
-UpdateDetail(1);
+UpdateDetail(0);
 
 
     }); // end document ready function

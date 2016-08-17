@@ -84,14 +84,18 @@ def runs(request):
     db = client[ settings.RUNS_DB_NAME ]
 
     collection = db[ settings.RUNS_DB_COLLECTION ]
-    fields = collection.distinct( "source.type" )
-    fields.insert( 0, "All" )
-    fieldslist = zip (fields, fields)
+    #fields = collection.distinct( "source.type" )
+    #fields.insert( 0, "All" )
+    #fieldslist = zip (fields, fields)
+    fieldslist = []
     
-
+    limit = 0
     if request.method == 'GET':
         filter_form = run_search_form( fieldslist, request.GET )
 
+        # Limit
+        if "limit" in request.GET:
+            limit = int(request.GET["limit"])
         if filter_form.is_valid():
             #build query from form
             if filter_form.cleaned_data[ 'custom' ] is not "":
@@ -126,8 +130,26 @@ def runs(request):
     else:
         filter_form = run_search_form( fieldslist )
     #logger.error(filter_query)
-    retset = collection.find( filter_query ).sort( "start", -1 )
     
+    # We only need these fields:
+    projection = {
+        "detector": 1,
+        "name": 1,
+        "start": 1,
+        "source": 1,
+        "data": 1,
+        "tags": 1, 
+        "comments": 1,
+        "trigger.events_built": 1,
+        "number": 1,
+        "reader.self_trigger": 1
+    }
+    if limit!=0:
+        retset = collection.find( filter_query, projection ).sort( "name", -1 ).limit(limit)
+    else:
+        retset = collection.find( filter_query, projection ).sort( "name", -1 )
+    
+    '''
     retdocs = []
     for doc in retset:
         row = { "detector": doc['detector'],
@@ -153,8 +175,8 @@ def runs(request):
         else:
             row['reader'] = {"self_trigger": False}
         retdocs.append(row)
-
-    return render( request, 'runs/runs.html', {"runs_list": dumps(retdocs), 
+    '''
+    return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
                                                "form" : filter_form,
                                                "query": filter_query} )
 

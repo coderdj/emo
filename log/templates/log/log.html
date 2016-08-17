@@ -4,6 +4,7 @@
 {% block content %}
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <script src="{% static "js/summernote.min.js"%}"></script>
+<script src="{% static "js/Ply.min.js" %}" type="text/javascript"></script>
 <link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
 <link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
 <link href="{% static "css/summernote.css" %}" rel="stylesheet">
@@ -12,6 +13,7 @@
 <script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
 <script src="{% static "DataTables-1.10.9/media/js/dataTables.bootstrap.min.js"%}"></script>
 <link href="{% static "DataTables-1.10.9/media/css/dataTables.bootstrap.min.css"%}" rel="stylesheet" />
+<link href="{% static "css/ply.css" %}" rel="stylesheet">
 
 
   <script type="text/javascript">
@@ -128,18 +130,38 @@ function format ( d ) {
      }}
 ret += '</table>';
      console.log(d);
-     ret += "<form action='/log/new_comment/' method='post'>" +
+     ret += "<form onsubmit='if(!OKtoSubmit) event.preventDefault();' id='comment_form' action='/log/new_comment/' method='post'>" +
 				     "{% csrf_token %}" +     
             '<textarea id="' + d._id['$oid'] + '_formtext" style="width:100%" name="content"></textarea>' +  
              '<br>' +                                                            
              '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +  
-             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;">New comment</button>';
+             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;" onclick="SubmitComment()">New comment</button>' + 
+		'<input type="hidden" name="log_id" value="' + d._id['$oid'] + '"/>';
      if(d.priority == 2 || d.priority ==3 || d.priority ==4 ){
-             ret += '&nbsp;<input type="checkbox" name="close_issue">Close Issue</input>';
+		ret += '&nbsp;<button class="btn btn-warning" onclick="ConfirmClose()">Submit and Close Issue</button>';
+            ret += '&nbsp;<input class="hidden" type="checkbox" name="close_issue" onclick="ConfirmClose()"></input>';
      }
       ret +=  '</form>';
 
      return ret;
+}
+var OKtoSubmit = false;
+function SubmitComment(){
+	OKtoSubmit=true;
+	$("#comment_form").submit();
+        OKtoSubmit=false;
+
+}
+function ConfirmClose(){
+
+Ply.dialog("confirm", "You're closing this alert. This means you understand what the alert means and know the problem has now been solved. You may confirm this by clicking OK. If you need help please contact the DAQ group.")
+    .done(function(ui){ 
+$("[name=close_issue]").attr("checked", true); 
+SubmitComment();
+$("[name=close_issue]").attr("checked", false);
+
+});
+
 }
 function toHashtagUrl(hashtag) {
 return "#";

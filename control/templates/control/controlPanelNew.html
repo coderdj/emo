@@ -11,6 +11,7 @@
 <script src="{% static "js/highcharts.4.2.5.offline-exporting.js" %}" type="text/javascript"></script>
 <script src="{% static "js/Sortable.min.js" %}" type="text/javascript"></script>
 <script src="{% static "js/Ply.min.js" %}" type="text/javascript"></script>
+<script src="{% static "js/alertify.min.js" %}" type="text/javascript"></script>
 
 <script src="{% static "js/bootstrap-switch.min.js" %}" type="text/javascript"></script>
 <script src="{% static "emo/js/playlist_sortable.js" %}" type="text/javascript"></script>
@@ -21,6 +22,8 @@
 <link href="{% static "css/gridstack.min.css" %}" rel="stylesheet">
 <link href="{% static "css/bootstrap-switch.min.css" %}" rel="stylesheet">
 <link href="{% static "css/ply.css" %}" rel="stylesheet">
+<link href="{% static "css/alertify.core.css" %}" rel="stylesheet">
+<link href="{% static "css/alertify.default.css" %}" rel="stylesheet">
 
 <link href="{% static "emo/css/playlist_sortable.css" %}" rel="stylesheet">
 
@@ -31,72 +34,61 @@
 <!-- Title bar-->                                                                
 <!--<div class="row"><h5>DAQ Run Control</h5></div>  -->
 
-<div class="grid-stack" style="width:100%;margin-top:20px;margin-bottom:20px">
+<div class="grid-stack" style="width:100%;margin-top:10px;margin-bottom:10px">
 
     <!-- THIS IS THE RATES WINDOW -->   
     <div class="grid-stack-item"
 	 data-gs-x="0" data-gs-y="0"
-	 data-gs-width="12" data-gs-height="4" data-gs-min-height="4"
-	 data-gs-max-height="4" data-gs-min-width="8" id="rate-gridstack">
+	 data-gs-width="8" data-gs-height="4" data-gs-min-height="4"
+	 data-gs-max-height="4" data-gs-min-width="8" id="rates-gridstack">
       <div class="grid-stack-item-content gridbox" style="overflow-y:hidden">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" id="rates_content">               
 	  <div class="window-title" id="rates_title">             
             <div class="row" style="width:100%">                                                      
               <div class="col-sm-2 col-xs-12" style="min-width:180px;">
-		<h4 style="padding:3px;margin:0"><strong>Rate History              
-		</strong><div id="updatebar" style="display:inline-block;width:20px;height:20px"></div>       </h4>
+		<h4 style="padding:3px;margin:0">
+		  <strong>Rate History</strong>
+		  <div id="updatebar" 
+		       style="display:inline-block;width:20px;height:20px">
+		</div>      
+		</h4>
               </div>                                                               
               <div class="col-sm-9 col-xs-12">
 		<!--<div class="pull-right" style="padding-right:3px">-->
 		<strong class="option-label">Options: </strong>                   
-		<div class="btn-group" id="graphic_var_selector" role="group"
-                     aria-label="...">
-		  <button type="button btn-range" value="datarate"
-			  class="btn btn-default var active">Data Rate</button>
-		  <button type="button btn-range" value="bltrate"
-			  class="btn btn-default var">BLT Rate</button>
-		  <button type="button btn-range" value="cpu"
-			  class="btn btn-default var">CPU Usage</button>
-		  <button type="button btn-range" value="ram"
-			  class="btn btn-default var">RAM Usage</button>
-		</div>
 		
-		<!--<strong class="option-label">History: </strong>                    -->
-		<div class="btn-group"                                             
-                     id="time_range_selector" role="group">   
-		  <button type="button btn-range" value=345600
-                          class="btn btn-default btn-xs range">96 hours</button>
-                  <button type="button btn-range" value=259200
-                          class="btn btn-default btn-xs range">72 hours</button>
-                  <button type="button btn-range" value=172800                     
-                          class="btn btn-default btn-xs range">48 hours</button>   
-                  <button type="button btn-range" value=86400                      
-                          class="btn btn-default btn-xs active range">24 hours     
-                  </button>                                                        
-                  <button type="button btn-range" value=21600                      
-                          class="btn btn-default btn-xs range">6 hours</button>    
-                  <button type="button btn-range" value=3600                       
-                          class="btn btn-default btn-xs range">1 hour</button>     
-		</div>                                                             
-
-<!--		<strong class="option-label">Frequency: </strong>                  -->
-		<div class="btn-group" id="time_bin_selector"                      
-                     role="group">                                                 
-                  <button type="button btn-range" value=600                        
-                          class="btn btn-default active bin">10 min</button>       
-                  <button type="button btn-range" value=120                        
-                          class="btn btn-default bin">2 min</button>               
-                  <button type="button btn-range" value=30                         
-                          class="btn btn-default bin">30 sec</button>              
-                  <!--<button type="button" value=10                               
-                      class="btn btn-default bin">10 sec</button>-->               
-		</div>                                                             
-<!--		</div>-->
+		<select class="form-control" 
+			style="width:100px;display:inline;font-size:10px"
+			id="var-select">
+		  <option value="datarate">Data rate</option>
+		  <option value="bltrate">BLT rate</option>
+		  <option value="cpu">CPU usage</option>
+		  <option value="ram">RAM usage</option>
+		</select>
+		<select class="form-control" 
+			style="width:100px;display:inline;font-size:10px;"
+			id="range-select">
+		  <option value=345600>96 hours</option>
+		  <option value=259200>72 hours</option>
+		  <option value=172800>48 hours</option>
+		  <option value=86400 selected>24 hours</option>
+		  <option value=21600>6 hours</option>
+		  <option value=3600>1 hour</option>
+		</select>
+		<select class="form-control" 
+			style="width:105px;display:inline;font-size:10px;"
+			id="bin-select">
+                  <option value=600>10 min. bins</option>
+                  <option value=120 selected>2 min. bins</option>
+                  <option value=30>30 sec. bins</option>
+                  <option value=10>10 sec. bins</option>
+                </select>
+		
               </div>                                                               
             </div>                                                                 
           </div>                                                                   
-	  <div id="rates_panel" style="position:relative;height:200px;width:100%;">
+	  <div id="rates_panel" style="position:relative;height:240px;width:100%;">
 	    
 	  </div>                                                                     
 	</div>
@@ -106,25 +98,32 @@
     
     <!-- THIS IS THE LOG WINDOW -->                                              
     <div class="grid-stack-item"
-         data-gs-x="0" data-gs-y="6"
-         data-gs-width="6" data-gs-height="4" id="log-gridstack" 
+         data-gs-x="0" data-gs-y="4"
+         data-gs-width="8" data-gs-height="6" id="log-gridstack" 
 	 data-gs-min-width="4" data-gs-min-height="4">
       <div class="grid-stack-item-content gridbox" id="logwindowgs">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" style="overflow-y:hidden">
-	  <div class="window-title" id="log_title" style="padding-top:2px;">
+	  <div class="window-title" id="log_title" style="padding-top:0px;min-height:26px;height:26px;">
 	    <form id="new_log_entry" class="form-inline" style="width:100%"
                   action="/log/new_log_entry" 
-                  method='post'>{% csrf_token %}
-	      <div class="form-group" style="width:80%;line-height:30px;">
-		<label for="new_comment_text" style="width:20%;padding-left:5px;">Log: </label>
-		<input type='text' id='new_comment_text' name='message' 
-		       class='form-control'  placeholder='Make a log entry...' style="width:75%">	
-	      </div>	      
-	      <button class='btn btn-default' 
-		      style="background-color:white;width:15%;min-width:50px;line-height:30px;"
-		      type="submit" value='Submit'>Submit</button>   	 
-	      <input type="hidden" name="redirect" value="none"/>	  
+                  method="post">{% csrf_token %}
+	      <div class="input-group" style="width:100%;">
+		<span class="input-group-btn" style="width:55px">
+                  <a class='btn btn-default'
+                     style="width:56px;border-radius:0;background-color:white;"
+                     href="/log/" title="Click to go to the log page...">Log:</a>
+                </span>
+
+		<input type="text" id="new_comment_text" name="message"
+		       class="form-control"  placeholder="Make a new log entry..." 
+		       style="border-radius:0">			  
+		<span class="input-group-btn" style="width:65px">
+		  <button class='btn btn-primary' style="width:66px;border-radius:0"
+			  type="submit" value='Submit'>Submit</button>   	 
+		</span>
+	      </div>
+	      <input type="hidden" name="redirect" value="none"/>	 
 	    </form>	   
 	  </div>
 	  <div id="message_panel" style="overflow-y:scroll;">
@@ -136,8 +135,8 @@
     <!-- END LOG WINDOW -->   
     <!-- THIS IS THE PLAYLIST WINDOW -->                                         
     <div class="grid-stack-item"
-         data-gs-x="7" data-gs-y="5"
-         data-gs-width="6" data-gs-height="1" data-gs-min-width="4"
+         data-gs-x="8" data-gs-y="0"
+         data-gs-width="4" data-gs-height="4" data-gs-min-width="4"
 	 data-gs-min-height="4" id="playlist-gridstack">
       <div class="grid-stack-item-content gridbox" id="playlistwindowgs">	
 	<div class="window-handle"></div>                                          
@@ -155,8 +154,8 @@
 
     <!-- THIS IS THE TPC WINDOW -->
     <div class="grid-stack-item"
-         data-gs-x="0" data-gs-y="9"
-         data-gs-width="6" data-gs-height="3" data-gs-min-width="4"
+         data-gs-x="8" data-gs-y="5"
+         data-gs-width="4" data-gs-height="4" data-gs-min-width="4"
 	 id="tpc-gridstack">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
@@ -164,7 +163,7 @@
 	  <div class="window-title" id="tpc_title" style="padding-top:2px;">
 	    <h3>TPC</h3>
 	  </div>
-	  <div class="window-title" id="tpc_title_2" style="padding-top:2px;">       
+	  <div class="window-title" id="tpc_title_2" style="padding-top:2px;height:36px;">       
           </div>
 	  <div id="tpc_content" style="width:100%;overflow-y:scroll">
 	  </div>
@@ -174,8 +173,8 @@
     <!-- END TPC -->
     <!-- THIS IS THE MUON VETO WINDOW -->
     <div class="grid-stack-item"
-         data-gs-x="7" data-gs-y="9"
-         data-gs-width="6" data-gs-height="3" data-gs-min-width="4"
+         data-gs-x="8" data-gs-y="10"
+         data-gs-width="4" data-gs-height="2" data-gs-min-width="4"
 	 id="mv_gridstack">
       <div class="grid-stack-item-content gridbox">
         <div class="window-handle"></div>
@@ -183,7 +182,8 @@
 	  <div class="window-title" id="mv_title" style="padding-top:2px;">
             <h3>Muon Veto</h3>
           </div>
-	  <div class="window-title" id="mv_title_2" style="padding-top:2px;">
+	  <div class="window-title" id="mv_title_2" style="padding-top:2px;height:36px">
+	  </div>
           <div id="mv_content"style="width:100%">
           </div>
 
@@ -208,7 +208,7 @@
   var currentShifterUrl = "/supermanrequest";
   var chart;
   var graphic_range = (24*60*60).toString();
-  var graphic_bin = "600";
+  var graphic_bin = "120";
   var graphic_var = "datarate";
   var feedback_count = 0;
   var feedbackURL = "/control/run_start_feedback";
@@ -217,6 +217,7 @@
   var queueURL="/control/get_queue_list";
   var queue_update_url="/control/set_queue_list";
   var display_counter=0;
+  document.superman = "nobody";
 
   // The progress bar update for page refresh
 
@@ -230,8 +231,47 @@
   svgStyle: null
 });
 
-  function redraw_graphic(data, callback){
+  // Update function for the run start messages
+  function FeedbackLoop(){
+     $.getJSON(feedbackURL, function(data){
+         console.log("Feedback");
+  console.log(data);
+         if("messages" in data){
+             setTimeout(function(){ 
+                AlertifyMessage(data, 0);
+             }, 1000);
+        }
+        }    
 
+     );
+  }
+  function AlertifyMessage(data, x){
+     alertify.set({ delay: 10000 });
+     if(x>=data['messages'].length) return;
+     enumb = data['messages'][x]['replyenum'];
+     if(enumb == 12 || enumb == 22)
+       alertify.log("Action taken: " + data['messages'][x]['message']);
+     else if(enumb == 11)
+       alertify.log("Received affirmation: " + data['messages'][x]['message']);
+     else if(enumb == 13)
+       alertify.success("Run Start: " + data['messages'][x]['message']);
+     else if(enumb ==19)
+       alertify.log("Finished: " + data['messages'][x]['message']);
+     else if(enumb == 18)
+       alertify.error("Error: " + data['messages'][x]['message']);
+     else
+       alertify.log("Unknown message code: " + data['messages'][x]['message']);
+     setTimeout(function(){AlertifyMessage(data, x+1)}, 1000);
+};
+  function trigger_redraw(){
+			  console.log("Triggering chart redraw");
+     var w = $("#rates_content").width();
+     
+h = $("#rates-gridstack").height() - $("#rates-gridstack .window-title").height();
+     var thechart = $("#rates_panel").highcharts();
+thechart.setSize(w, h);
+  }
+  function redraw_graphic(data, callback){
         var thechart=$("#rates_panel").highcharts();
         while( thechart.series.length > 0 ) {
             thechart.series[0].remove( false );
@@ -275,13 +315,21 @@ console.log("made here");
 
   }
   function UpdatePage( thechart ){
+         $.getJSON(currentShifterUrl, function(data){
+             document.superman = data['starting_user'];
+          });
   update_graphic(function(){				   
     DrawLogWindow( "message_panel", logUrl, function(){
        UpdateDetectorTextPretty(dataUrl, pointUpdateUrl, "tpc_content", "mv_content", 
 				   "tpc_title", "mv_title", "tpc_title_2", 
-				   "mv_title-2",
+				   "mv_title_2",
 	function(){
+				   RefreshPlaylist(true);
+				   ResizeDetailWindows();
+
        var updatecounter=0;
+				   FeedbackLoop();
+
        timerLoop(updatecounter, thechart);      
 				   });
   });
@@ -311,9 +359,13 @@ console.log(progress);
 				// Check rates
   ratesheight = $("#rates_panel").innerHeight() + $("#rates_title").innerHeight();
   if(ratesheight > height)
-    height = (ratesheight+4)/5;
-    //height+=4; // for border
-    //height = 50;
+    height = (ratesheight)/5;
+
+
+     height = window.innerHeight / 15;
+      if(height<40) height=40;
+console.log("CELL HEIGHT");
+      console.log(height);
   $(".grid-stack").gridstack({                                                     
 
      cellHeight: height,
@@ -325,24 +377,21 @@ console.log(progress);
        var grid = this;
        var element = event.target;
     // FIND FIRST CHILD OF CORRECT CLASS, GET ID, REDRAW CORRECT WINDOW
-    console.log( $("#"+element.id).find(".window-content").id);
-       if($("#"+element.id).find(".window-content").id == "playlist-gridstack")
+
+       if($("#"+element.id).find(".window-content").attr('id') == "playlist-gridstack")
           RefreshPlaylist();
-    console.log(element);
-       console.log(element.id);
+else if($("#"+element.id).find(".window-content").attr('id') == "rates_content")
+      trigger_redraw();
     });
 
   }
   
     $(function(){ //DOM Ready
-    
+    document.autoplay=true;
     // Save some info from template tags
     document.user = "{{ request.user.username }}";
     document.canstartruns = false;
     {% if request.user.profile.canstartruns == True %}
-    document.canstartruns = true;
-    {% endif %}
-    {% if request.user.username == 'coderre' %}
     document.canstartruns = true;
     {% endif %}
 
@@ -365,10 +414,10 @@ var frm = $('#new_log_entry');
      });
 
     MakeGrid();
-      ResizeDetailWindows();
+
       drawChart( chart, chartdiv, graphic_var, function(thechart) {
                  UpdatePage( thechart );
-
+      ResizeDetailWindows
           $('.grid-stack').on('resizestop', function(event, ui) {
           ResizeLogWindow();
           ResizePlaylistWindow();
@@ -384,19 +433,16 @@ $(".nav a").on("click", function(){
    $(".nav").find(".active").removeClass("active");
    $(this).parent().addClass("active");
 });
-$(".btn-group button").on("click", function() {
-    $(this).parent().find(".active").removeClass("active");
-    $(this).addClass("active");
-    $(this).blur();
-    if ($(this).hasClass("range"))
-				   graphic_range = $(this)[0].value;
-    else if($(this).hasClass("var"))
-				   graphic_var = $(this)[0].value;
-    else
-        graphic_bin = $(this)[0].value;
-    //console.log($(this)[0].value);
-
+$("#range-select").on('change', function() {
+  graphic_range= $(this).val();
 });
+$("#var-select").on('change', function() {
+  graphic_var= $(this).val();
+});
+$("#bin-select").on('change', function() {
+  graphic_bin= $(this).val();
+});
+
 
 function ResizeLogWindow(){
 var hheight = $("#log_title").height();
@@ -412,14 +458,18 @@ $("#playlist_body").height(wantheight);
 }
 
 function ResizeDetailWindows(){
-    var hheight = $("#tpc_title").height();
-    var theight = $("#tpc_window").height();
+    var hheight = $("#tpc_title").innerHeight() + $("#tpc_title_2").innerHeight();
+    var theight = $("#tpc_window").innerHeight();
     var wantheight = theight - hheight;
-    $("#tpc_content").height(wantheight);
-    hheight = $("#mv_title").height();
-    theight = $("#mv_window").height();
+      console.log("HEIGHTS");
+      console.log(hheight);
+      console.log(theight);
+      console.log(wantheight);
+    $("#tpc_content").innerHeight(wantheight);
+    hheight = $("#mv_title").innerHeight();
+    theight = $("#mv_window").innerHeight();
     var wantheight = theight - hheight;
-    $("#mv_content").height(wantheight);
+    $("#mv_content").innerHeight(wantheight);
 
 }
 function DrawLogWindow( logdiv, Url, callback ) {

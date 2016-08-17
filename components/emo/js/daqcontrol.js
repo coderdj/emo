@@ -221,49 +221,68 @@ function GetRateString(rate, unit){
     else
 	return (rate.toFixed(2) + " " + unit);
 }
+function GetColor(prog){
+    if(prog<40)
+	return "green";
+    if(prog<70)
+	return "yellow";
+    if(prog<90)
+	return "orange";
+    return "red";
+}
 function GetCPURAMDiv(cpu, ram, ramtot){
     cpu_int = Math.floor(cpu);
     ram_int = Math.floor((ram/ramtot)*100);
-    html = "<div style='display:table-cell;width:35%;padding-right:3px'>"+
-	"<div style='padding:0;margin-bottom:2;width:100%;height:20px;font-size:10px'>"
-	+"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+ 
-	"aria-valuenow='"+cpu_int+"' aria-valuemin='0' aria-valuemax='100'"+ 
-	"style='width:"+cpu_int+"%;'>";
-    if(cpu_int>40) html+="CPU: "+cpu.toFixed(2)+"%</div>;"
-    else html+="</div>CPU: "+cpu.toFixed(2)+"%";
-     html+="</div></div>"+	
-	"<div style='padding:0;width:100%;height:20px;font-size:10px'>"+
-    "<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
-	"aria-valuenow='"+ram_int+"' aria-valuemin='0' aria-valuemax='100'"+
-        "style='width:"+ram_int+"%;'>";
-    if(ram_int>40) html+="RAM: "+ram+" / "+ramtot+" MB</div>";
-    else html+= "</div>RAM: "+ram+" / "+ramtot+" MB";
-    html+="</div></div>"+
-	"</div>"
+    html = "<div style='display:table-cell;width:35%;padding:0;'>"+ 
+	 "<div style='height:15px;line-height:15px;font-size:10px;width:100%'>"+
+	"CPU: "+cpu_int.toString()+"%</div>" + 
+	"<div style='height:4px;line-height:4px;width:100%'>"+
+	"<div style='background-color:"+GetColor(cpu_int)+";width:"+cpu_int+"%;height:100%;'></div></div>";
+
+    // RAM
+    html += "<div style='height:15px;line-height:15px;font-size:10px;width:100%'>"+
+        "RAM: "+ram_int.toString()+"%</div>" +
+        "<div style='height:4px;line-height:4px;width:100%'>"+
+        "<div style='background-color:"+GetColor(ram_int)+";width:"+ram_int+"%;height:100%;'></div></div>";
+
+    html+="</div>";
 
 return html;
 }
 function GetRateBTLDiv(rate, blt){
-    rate_int = Math.floor(rate/90.);
-    blt_int = Math.floor(blt/10000);
-    html = "<div style='display:table-cell;width:35%;margin-left:3px'>"+
-        "<div style='padding:0;margin-bottom:2;width:100%;height:20px;font-size:10px'>"
-        +"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
-        "aria-valuenow='"+rate_int+"' aria-valuemin='0' aria-valuemax='100'"+
-        "style='width:"+rate_int+"%;'>";
-    if(rate_int>40) html+="Data: "+rate.toFixed(2)+" MB/s</div>;"
-    else html+="</div>Data: "+rate.toFixed(2)+" MB/s";
-     html+="</div></div>"+
-        "<div style='padding:0;width:100%;height:20px;font-size:10px'>"+
-	"<div class='progress'><div class='progress-bar progress-bar-info' role='progressbar'"+
-        "aria-valuenow='"+blt_int+"' aria-valuemin='0' aria-valuemax='100'"+
-	"style='width:"+blt_int+"%;'>";
-    if(blt_int>40) html+="BLT: "+blt+" blk/s</div>";
-    else html+= "</div>BLT: "+blt+" blk/s";
-    html+="</div></div>"+
-        "</div>"
+    rate_int = Math.floor(100*(rate/90.));
+    blt_int = Math.floor(100*(blt/25000));
+    if(blt_int==0) blt_int=1;
+    if(rate_int==0) rate_int=1;
+    if(rate_int>100) rate_int=100;
+    if(blt_int>100) blt_int = 100;
+    html = "<div style='display:table-cell;width:35%;padding:0;'>"+
+         "<div style='height:15px;line-height:15px;font-size:10px;width:100%'>"+
+        "Data: "+rate.toString()+" MB/s</div>" +
+        "<div style='height:4px;line-height:4px;width:100%'>"+
+        "<div style='background-color:"+GetColor(rate_int)+";width:"+rate_int+"%;height:100%;'></div></div>";
+    html += "<div style='height:15px;line-height:15px;font-size:10px;width:100%'>"+
+        "BLT: "+blt.toString()+" blk/s</div>" +
+        "<div style='height:4px;line-height:4px;width:100%'>"+
+        "<div style='background-color:"+GetColor(blt_int)+";width:"+blt_int+"%;height:100%;'></div></div>";
+    html+="</div>";
 
 return html;
+
+
+}
+function GetElapsedTime(startTimeString){
+    var currentDate = new Date();
+    var startDate = Date.parse(startTimeString);
+    var seconds = Math.abs(currentDate - startDate)/1000;
+    var hours = Math.floor(seconds/3600);
+    var minutes = Math.floor((seconds - (hours*3600) ) /60);
+    var seconds = seconds - (hours*3600 + minutes*60);
+    var hoursString = hours.toString();
+    if(hours < 10)
+	hoursString = "0"+hoursString;
+    return hoursString + ":" + ("0"+minutes.toString()).slice(-2);
+
 
 
 }
@@ -289,10 +308,14 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title,
                 if (update_seconds > 60 )
                     color = "#AAAAAA";
 
-		var html_string ="<div style='display:table;max-height:40px;border-width:1px;border-color:#d3d3d3;border-style:solid;width:100%'>"+
-		    "<div style='display:table-cell;'>"+
-		    "<strong style='height:15px'>"+node_data[node_id]['node']+
-		    " ("+update_seconds.toString()+")</strong>"+
+		var html_string ="<div style='display:table;max-height:40px;border-width:1px;border-color:#d3d3d3;border-style:solid;width:100%;'>"+
+		    "<div style='display:table-cell;height:40px'>"+
+		    "<div style='height:15px;font-size:12px;'><strong";
+		if(update_seconds > 100)
+		    html_string += " style='color:red' title='This node may be timing out!'";
+
+		    html_string += ">"+node_data[node_id]['node']+
+		    " ("+update_seconds.toString()+")</strong></div>"+
 		    "<div style='height:15px;font-size:12px;'>"+node_data[node_id]['nboards']+" digitizer(s)</div></div>"+
 		    GetCPURAMDiv(node_data[node_id]['cpu'], 
 				 node_data[node_id]['ram'], 
@@ -338,16 +361,16 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title,
 		rate = muon_veto_rate;
 
 	    var mode = detector_data['status'][status_id]['mode'];
-	    if (mode == "None")
+	    if (mode == "None" || detector_data['status'][status_id]['state']=="Idle")
 		mode = "";
 	    title_str = 
-		"<div class='row' style='padding-left:15px;padding-right:18px;'>"+
+		"<div class='row' style='padding-left:20px;padding-right:18px;'>"+
 		"<h3 style='display:inline-block'>"+
-		display_name+"</h3>&nbsp;<h4 style='display:inline-block'>is "
-		+GetStateHtml(detector_data,status_id)+" at "+
-		GetRateString(rate, "MB/s")+"</h4>"+
-		"<h4 class='pull-right' style='display:inline-block;color:#656565'>"+
-		mode+"</h4></div>";
+		display_name+"</h3>&nbsp;<h4 style='display:inline-block'>"
+		+GetStateHtml(detector_data,status_id)+" "+
+		GetRateString(rate, "MB/s")+"</h4>"+"</div>";
+		//"<h4 class='pull-right' style='display:inline-block;color:#656565'>"+
+		//mode+"</h4></div>";
 	    	    
 	    var title_2_str = "<div class='row'><div class='col-xs-6";
 	    
@@ -355,6 +378,37 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title,
 		document.getElementById(tpc_title).innerHTML=title_str;
 	    else
 		document.getElementById(mv_title).innerHTML=title_str;
+	    
+	    var elapsed_time = "";
+	    var run_no = "";
+	    var startedBy = "";
+	    if(detector_data['status'][status_id]['state']=="Running"){
+		elapsed_time = 
+		    GetElapsedTime(detector_data['status'][status_id]['startTime']);
+		run_no = detector_data['status'][status_id]['currentRun'];
+		startedBy = detector_data['status'][status_id]['startedBy'];
+	    }
+	    
+	    console.log(detector_data);
+
+	    // Now for the second title
+	    var title_2_str = "<div style='display:table;max-height:40px;border-width:0px;border-color:#d3d3d3;border-style:solid;width:100%;'>"+
+		"<div style='display:table-cell;height:40px'>"+
+                "<div style='height:15px;font-size:12px;'>"+
+		"<strong>Run: </strong>"+run_no+"</div>"+
+		"<div style='height:15px;font-size:12px;'>"+
+		"<strong>Started by: </strong>"+startedBy+
+		"</div></div>"+
+		"<div style='display:table-cell;height:40px'>"+
+		"<div style='height:15px;font-size:12px;'>"+
+		"<strong>Mode: </strong>"+mode+"</div>"+
+		"<div style='height:15px;font-size:12px;'>"+
+		"<strong>Time: </strong>"+elapsed_time+"</div>"+
+		"</div></div></div>";
+	    if(display_name=="TPC")
+                document.getElementById(tpc_title_2).innerHTML=title_2_str;
+            else
+                document.getElementById(mv_title_2).innerHTML=title_2_str;
 
 	    
 	}
