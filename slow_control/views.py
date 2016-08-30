@@ -48,7 +48,7 @@ def get_water_level(request):
 
 @login_required
 def get_sc_info(request):
-    
+
     sccol = scd['measurements']
     pmts_on = 0
     pmts_tot = 0

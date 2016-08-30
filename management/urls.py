@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^get_current_shifter', views.GetCurrentShifter, name='get_current_shifter'),
     url(r'^get_shift_stats', views.GetShiftStats, name='get_shift_stats'),
     url(r'^get_shifts', views.GetShifts, name='get_shifts'),
+    url(r'^shift_history', views.ShiftHistory, name="shift_history"),
     url(r'^get_hs', views.GetHs, name="get_hs"),
     url(r'^set_hs', views.SetHs, name="set_hs"),
     url(r'$', login_required(views.get_user_list), name="user_management")

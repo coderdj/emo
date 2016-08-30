@@ -99,7 +99,7 @@
 	  <th>Date</th>
 	  <th>Source</th>
 	  <th>Events</th>
-	  <th>Status <a class="pull-left" data-toggle="modal" href="#helpModal" style="padding-left:3px" title="Help">?</a></th>
+	  <th>Status &nbsp;<a data-toggle="modal" href="#helpModal" style="padding-left:3px" title="Help">?</a></th>
 	  <th style="width:30px">Tags</th>
 	  <!--<th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>-->
 	  <th style="width:100px">Top Comment</th>
@@ -197,8 +197,28 @@
 	  </ul>
         </p>
 	<p>
-	  The color of the boxes indicates the status of that site for this run. The colors are as follows.
-	  (and now I am boarding a flight and will finish later...)
+	  The color of the boxes indicates the status of that site for this run. The colors are as follows:
+	  <p><span class="glyphicon glyphicon-stop" style="color:#ff0000;"></span>
+	    &nbsp No information for this site
+	  </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#ffcc00;"></span>
+            &nbsp Data currently transferring to this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#006600;"></span>
+            &nbsp Raw data successfully transferred to this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#000099;"></span>
+            &nbsp Data currently processing at this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#3399ff;"></span>
+            &nbsp Processed data exists at this site
+          </p>
+	  <p><span class="glyphicon glyphicon-exclamation-sign" style="color:#ff6600;"></span>
+            &nbsp cax reports an error for this site
+          </p>	 
+	</p>
+	<p>
+	  For more information on a run, open it and browse to the data tab.
 	</p>
 </div>
       <div class="modal-footer">

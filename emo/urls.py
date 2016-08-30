@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^game', login_required(TemplateView.as_view( template_name='game.html'))),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^april', TemplateView.as_view(template_name='base_april.html')),
+    url(r'^fancy', TemplateView.as_view(template_name='base_fancy.html')),
     url(r'^get_login/', views.get_login, name='get_login'),
     #url(r'^accounts/login',login(template_name="login.html"),name="login"),
 #    url(r'^accounts/login/$', 'django.contrib.auth.views.login',

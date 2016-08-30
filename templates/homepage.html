@@ -199,10 +199,10 @@ width: calc(100% - 150px);
       <div class="col-xs-6"><strong>My Affiliation:</strong></div>
       <div class="col-xs-6" id="inst_name_div"><a href="/profile">Set in profile</a></div>
     </div>
-    <div class="row lrow">
+    <!--<div class="row lrow">
       <div class="col-xs-6"><strong>Institute shifts (done/total):</strong></div>
       <div class="col-xs-6" id="inst_shift_div">0</div>
-    </div>
+    </div>-->
     <div class="row lrow">
       <div class="col-xs-6"><strong>Runs started:</strong></div>
       <div class="col-xs-6" id="runs_started_div"></div>
@@ -222,6 +222,7 @@ width: calc(100% - 150px);
   var logURL = "/log/get_dispatcher_log";
   var startedURL = "/runs/runs_started";
   var uptimeURL = "/monitor/runstats_uptime/?this_month=true";
+  var shiftHistoryURL = "/management/shift_history";
 
   function get_water_level(){ return;
                                                    console.log("water1");
@@ -284,20 +285,27 @@ return "#";
 
   $( function() {
 				get_water_level();
-	$.getJSON(startedURL, function(data){
-				console.log("RUNS");
-				console.log(data);
+	$.getJSON(startedURL, function(data){	
    document.getElementById("runs_started_div").innerHTML = data['mine'] + " (out of "+ data['total'] + " total)";
   });
+	$.getJSON(shiftHistoryURL, function(data){
+             console.log("Shifts");
+             console.log(data);
+	    document.getElementById("next_shift_div").innerHTML = new Date(data['next_shift']['$date']).toDateString();
+	    document.getElementById("shifts_ever_div").innerHTML = data['shifts_total'];
+	document.getElementById("shifts_year_div").innerHTML = data['shifts_thisyear'];
+
+        });
         $.getJSON(uptimeURL, function(data){
 				tot=1.;
 				series=[];				
+
 				for(var key in data){
 				series.push({"name": key, "y": data[key]});
 				tot=tot-data[key];
 				}
 				if(tot>0.) series.push({"name":"Idle", "y": tot});
-	console.log(series);
+
 		$('#plot_div').highcharts({
 	credits: {enabled: false},
 

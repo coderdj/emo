@@ -65,6 +65,34 @@ def SetHs(request):
 
     return HttpResponse(json.dumps({"good": True, "g_id": request.GET['g_id']}), content_type="application/json")
 
+@login_required
+def ShiftHistory(request):
+    # return total shifts, total this year, and next shift (if any)
+    user = request.user.username
+    ret = {"shifts_total": 0, "shifts_thisyear": 0, "next_shift": None}
+    try:
+        docs = db['shifts'].find({
+            "shifter": user,            
+        })
+    except:
+        return HttpResponse(dumps(ret), content_type="application/json")
+
+    now = datetime.datetime.now()
+    min_days = 10000
+    for shift in docs:
+        
+        # If in the past
+        if shift['start'] < now:
+            ret['shifts_total'] += (shift['end'] - shift['start']).days
+            if shift['start'].year == now.year:
+                ret['shifts_thisyear'] += (shift['end'] - shift['start']).days
+        else:
+            if (shift['start'] - now).days < min_days:
+                min_days = (shift['start']-now).days
+                ret['next_shift'] = shift['start']
+    return HttpResponse(dumps(ret), content_type="application/json")
+    
+
 def GetShiftResponsibility(cdef, start, shifts_per_week):
     # Assuming we start handing out shifts at "start", how many shifts does 
     # Each institute have to do? Assume we count membership at institutes

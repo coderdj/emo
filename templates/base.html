@@ -479,6 +479,8 @@ margin-left:-30px;margin-right:-30px;
 
 <script type="text/javascript">
 	function DoUpdate(Url){
+
+	/*	
 	        sc_URL = "/slow_control/get_sc_info";
          	$.getJSON(sc_URL, function(data) {
                    if(data['staleness'] > 15){
@@ -500,7 +502,7 @@ margin-left:-30px;margin-right:-30px;
 											                document.getElementById("sc_more").innerHTML = html;
                   
                 });
-
+*/
 		$.getJSON(Url, function(data) {
 	                // Now do some aggregations. data is a list of status docs for the detectors. Status can
 			// either be RUNNING, IDLE, or ERROR. Last update is most recent update

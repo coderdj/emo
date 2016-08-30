@@ -1100,6 +1100,8 @@ def get_uptime(request):
         endtime = datetime.datetime.now()
         if "end" in doc.keys():
             endtime = doc['end']
+        else:
+            continue
 
         if doc['start'].day == endtime.day:
             incval = (endtime-doc['start']).seconds/(3600*24)
@@ -1111,17 +1113,17 @@ def get_uptime(request):
                     day_hist_tpc.append({})
                 #logger.error(bin_no)
                 #logger.error(len(day_hist_tpc))
-                if doc['source']['type'] in day_hist_tpc[bin_no]:
-                    day_hist_tpc[bin_no][doc['source']['type']]+=incval
+                if doc['reader']['ini']['name'] in day_hist_tpc[bin_no]:
+                    day_hist_tpc[bin_no][doc['reader']['ini']['name']]+=incval
                 else:
-                    day_hist_tpc[bin_no][doc['source']['type']]=incval
+                    day_hist_tpc[bin_no][doc['reader']['ini']['name']]=incval
             if doc['detector'] == 'muon_veto':
                 while bin_no >= len(day_hist_muon_veto):
                     day_hist_muon_veto.append({})
-                if doc['source']['type'] in day_hist_muon_veto[bin_no]:
-                    day_hist_muon_veto[bin_no][doc['source']['type']]+=incval
+                if doc['reader']['ini']['name'] in day_hist_muon_veto[bin_no]:
+                    day_hist_muon_veto[bin_no][doc['reader']['ini']['name']]+=incval
                 else:
-                    day_hist_muon_veto[bin_no][doc['source']['type']]=incval
+                    day_hist_muon_veto[bin_no][doc['reader']['ini']['name']]=incval
         else:
             stime = doc['start']
             while (endtime-stime).days>=0:
@@ -1133,17 +1135,17 @@ def get_uptime(request):
                 if doc['detector'] == 'tpc':
                     while bin_no >= len(day_hist_tpc):
                         day_hist_tpc.append({})
-                    if doc['source']['type'] in day_hist_tpc[bin_no]:
-                        day_hist_tpc[bin_no][doc['source']['type']]+=incval
+                    if doc['reader']['ini']['name'] in day_hist_tpc[bin_no]:
+                        day_hist_tpc[bin_no][doc['reader']['ini']['name']]+=incval
                     else:
-                        day_hist_tpc[bin_no][doc['source']['type']]=incval
+                        day_hist_tpc[bin_no][doc['reader']['ini']['name']]=incval
                 if doc['detector'] == 'muon_veto':
                     while bin_no >= len(day_hist_muon_veto):
                         day_hist_muon_veto.append({})
                     if doc['source']['type'] in day_hist_muon_veto[bin_no]:
-                        day_hist_muon_veto[bin_no][doc['source']['type']]+=incval
+                        day_hist_muon_veto[bin_no][doc['reader']['ini']['name']]+=incval
                     else:
-                        day_hist_muon_veto[bin_no][doc['source']['type']]=incval
+                        day_hist_muon_veto[bin_no][doc['reader']['ini']['name']]=incval
                 
                 stime=stime + timedelta(days=1)
     ret_doc = {"tpc":[],"muon_veto":[]}
@@ -1161,12 +1163,22 @@ def get_uptime(request):
         total = {}
         for entry in ret_doc['tpc']:
             for det in entry['uptime'].keys():
-                if det not in total:
+                if det not in total:                    
                     total[det] = 0.
                 total[det] += entry['uptime'][det]
         for det in total.keys():
             total[det]/=last_days
-        ret_doc = total
+        ret_total = {}
+        for mode in total.keys():
+            if total[mode] > 0.05:
+                ret_total[mode] = total[mode]
+            elif "other" not in ret_total:
+                ret_total['other'] = total[mode]
+            else:
+                ret_total['other'] += total[mode]
+            
+        ret_doc = ret_total
+
     return HttpResponse(dumps(ret_doc), content_type="application/json")
 
 @login_required

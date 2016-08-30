@@ -1,3 +1,52 @@
+table.dataTable tbody td.no-padding {
+    padding: 0;
+}
+div.slider {
+    display: none;
+    background-color:white;
+    border: solid 1px #AAAAAA;
+    padding:10px;
+    box-shadow: 0 0 1px #333333;
+}
+.emo-disjointed-table{
+    border-collapse:separate;
+    #border-spacing: 0 0.5em;
+}
+.emo-disjointed-table-body:before{
+    content: "-";
+    display: block;
+    line-height: .5em;
+    color: transparent;    
+}
+.emo-disjointed-table-head{
+
+    box-shadow: 0 0 1px #333333;
+    #-webkit-box-shadow: 0 0 10px #333333;
+    background-color:white;
+    #margin-bottom:5px;
+    border-color:#AAAAAA;
+    border-style:solid;
+    border-width:1px;
+    #-webkit-box-shadow: 18px 22px 41px -28px rgba(102,102,102,1);
+    #-moz-box-shadow: 18px 22px 41px -28px rgba(102,102,102,1);
+    #box-shadow: 18px 22px 41px -28px rgba(102,102,102,1);
+    
+}
+.emo-disjointed-table-row:before{
+    #content: "-";
+    #display: block;
+    #line-height: 1em;
+    #color: transparent;
+}
+.emo-disjointed-table-row > td{
+    #padding-top: .5em;
+    #padding-bottom: .5em;    
+    border-top: solid 1px #AAAAAA;
+    border-bottom: solid 1px #AAAAAA;
+    background-color:white;
+}
+
+
 .emo-log-line {
     background-color: white;
     border: 1px solid black;

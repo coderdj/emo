@@ -16,7 +16,7 @@ urlpatterns = [
     url(r'^fancy', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanelNew.html"))),
     url(r'$', login_required( TemplateView.as_view( template_name=
-                                                    "control/controlPanel.html"))),
+                                                    "control/controlPanelNew.html"))),
 
     #url(r'^get_status_update',views.GetStatusUpdate,name='get_status_update'),
     #   url(r'^rundetail',views.rundetail,name='rundetail'),
