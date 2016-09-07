@@ -35,7 +35,8 @@ logger = logging.getLogger("emo")
 # Connect to pymongo
 client = MongoClient(settings.MONITOR_DB_ADDR)
 db = client[settings.MONITOR_DB_NAME]
-
+wfclient = MongoClient(settings.WAVEFORM_DB_ADDR)
+wfdb = wfclient[settings.WAVEFORM_DB_NAME]
 # Connect to buffer DB
 bufferclient = MongoClient( settings.BUFFER_DB_ADDR)
 
@@ -231,9 +232,12 @@ def get_waveform_run_list(request):
     """
 
     retlist = []
-    for collection in db.collection_names():
-        if collection[-7:] == "_events" and db[collection].count() != 0:
-            retlist.append(collection[:-7])
+    collection_list = list(wfdb.collection_names())
+    collection_list.sort(reverse=True)
+
+    for collection in collection_list:
+        if wfdb[collection].count() != 0:
+            retlist.append(collection)
     return HttpResponse(dumps({"runs": retlist}), content_type="application/json")
 
 
@@ -242,14 +246,14 @@ def get_event_as_json(request):
 
     run = ""
     if request.method == "GET" and "run" in request.GET:
-        run = request.GET['run'] + "_events"
+        run = request.GET['run']
     else:
-        for collection in db.collection_names():
-            if collection[-7:] == "_events" and db[collection].count() != 0:
+        for collection in wfdb.collection_names():
+            if wfdb[collection].count() != 0:
                 run = collection
                 break
 
-    collection = db[run]
+    collection = wfdb[run]
 
     event_number = 0
     if request.method == "GET" and "event" in request.GET:
@@ -294,23 +298,25 @@ def strip_doc(doc):
             "area_per_channel": peak["area_per_channel"],
             "hits": [],
         }
+        '''
         for hit in peak['hits']:
             minpeak['hits'].append({"found_in_pulse": hit['found_in_pulse'],
                                     "channel": hit['channel'],})
+        '''
         ret["peaks"].append(minpeak)
-
+    
     for hit in doc['all_hits']:
         minhit = {
-            "index_of_maximum": hit["index_of_maximum"],
-            "channel": hit["channel"],
-            "area": hit["area"],
-            "left": hit["left"],
-            "right": hit["right"],
-            "found_in_pulse": hit["found_in_pulse"],
+            "index_of_maximum": hit[5],
+            "channel": hit[2],
+            "area": hit[0],
+            "left": hit[7],
+            "right": hit[10],
+            "found_in_pulse": hit[3],
         }
         ret["all_hits"].append(minhit)
-
     
+    '''
     for pulse in doc['pulses']:
         minpulse = {
             "baseline": pulse['baseline'],
@@ -320,7 +326,8 @@ def strip_doc(doc):
             "raw_data": pulse["raw_data"]
         }
         ret["pulses"].append(minpulse)
-    
+    '''
+
     return ret
 @login_required
 def get_event_for_display(request):
@@ -336,14 +343,14 @@ def get_event_for_display(request):
     # Get the doc. If there is no doc return an empty dict
     run = ""
     if request.method == "GET" and 'run' in request.GET:
-        run = request.GET['run'] + "_events"
+        run = request.GET['run']# + "_events"
     else:
-        for collection in db.collection_names():
-            if collection[-7:] == "_events" and db[collection].count() != 0:
+        for collection in wfdb.collection_names():
+            if wfdb[collection].count() != 0:
                 run = collection
                 break
 
-    collection = db[run]
+    collection = wfdb[run]
 
     event_number = 0
     if request.method == "GET" and "event" in request.GET:
@@ -550,6 +557,8 @@ def make_bokeh_waveform_plot(waveform_dict, peaks_list):
             continue
         name = ""    
         color = "#5992c2";
+        if peak_order > 10:
+            continue
         if ptype == "s1":
             name = "s1_" + str(peak_order)
             #s1_count += 1

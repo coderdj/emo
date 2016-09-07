@@ -33,6 +33,7 @@ urlpatterns = [
  
     url(r'^$', TemplateView.as_view( template_name='base.html')),
     url(r'^game', login_required(TemplateView.as_view( template_name='game.html'))),
+    url(r'^pong', login_required(TemplateView.as_view( template_name='pong.html'))),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^april', TemplateView.as_view(template_name='base_april.html')),
     url(r'^fancy', TemplateView.as_view(template_name='base_fancy.html')),
@@ -61,4 +62,5 @@ urlpatterns = [
     url(r'^api/', include(daqapi.urls)),
     url(r'^sc_api/', include(scapi.urls)),
     url(r'^runs_api/',include(runapi.urls)),
+    url(r'^online_monitor/', include('online_monitor.urls')),
 ]

@@ -190,7 +190,7 @@ function ExtractChannelWaveforms(data, whichs2, hidelist){
     return retarray;
 }
 
-function emo_draw_waveform(div, data){
+function emo_draw_waveform(div, data, peak_labels=true){
     xaxis = [];
     var tpc_index = -1;
     waveforms = UnzipWaveforms(data, 1);
@@ -221,7 +221,7 @@ function emo_draw_waveform(div, data){
     }
     if(waveform_max==0 || waveform_min == 16000){
 	waveform_max=16000;
-	waveform_min=-100;
+	waveform_min=-5;
     }
     else{
 	waveform_max=waveform_max*1.15;
@@ -234,24 +234,26 @@ function emo_draw_waveform(div, data){
             x: waveforms['x'],
             y: waveforms['tpc'],
             mode: 'lines',
+	    //type: 'scattergl',
         //    xaxis: 'x',
-            yaxis: 'y2',
+          //  yaxis: 'y2',
             name: "TPC Sum",
-            line: {'color': '#5992c2'}
+            line: {'color': '#5992c2', width:1}
         };
     var trace_veto = {
         x: waveforms['x'],
         y: waveforms['veto'],
         mode: 'lines',
+	//type: 'scattergl',
   //      xaxis: 'x',
-	yaxis: 'y2',
+	//yaxis: 'y2',
         name: "Veto",
-        line: {'color': '#ff4040'}
+        line: {'color': '#ff4040', width:1}
 
     };
 
-    plot_data = [trace_veto, trace_tpc];
-
+    plot_data_wf = [trace_tpc]; //, trace_veto];
+    plot_data = []
     // hits plot
     scatter_data = {x:[], y:[], left: [], right: []};
     for(var x=0;x<data['all_hits'].length;x+=1){
@@ -266,9 +268,9 @@ function emo_draw_waveform(div, data){
             y: scatter_data['y'], //data['all_hits'][x]['channel'],
             //x: [data['all_hits'][x]['left'], data['all_hits'][x]['right']],
             x: scatter_data['x'],//data['all_hits'][x]['index_of_maximum'],
-            type: 'scatter',
+            type: 'scattergl',
             mode: "markers",
-            name: "All hits",
+            name: "Hits",
             marker: { symbol: 1, color: "red", opacity: 0.5,
             },
             error_x: {
@@ -286,92 +288,108 @@ function emo_draw_waveform(div, data){
         };
     plot_data.push(trace);
     
-    // Now add annotaions for all S1/S2 peaks
-    peaks_s2 = get_peaks(data, 's2');
-    peaks_s1 = get_peaks(data, 's1');
+    // Now add annotaions for first 10 S1/S2 peaks
     annos = [];
     shapes = [];
-    for( var s2=0;s2<peaks_s2.length;s2+=1){
-	peak = data['peaks'][peaks_s2[s2]];
-	anno = {		
+
+    if(peak_labels){
+	peaks_s2 = get_peaks(data, 's2');
+	peaks_s1 = get_peaks(data, 's1');
+	
+	for( var s2=0;s2<peaks_s2.length;s2+=1){
+            //if(s2>10) break;
+	    peak = data['peaks'][peaks_s2[s2]];
+	    anno = {		
 	    x:peak['index_of_maximum'],
-	    y:waveforms['tpc'][peak['index_of_maximum']],
-	    xref:'x',
-	    yref:'y2',
-	    text:'S2['+s2.toString()+']',
-	    showarrow:true,
-	    arrowhead:7,
-	    ax:0,
-	    ay:-40
-	};
-	annos.push(anno);
-	shape =    {
-	    type: 'rect',
-	    // x-reference is assigned to the x-values
-	    xref: 'x',
-	    // y-reference is assigned to the plot paper [0,1]
-	    yref: 'paper',
-	    x0: peak['left'],
-	    y0: 0,
-	    x1: peak['right'],
-	    y1: 1.05*waveform_max,
+		y:peak['area']/(peak['right']-peak['left']),//waveforms['tpc'][peak['index_of_maximum']],
+		xref:'x',
+		yref:'y2',
+		text:'S2['+s2.toString()+']',
+		showarrow:true,
+		arrowhead:7,
+		ax:0,
+		ay:-40
+	    };	    
+	    annos.push(anno);
+	    shape =    {
+		type: 'rect',
+		// x-reference is assigned to the x-values
+		xref: 'x',
+		// y-reference is assigned to the plot paper [0,1]
+		yref: 'paper',
+		x0: peak['left'],
+		y0: 0,
+		x1: peak['right'],
+		y1: 1.05*waveform_max,
 	    fillcolor: '#4fa783',
 	    opacity: 0.2,
 	    line: {
 		width: 1,
 		opacity: 0.4
 	    }
+	    };
+	    shapes.push(shape);
 	};
-	shapes.push(shape);
-    };
-    for( var s1=0;s1<peaks_s1.length;s1+=1){
-	peak = data['peaks'][peaks_s1[s1]];
-	anno = {
-	    x:peak['index_of_maximum'],
-	    y:waveforms['tpc'][peak['index_of_maximum']],
-	    xref:'x',
-	    yref:'y2',
-	    text:'S1['+s1.toString()+']',
-	    showarrow:true,
-	    arrowhead:7,
-	    ax:0,
-	    ay:-40
+	for( var s1=0;s1<peaks_s1.length;s1+=1){
+        //if(s1>10) break;
+	    peak = data['peaks'][peaks_s1[s1]];
+	    anno = {
+		x:peak['index_of_maximum'],
+		y:peak['area']/(peak['right']-peak['left']),//waveforms['tpc'][peak['index_of_maximum']],
+		xref:'x',
+		yref:'y2',
+		text:'S1['+s1.toString()+']',
+		showarrow:true,
+		arrowhead:7,
+		ax:0,
+		ay:-40
 	};
-	annos.push(anno);
-	shape =    {
-	    type: 'rect',
-	    // x-reference is assigned to the x-values
-	    xref: 'x',
-	    // y-reference is assigned to the plot paper [0,1]
-	    yref: 'paper',
-	    x0: peak['left'],
-	    y0: 0,
-	    x1: peak['right'],
-	    y1: 1.05*waveform_max,
-	    fillcolor: '#b342b4',
-	    opacity: 0.2,
-	    line: {
-		width: 1,
-		opacity: 0.4
-	    }
+	    annos.push(anno);
+	    shape =    {
+		type: 'rect',
+		// x-reference is assigned to the x-values
+		xref: 'x',
+		// y-reference is assigned to the plot paper [0,1]
+		yref: 'paper',
+		x0: peak['left'],
+		y0: 0,
+		x1: peak['right'],
+		y1: 1.05*waveform_max,
+		fillcolor: '#b342b4',
+		opacity: 0.2,
+		line: {
+		    width: 1,
+		    opacity: 0.4
+		}
 	};
-	shapes.push(shape);
-    };
+	    shapes.push(shape);
+	};
+    }
 
-    wmin = 2*waveform_min;
+    //wmin = 2*waveform_min;
+    wmin = waveform_min;
     wmax = 1.05*waveform_max;
     
     var layout = {	
         xaxis: {tickformat:"f", anchor: 'y', title: "Samples [10ns]"}, //domain: [0, 0.45]},
-        yaxis: {domain: [0, 0.5], title: "PMT channel", range: [0, 255]},
-        yaxis2: {domain: [0.5,1.], title: "Charge [p.e.]", range: [wmin,wmax], autorange: false,},
-        margin: {l:50, r:0, t:0, b:40},
-	annotations: annos,
-	shapes: shapes,
+	yaxis: {/*domain: [0, 0.5], */title: "PMT channel", range: [0, 255]},
+        //yaxis2: {domain: [0.5,1.], title: "Charge [p.e.]", range: [wmin,wmax], autorange: false,},
+        margin: {l:60, r:10, t:10, b:40},
+//	annotations: annos,
+//	shapes: shapes,
 //	hovermode: 'y',
+showlegend: true
     };
+    var layout_wf = {
+	xaxis: {tickformat:"f", anchor: 'y', title: "Samples [10ns]"}, 
+	yaxis: {title: "Charge [p.e.]", range: [wmin,wmax], autorange: false,},                                                                         
+        margin: {l:60, r:10, t:10, b:40},
+        annotations: annos,
+        shapes: shapes,
 
-    
+	};
+    wfdiv="sum_waveform_line";
+    Plotly.newPlot(wfdiv, plot_data_wf, layout_wf, {"showLink": false, "displaylogo": false});
     Plotly.newPlot(div, plot_data, layout, {"showLink": false, "displaylogo": false});
 
 
@@ -448,7 +466,7 @@ function UnzipWaveforms(data, format){
 		continue;
 	    }
 	    else if(tpc_waveform[i]!=0 || veto_waveform[i]!=0){
-		if((tpcWasZero || vetoWasZero) && i>0){
+		if((tpcWasZero && vetoWasZero) && i>0){
 		    if(format==0)
                         total_data.push([i-1, tpc_waveform[i-1], veto_waveform[i-1]]);
                     else if(format==1){
@@ -518,7 +536,6 @@ function getNPeaks(data, type){
     return count;
 }
 function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
-    
     // Check for invalid peak types
     if( peaktype != 's1' && peaktype != 's2' ){
 	console.log(" tpc_3d::draw_peak ERROR unknown peak type " + peaktype );
@@ -538,15 +555,16 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
     // Compute boundaries
     leftb = data['peaks'][peaks[ID]]['left'];
     rightb = data['peaks'][peaks[ID]]['right'];
-    buffer = Math.ceil( .1*( rightb - leftb ));
+    /*buffer = Math.ceil( .1*( rightb - leftb ));
     leftb = leftb - buffer;
     if( leftb < 0 ) leftb = 0;
     rightb = rightb + buffer;
     if( rightb > unzipped_data.length ) rightb = unzipped_data.length;
-    
+    */
     // Slice the waveform around the S1
-    waveform = unzipped_data.slice( leftb, rightb );
-
+    //waveform = unzipped_data.slice( leftb, rightb );
+    waveform = GetSliceWaveform(unzipped_data, leftb, rightb);
+    console.log(waveform);
     // From here for dygraphs plot
   /*  var dygraph_data = [];
     for(var x=0;x<waveform.length;x+=1){
@@ -596,7 +614,12 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
 	color: "#5992c2",
 	name: "Sum waveform"
     };
-//    plot_data.push(trace_sum);
+    plot_data.push(trace_sum);
+    console.log("PEAK");
+    console.log(data['peaks'][peaks[ID]]);
+    console.log(sum_x);
+    console.log(sum_y);
+    /*
     for(var h=0;h<data['peaks'][peaks[ID]]['hits'].length;h+=1){
 	console.log("Looking at pulse " + data['peaks'][peaks[ID]]['hits'][h]['found_in_pulse'].toString());
 	var pulse = data['pulses'][data['peaks'][peaks[ID]]['hits'][h]['found_in_pulse']];
@@ -620,11 +643,12 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
 	plot_data.push(trace);
 	
     }
+    */
     layout={
 	'showlegend': false,
 	'xaxis': {
 	    'autorange': true,
-	    'range': [rightb, leftb],// rightb],
+	    //'range': [rightb, leftb],// rightb],
 	    'tickformat':"f",
 	},
 	'margin': {
@@ -658,6 +682,33 @@ function draw_waveform( div, thedata, thetitle, height ){
                       });
 }
 
+function GetSliceWaveform(reducedwf, left, right){
+    // Get a slice from our reduced wf format
+    retwf = [];
+    current_index = left;
+    // Find left bound
+    console.log(reducedwf);
+    console.log(left);
+    console.log(right);
+    for(i=0;i<reducedwf.length;i+=1){
+	if(reducedwf[i][0]<current_index)
+	    continue;
+	// Add zeroes
+	while(current_index < reducedwf[i][0] && retwf.length < (right-left)){
+	    retwf.push([current_index, 0]);
+	    current_index += 1;
+	}
+	
+	// Add the current element
+	if(retwf.length<(right-left)){
+	    
+	    retwf.push([current_index, reducedwf[i][1]]);
+	    current_index+=1;
+	}
+    }
+    console.log(retwf);
+    return retwf;
+}
 function draw_hit_location( scene, data, hit_locs )
 // Draw a little circle at hit location
 {
@@ -752,6 +803,8 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
         var hit = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0),
 				 new THREE.MeshLambertMaterial({color: 0xaaaaaa,
 							       emissiveIntensity:.01}));
+	console.log("COLOR");
+	console.log(colz);
 	hit.material.color.setRGB(colz[0], colz[1], colz[2]);
 	hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
 	if(amp==0)
@@ -985,8 +1038,15 @@ function GetV(seed){
 
 function GetColor( amp )
 {
-    if(amp<=0) return([0,0,0]);
+    if(amp<=0) return([0, 0, 0]);
     if(amp>=1) amp=.9999;
+
+
+    s = chroma.scale(['navy', 'red']).mode("lch");
+    col = s(amp);    
+    colz = [col["_rgb"][0]/255., col["_rgb"][1]/255., col["_rgb"][2]/255.];
+    return colz;
+/*
     var colours = [ 
 	[83, 154, 47], 
 	[154, 166, 51], 
@@ -1056,6 +1116,7 @@ function GetColor( amp )
 //    colz[2] =  (.7 - Math.sin( amp )/2);// /2;
     console.log(colz);
     return colz;
+*/
 }
 
 function DrawMouseover( mousex, mousey, threeScene, threeCamera, currentHighlight ){

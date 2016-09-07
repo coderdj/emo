@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block head %}
+<style type="text/css">
+
+.plot_link{
+ cursor: pointer;
+}
+</style>
+
+<!--    <script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>
+<link rel="stylesheet" href="{% static "css/bokeh-0.9.0.min.css" %}"/> -->
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "js/plotly-latest.min.js" %}"></script>
+
+
+
+{% endblock %}
+{% block content %}
+<style>.Loading {
+      display:    none;
+      position:   absolute;
+      z-index:    100;
+      top:        0;
+      left:       0;
+      height:     100%;
+      width:      100%;
+      background: #ebebeb;
+      url("/img/ajax-loader.gif");
+      50% 50%
+      no-repeat;
+  }</style>
+<div id="Loading" class="Loading">
+  <div class="col-xs-3 col-xs-offset-5;padding-left:200px;" style="margin-top:150px;left:45%">
+    <img style="width:60px;height:60px;" src="{% static "img/ajax-loader.gif" %}">
+    <br>
+    <br>
+    Crunching data...
+    
+  </div>
+</div>
+<!--<div class="row" style="padding:5px">
+  <h3 style="padding-left:20px">Trigger Monitor</h3>
+</div>-->
+ <div class="row" style="padding:0" id="main_row">
+   <div class="col-sm-3 col-xs-12" id="runselector"
+	style="background-color:white;height:100%;overflow-y:scroll;width:250px;height:100%;">
+     <!--<h4>Request Run:</h4>
+     <div class="col-xs-12"><input id="runRequest" type="number" placeholder="Run number" style="width:100px">
+       <button class="btn btn-success" style="display:inline" onclick="RequestRun()">Fetch</button></div>-->
+
+     <h4>Recent runs:</h4>
+     <table style="background-color:white;width:100%">
+       <thead>
+	 <tr>
+	   <th>Num.</th>
+	   <th>Name</th>
+	   <th>View</th>
+	 </tr>
+       </thead>
+       <tbody id="therunstable">
+       </tbody>
+     </table>
+   </div>
+
+   <div class="col-sm-3 col-xs-12" id="mainwindow" style="height:100%; overflow-y:scroll;background-color:white">
+     
+     <div class="row">
+       <div class="col-xs-12"><h3>Aggregate information</h3>
+       </div>
+     </div>
+     <div class="row">
+       <div class="col-xs-12">
+         <div class="col-xs-12">
+         <strong>Event rates last 100 runs: </strong>
+         </div>
+         <div class="col-xs-12" id="plot_event_history" style="height:25vh">
+       </div>
+       </div>
+     </div>
+     <div class="row">
+       <div class="col-xs-12">
+         <div class="col-xs-12">
+         <strong>Electron lifetime last few days: </strong>
+         </div>
+         <div class="col-xs-12" id="plot_elife_history" style="height:35vh">
+       </div>
+       </div>
+     </div>
+
+     <div class="row">
+       <div class="col-xs-12"><hr>
+       </div>
+     </div>
+
+     <div class="col-xs-12" id="container_info">
+       <div class="row">
+	 <div class="col-sm-6 col-xs-12">
+	   <h3>Detail for Run <span id="info_run_number"></span></h3>
+	 </div>
+	 <div class="col-sm-6 col-xs-12">
+	   <h4>Name: <span id="info_run_name"></span></h4>
+	 </div>
+       </div>
+       <div class="row">
+	 <div class="col-sm-6 col-xs-12">
+	   <strong>Start: </strong><span id="info_run_start"></span>
+	 </div>
+	 <div class="col-sm-6 col-xs-12">
+           <strong>End: </strong><span id="info_run_end"></span>
+         </div>
+       </div>
+       <div class="row">
+	 <div class="col-sm-3 col-xs-12">
+           <strong>Source: </strong><span id="info_run_source"></span>
+         </div>
+	 <div class="col-sm-3 col-xs-12">
+           <strong>User: </strong><span id="info_run_user"></span>
+         </div>
+	 <div class="col-sm-3 col-xs-12">
+           <strong>Events: </strong><span id="info_run_events"></span>
+         </div>
+	 <div class="col-sm-3 col-xs-12">
+           <strong>Mode: </strong><span id="info_run_mode"></span>
+         </div>
+       </div>     
+     </div>
+     <div class="col-xs-12">
+       <hr>
+     </div>     
+     <div class="row" style="margin-top:20px;">
+       <div class="col-xs-12">
+	 <div class="col-xs-12">
+         <strong>Event rates this run(note: scaled up from prescaled sample!): </strong>
+	 </div>
+	 <div class="col-xs-12" id="plot_event_rate" style="height:25vh">
+       </div>
+       </div>
+     </div>
+     <div class="row" style="margin-top:20px;margin-bottom:20px">
+       <div class="col-sm-6 col-xs-12" 
+	  style="min-height:300px;height:45vh">
+       <div class="col-xs-12">
+	 <strong>S1 Energies: </strong>
+       </div>
+       <div class="col-xs-12" id="plot_s1" style="height:45vh">
+       </div>
+     </div>
+     <div class="col-sm-6 col-xs-12" 
+	  style="min-height:300px;height:45vh">
+       <div class="col-xs-12">
+	 <strong>S2 Energies: </strong>
+       </div>
+       <div class="col-xs-12" id="plot_s2" style="height:45vh">
+       </div>
+     </div>
+     </div>
+     <div class="row" style="margin-top:20px;margin-bottom:20px">
+     <div class="col-sm-6 col-xs-12"
+          style="min-height:300px;height:45vh">
+       <div class="col-xs-12">
+         <strong>x-y Distribution: </strong>
+       </div>
+       <div class="col-xs-12" id="plot_xy" style="height:45vh">
+       </div>
+     </div>
+     <div class="col-sm-6 col-xs-12"
+          style="min-height:300px;height:45vh">
+       <div class="col-xs-12">
+         <strong>r-dt Distribution: </strong>
+       </div>
+       <div class="col-xs-12" id="plot_rdt" style="height:45vh">
+       </div>       
+     </div>
+      <div class="row" style="margin-top:20px;margin-bottom:20px">
+     <div class="col-sm-6 col-xs-12"
+          style="min-height:300px;height:45vh">
+       <div class="col-xs-12">
+         <strong>S2 vs dt Distribution: </strong>
+       </div>
+       <div class="col-xs-12" id="plot_s2dt" style="height:45vh">
+       </div>
+     </div>
+     <div class="col-sm-6 col-xs-12">
+       <br><br>
+       <p>
+	 <strong> Electron lifetime attempt </strong>
+       </p>
+       <p>(autogenerated, don't take too seriously): 
+       </p>
+       <p><div id="elife"></div>&nbsp; microseconds
+       </p>
+     </div>
+</div>
+     </div>
+     </div>
+	    
+   </div>
+ </div>
+
+ <script type="text/javascript">
+
+   function DrawHists(runname){
+      $("#Loading").show();
+      LoadRunDoc(runname);
+      Hist1D("plot_s1", runname, 0, 10000, 80, 's1');
+      Hist1D("plot_s2", runname, 1, 1000000, 80, 's2');
+      Hist2D("plot_xy", runname, 'x', 'y', "x [cm]", "y[cm]", -50, 50, 2, false, -50, 50, 2, false, false);
+      Hist2D("plot_s2dt", runname, "dt", "s2", "drift time [ns]", "log s2 [log pe]", 0, 650000, 4000, false, 1, 20, 1, true, true);
+      RDT("plot_rdt", runname);
+      // 
+      GetEventSpread("plot_event_rate", runname);
+      $("#Loading").hide();
+
+   }
+
+   function LoadRunDoc(runname){
+     var runURL = "/runs/get_run/?detector=tpc;name="+runname;
+     $.getJSON(runURL, function(rundoc){
+         document.getElementById("info_run_number").innerHTML = rundoc['number'];
+      document.getElementById("info_run_name").innerHTML = rundoc['name'] + "&nbsp;&nbsp;&nbsp;&nbsp;<a class='btn btn-default' href='/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22"+rundoc['name']+"%22%7D&submit='>See in runs DB</a>";
+      var start = new Date(rundoc.start['$date']);
+      var dstring = start.getUTCFullYear() +"/"+
+                    ("0" + (start.getUTCMonth()+1)).slice(-2) +"/"+
+                    ("0" + start.getUTCDate()).slice(-2) + " " +
+                    ("0" + start.getUTCHours()).slice(-2) + ":" +
+                    ("0" + start.getUTCMinutes()).slice(-2) + ":" +
+                    ("0" + start.getUTCSeconds()).slice(-2);
+      document.getElementById("info_run_start").innerHTML = dstring;
+if("end" in rundoc){
+      var end = new Date(rundoc.end['$date']);
+      dstring = end.getUTCFullYear() +"/"+
+                    ("0" + (end.getUTCMonth()+1)).slice(-2) +"/"+
+                    ("0" + end.getUTCDate()).slice(-2) + " " +
+                    ("0" + end.getUTCHours()).slice(-2) + ":" +
+                    ("0" + end.getUTCMinutes()).slice(-2) + ":" +
+                    ("0" + end.getUTCSeconds()).slice(-2);
+
+      document.getElementById("info_run_end").innerHTML = dstring;
+      }
+      else
+        document.getElementById("info_run_end").innerHTML = "Still running";
+      document.getElementById("info_run_source").innerHTML = rundoc['source']['type'];
+      if(rundoc['trigger']['events_built']!=null)
+      document.getElementById("info_run_events").innerHTML = (rundoc['trigger']['events_built']).toString();
+      document.getElementById("info_run_user").innerHTML = rundoc['user'];
+      document.getElementById("info_run_mode").innerHTML = rundoc['reader']['ini']['name'];
+
+
+
+
+   });
+   }
+
+
+function GetELifeHistory(divname){
+var elifeURL="/online_monitor/get_elife_history/?runs=100;";
+   $.getJSON(elifeURL, function(data){
+
+console.log(data);
+bins_time = [];
+for(x=0; x<data['t'].length;x+=1)
+          bins_time.push(new Date(data['t'][x]*1000));
+var trace1 = {
+          x: bins_time,
+        y: data['l'],
+ mode: 'markers',
+          showline: true,
+          marker: {
+                 symbol: "circle",
+                   opacity: .9,
+                  size: 10,
+                           color: 'rgb(50,50,50)',
+          line: {
+                       //color: 'rgb(255,255,255)',
+                   color: 'rgba(50,171,96,1.0)',
+          width: 1
+          }
+          },
+	     error_y: {
+	                             type: 'data',
+	                           array: data['e'],
+	                         color: '#888888',
+                               thickness: 1,
+            //              opacity: .1
+                       },
+
+
+};
+var traces = [trace1];
+ var layout = {
+                   xaxis: {
+                   title: "Time (UTC)",
+                   titlefont: {
+                   size: 16,
+                   color: '#7f7f7f'
+                   },
+
+                   },
+                   yaxis: { title: "Electron lifetime-ish (mus)",
+	     range: [0, 500],
+	     },
+                   margin: {t: 10, b:50, l:45, r:25},
+                   title: "",
+                   font:{
+                   family: 'Raleway, snas-serif'
+                   },
+                   showlegend: false,
+                   bargap :0.0
+                   };
+      Plotly.newPlot(divname, traces, layout);
+
+});
+}
+
+
+   function GetEventHistory(divname, runname){
+   var histURL="/online_monitor/get_event_rate_history/?runs=100;run="+runname;
+   $.getJSON(histURL, function(data){
+      bins_time = [];
+       sqrts=[];
+   console.log(data);
+      for(x=0; x<data['times'].length;x+=1){
+          bins_time.push(new Date(data['times'][x]*1000));
+          sqrts.push(Math.sqrt(data['events'][x]));
+     }
+	var trace1 = {
+          x: bins_time,
+	y: data['events'],
+error_y: { type: 'data', array: sqrts, thickness: 1 },
+//        error_x: {
+  //                        type: 'data',
+    //                      array: data['halftimes']*1000,
+      //                    color: '#888888',
+        //                  thickness: 5,
+          //                width: 0,
+            //              opacity: .1
+              //          },
+
+              mode: 'markers',
+          showline: true,
+          marker: {
+		   opacity: .8,
+                           color: 'rgb(100,100,100)',
+          line: {
+                       //color: 'rgb(255,255,255)',
+		   color: 'rgba(50,171,96,1.0)',
+          width: .1
+          }
+          }
+
+
+      };
+		    var traces = [trace1];//, trace2];
+
+		   var layout = {
+		   xaxis: {
+		   title: "Time (UTC)",
+		   titlefont: {
+		   size: 16,
+		   color: '#7f7f7f'
+		   },
+		   
+		   },
+		   yaxis: { title: "Avg event rate (Hz)",},
+		   margin: {t: 10, b:50, l:45, r:25},
+		   title: "",
+		   font:{
+		   family: 'Raleway, snas-serif'
+		   },
+		   showlegend: false,
+		   bargap :0.0
+		   };
+      Plotly.newPlot(divname, traces, layout);
+
+   });
+   }
+   function GetEventSpread(divname, runname){
+      var spreadURL="/online_monitor/get_event_rates/?run="+runname;
+      $.getJSON(spreadURL, function(data){
+          console.log(data);
+          bins_time = [];
+          for(x=0; x<data['events'].length;x+=1)
+             bins_time.push(new Date(x*data['bin_size']*1000+((-2*3600000)+data['min_time']/1000000)))
+          var trace1 = {
+          x: bins_time,
+          y: data['events'],
+		       y: data['events'],
+                       error_y: {
+                          type: 'constant',
+                          value: 5,
+                          color: '#888888',
+                          thickness: 5,
+                          width: 0,
+                          opacity: .1
+                        },
+
+
+          type: 'line',
+		       mode: 'markers',
+          showline: true,
+          marker: {
+                           color: 'rgb(100,100,100)',
+          line: {
+		       //color: 'rgb(255,255,255)',
+		       //color: 'rgba(50,171,96,1.0)',
+          width: .1
+          }
+          }
+      };
+		       /*var trace2 = {
+           x: bins_time,
+          y: data['interactions'],
+//          type: 'line',
+          showline: true,
+          marker: {
+               //            color: 'rgb(142,124,195)'
+          line: {
+		   color: 'rgba(96,59,171,1.0)',
+          width: 1
+          }
+          }
+};*/
+          var traces = [trace1];//, trace2];
+
+      var layout = {
+ xaxis: {
+         title: "Time (UTC)",
+titlefont: {
+//      family: 'Courier New, monospace',
+      size: 16,
+      color: '#7f7f7f'
+    },
+
+    },
+
+         margin: {t: 10, b:50, l:25, r:25},
+   title: '',
+         font:{
+          family: 'Raleway, snas-serif'
+         },
+         showlegend: false,
+         bargap :0.0
+      };
+      Plotly.newPlot(divname, traces, layout);
+
+      });
+   }
+   function RDT(divname, runname){
+        var URL = "/online_monitor/get_rdt?run="+runname;
+console.log("Pre RDT");
+              $.getJSON(URL, function(data){
+console.log("RDT");
+console.log(data);
+                var series = [
+                   {
+           x: data['r'],
+           y: data['dt'],
+		       //histnorm: 'probability',
+          autobinx: false,
+           xbins: {
+           start: 0,
+            end: 55,
+             size: 2
+         },
+         autobiny: false,
+         ybins: {
+           start: 0,
+           end: 400,
+           size: 5
+         },
+         colorscale: [['0', 'rgb(12,51,131)'], ['0.25', 'rgb(10,136,186)'], ['0.5', 'rgb(242,211,56)'], ['0.75', 'rgb(242,143,56)'], ['1', 'rgb(217,30,30)']],
+    type: 'histogram2d'
+  }
+];
+var layout = {
+ xaxis: {
+         title: "r [cm]",
+         titlefont: {
+           size: 16,
+           color: '#7f7f7f'
+         },
+ tickformat : ":04,2f"
+       },
+ yaxis: { 
+		       title: "dt [mus]",
+         titlefont: {
+           size: 16,
+           color: '#7f7f7f',
+	
+         },
+autorange: "reversed",
+ tickformat : ":04,2f"
+       },
+   margin: {t: 10, b:50, l:25, r:25},
+   title: '',
+         font:{
+          family: 'Raleway, snas-serif'
+         },
+         showlegend: false,
+
+      };
+
+Plotly.newPlot(divname, series, layout);
+});
+   }
+
+
+   function Hist2D(divname, runname, xvar, yvar, xlab, ylab, xmin, xmax, xbin, logx, ymin, ymax, ybin, logy, showscatter){
+     var URL = "/online_monitor/get_series_2d?run="+runname+";x="+xvar+";y="+yvar;
+     $.getJSON(URL, function(data){
+console.log("2D");
+console.log(data);
+      xdata = data['x'];
+      ydata = data['y'];
+      if(logy){
+        ydata = [];
+        for(x=0;x<data['y'].length;x+=1){
+          ydata.push(Math.log(data['y'][x]));
+        }
+       }
+        var series = [
+       {
+           x: xdata,
+		       y: ydata,
+//		           histnorm: 'probability',
+          autobinx: false,
+           xbins: {
+           start: xmin,
+            end: xmax,
+             size: xbin
+         },
+    autobiny: false,
+		       ybins: {
+		       start: ymin,
+		       end: ymax,
+		       size: ybin
+		       },
+    colorscale: [['0', 'rgb(12,51,131)'], ['0.25', 'rgb(10,136,186)'], ['0.5', 'rgb(242,211,56)'], ['0.75', 'rgb(242,143,56)'], ['1', 'rgb(217,30,30)']],
+    type: 'histogram2d'
+  }
+];
+		    if(showscatter){
+		    series.push({
+
+		     x: xdata,
+                       y: ydata,
+mode: 'markers',
+  marker: {
+    symbol: 'circle',
+    opacity: 0.2,
+		     color:'rgb(200,111,200)',
+  },
+		    type: 'scatter'
+
+});
+}
+var layout = {
+ xaxis: {
+range: [xmin, xmax],
+         title: xlab,
+         titlefont: {
+           size: 16,
+           color: '#7f7f7f'
+         },
+		        tickformat : ":04,2f"
+       },
+ yaxis: { title: ylab,
+range: [ymin, ymax],
+         titlefont: {
+           size: 16,
+           color: '#7f7f7f'
+         },
+		        tickformat : ":04,2f"
+       },
+         margin: {t: 10, b:50, l:35, r:25},
+   title: '',
+         font:{
+          family: 'Raleway, snas-serif'
+         },
+         showlegend: false,
+         
+      };
+//if(logx) layout['xaxis']['type'] = 'log';
+//if(logy) layout['yaxis']['type'] = 'log';
+if(xvar =="dt" && yvar=="s2"){
+document.getElementById("elife").innerHTML = (1/(-1000*data['m']));
+if(data['m']!=0){
+  layout['shapes'] = [{
+       "type": "line",
+       "xref": "x", "yref": "y",
+       "x0": xmin, "x1": xmax,
+       "y0": data['m']*xmin+data['b'], "y1": data['m']*xmax+data['b'],
+}];
+}
+}
+
+Plotly.newPlot(divname, series, layout);
+
+});
+   }
+   function Hist1D(divname, runname, minimum, maximum, bins, variable){
+     units = {"s1": "p.e.", "s2": "p.e."};
+   var runURL = "/online_monitor/get_hist_1d/?var="+variable+";run="+runname+";min="+
+   minimum.toString()+";max="+maximum.toString()+";bins="+bins.toString();
+   $.getJSON(runURL, function(data){
+      console.log("Got run data");
+      axis_label = (variable+ '['+units[variable]+']');
+      var trace1 = {
+          x: data['bins'],
+          y: data['hist'],
+          type: 'bar',
+          showline: true,
+          marker: {
+//            color: 'rgb(142,124,195)'
+line: {
+      color: 'rgba(50,171,96,1.0)',
+      width: 1
+    }
+          }
+      };
+      var traces = [trace1];
+
+      var layout = {
+ xaxis: {
+         title: axis_label,
+titlefont: {
+//      family: 'Courier New, monospace',
+      size: 16,
+      color: '#7f7f7f'
+    },
+ tickformat : ":04,2f"
+    },
+
+         margin: {t: 0, b:50, l:25, r:25},
+   title: '',
+         font:{
+          family: 'Raleway, snas-serif'
+         },
+         showlegend: false,
+         bargap :0.0
+      };
+ 
+      Plotly.newPlot(divname, traces, layout);
+    });
+}
+$(function() {
+   var collection_url = "/online_monitor/get_run_list";
+   $.getJSON(collection_url, function(data){
+     var html= "";
+   var firstrun='0';
+     for(var x=0; x<data['runs'].length; x+=1){      
+        if(data['runs'][x]['collection'][0]!='s' && data['runs'][x]['collection'][0]!='o'){
+		html += ("<tr><td><strong>"+data['runs'][x]['number']+"</strong></td><td>"+data['runs'][x]['collection']+"</td><td><button class='btn btn-info btn-xs' style='cursor:pointer;cursor:hand;width:80px;width:50px' onclick='DrawHists("+'"' + data['runs'][x]['collection'] + '","'+data['runs'][x]['client']+'"'+", false)'>View</button></td></tr>");
+if(firstrun=='0') firstrun=data['runs'][x]['collection'];
+}
+					 }
+		document.getElementById("therunstable").innerHTML=html;
+         GetEventHistory("plot_event_history", firstrun);
+	 GetELifeHistory("plot_elife_history");
+					 });
+WindowResize();
+window.onresize = function() {
+WindowResize();
+}
+   });
+ 
+function WindowResize(){
+  var height = window.innerHeight;
+
+ document.getElementById("runselector").style.height = height - 40 + "px";
+ document.getElementById("mainwindow").style.height = height - 40 + "px";
+
+var mainwidth = window.innerWidth; //document.getElementById("content").offsetWidth;
+offset = 0;
+if($("#content").hasClass("emo-sidebar-show")){
+console.log("HAS CLASS");
+offset +=166;
+}
+ document.getElementById("mainwindow").style.width = mainwidth - 265 - offset + "px";
+// document.getElementById("main_row").style.height = height - 40 + "px";
+//document.getElementById("content").style.height = height - 40 + "px";
+document.getElementById("content").style.padding_right=0 + "px";
+
+
+
+}
+
+				       </script>
+{% endblock %}

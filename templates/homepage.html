@@ -71,6 +71,17 @@ width: calc(100% - 150px);
 </style>
 <div id="water" class="Water"></div>
 <h3 style="margin-top:10px">Welcome back <span id="username_span">{{ user.username }}</span> &nbsp;<span id="watertext" style="color:white;background-color:red"></span></h3>
+{% if user.username == "acolijn" %}
+<div class="row">
+  <div class="col-xs-12 col-sm-6">
+    <script type="text/javascript" src="https://www.windfinder.com/widget/forecast/js/zandvoort_aan_zee?unit_wave=m&unit_rain=mm&unit_temperature=c&unit_wind=kts&columns=3&days=4&show_day=1"></script><noscript><a href='https://www.windfinder.com/forecast/zandvoort_aan_zee?utm_source=forecast&utm_medium=web&utm_campaign=homepageweather&utm_content=noscript-forecast'>Wind forecast for Zandvoort aan Zee</a> provided by <a href='https://www.windfinder.com?utm_source=forecast&utm_medium=web&utm_campaign=homepageweather&utm_content=noscript-logo'>windfinder.com</a></noscript>
+  </div>
+  <div class="col-xs-12 col-sm-6">
+    <img src="https://media.giphy.com/media/sUCS1kxgkWBnG/giphy.gif" style="width:100%"/>
+  </div>
+</div>
+<hr>
+{% endif %}
 {% if user.username == "tunnelll" %}
 <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?list=FLaIRNaoirM9sfcsl5fiUwgA;autoplay=1" frameborder="0" allowfullscreen></iframe>
 

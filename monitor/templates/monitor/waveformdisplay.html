@@ -7,9 +7,12 @@
 <!--<script src="{% static "js/bokeh-0.9.0.min.js"%}"></script>-->
 <script src="{% static "js/three.min.js" %}"></script>
 <script src="{% static "js/OrbitControls.js"%}"></script>
-<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
-<script src="{% static "js/plotly-latest.min.js" %}"></script>
+<!--<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>-->
+<script src="{% static "js/plotly.min.js" %}"></script>
+
+<!--<script src="{% static "js/plotly-latest.min.js" %}"></script>-->
 <script src="{% static "js/simplify.js" %}"></script>
+<script src="{% static "js/chroma.min.js" %}"></script>
 
 <script src="{%  static "bootstrap-fileinput-master/js/fileinput.min.js"%}"></script>
 <link rel="stylesheet" href="{% static "bootstrap-fileinput-master/css/fileinput.min.css" %}"/>
@@ -55,6 +58,10 @@
 <!--<p class="bg-info" style="width:100%;padding-left:20px">I put a bit of XENON100 data in here as an example. To begin choose the dataset and hit 'newest'. - Dan</p>-->
 
     <div class="row" style="margin:10px;margin-bottom:0px;min-height:360px;">
+	<div class="col-xs-12 emobox_flat" id="sum_waveform_line" style="min-height:300px;padding-left:5px;padding-right:5px;margin-bottom:10px">
+    </div>
+
+
       <div class="col-xs-9 col-sm-9 emobox_flat" id="hit_patterns" style="padding-left:0;height:100%;min-width:900px;">
 	    <div class="col-xs-2" id="peak_info" style="padding-left:0;height:100%;">
 	        <div class="panel panel-default" style="height:100%;margin:0;min-height:360px;">
@@ -95,7 +102,7 @@
 	    </div>
       </div>
       <div class="col-xs-3 col-sm-3">
-          <div class="panel panel-default">
+          <div class="panel panel-default" style="margin-bottom:10px;">
 	            <div class="panel-heading">
 	                <h4 style="margin:0">Info/Control</h4>
 	            </div>
@@ -131,12 +138,16 @@
 		            <button class="btn btn-default btn-sm"
 			            onclick="savejson()" style="margin-left:3px;color:black;">
 		            Save to file</button>
-		            <button class="btn btn-default btn-sm"
+			    <!--<button class="btn btn-default btn-sm"
+				    onclick="ToggleAnnotations()"
+				    style="margin-left:3px;color:black">Toggle labels
+			    </button>-->
+		            <!--<button class="btn btn-default btn-sm"
 			            id="make_hits_plot" onclick="make_hits_plot()">
 		            3D plot (slow!)</button>
 		            <button class="btn btn-default btn-sm"
 			            id="make_dygraph_plot" onclick="DrawPeak()">
-		            2D plot (default)</button>
+		              2D plot (default)</button>-->
 	            </div>
 	      
 	        </div>
@@ -188,16 +199,20 @@
       </div>
     </div>
     <div class="col-xs-12 container" style="width:100%;">
-    <div class="col-xs-12 emobox_flat" id="full_waveform" style="min-height:600px;padding-left:5px;padding-right:5px;"></div>
+      
+    <div class="col-xs-12 emobox_flat" id="full_waveform" style="min-height:400px;padding-left:5px;padding-right:5px;">
+    </div>
 </div>
 <script type="text/javascript">
   var s1_index = -1;
   var s2_index = -1;
   var ns1 = 0;
   var ns2 = 0;
+  var last_data=null;
   var disp_type='s2';
   var peaks = null;
   var event_number = -1;
+  var annotations=false;
   //var event_data = null;
   var scene= null;
   var suspend_animations = false;
@@ -209,12 +224,21 @@
   var mouse = new THREE.Vector2();
   var mightBeClick = 0;
   var showing_small = false;
-  
+
+  function ToggleAnnotations(){
+     if(annotations==true)
+       annotations=false;
+     else
+       annotations=true;
+if(last_data!=null)
+          emo_draw_waveform("full_waveform", last_data, annotations);
+}
   //function onDocumentMouseDown( event ) {
   $("#peak_hitpattern").mousedown(function(){
   mightBeClick = 1;
   });
   $("#peak_hitpattern").mouseup(function() {
+  mightBeClick=0;
   if(mightBeClick == 0)
   return;
   rect = renderer.domElement.getBoundingClientRect();
@@ -374,11 +398,13 @@
   }
 							    
   function DrawPeak(){
-  //id area lt rt coin peak_$
+	//id area lt rt coin peak_$
+	console.log("IN PEAK");
+	console.log(currentdata);
      if(currentdata == null) return;
      if(disp_type == 's1' && (s1_index > ns1 || s1_index<0)) return;
      if(disp_type == 's2' && (s2_index > ns2 || s2_index<0)) return;
-
+console.log("STILL");
      $("#Loading_small").show();
      // this is a list of indices of the peaks of your chosen type
      peaks = get_peaks(currentdata, disp_type);
@@ -490,6 +516,7 @@ console.log(data);
          event_number = 0;
          update_data();
     }
+			
     function update_data_next(){
          event_number += 1;
          update_data();
@@ -512,7 +539,8 @@ console.log(data);
         if(ns1 > 0 ) s1_index = 0;
         if(ns2 > 0 ) s2_index = 0;
         document.getElementById("full_waveform").innerHTML = "";
-        emo_draw_waveform("full_waveform", data);
+	      last_data = data;
+        emo_draw_waveform("full_waveform", data, annotations);
         //$("#full_waveform").append(data['div']);
         //$("#full_waveform").append(data['script']);
 
@@ -525,7 +553,7 @@ console.log(data);
 */
 
         document.getElementById("run_name").innerHTML = data['run_name'];
-        document.getElementById("event_number").innerHTML = data['event_number'];
+        document.getElementById("event_number").innerHTML = 1000*data['event_number'];
         document.getElementById("event_date").innerHTML = data['event_date'];
         document.getElementById("event_s1s").innerHTML = ns1.toString();
         document.getElementById("event_s2s").innerHTML = ns2.toString();
