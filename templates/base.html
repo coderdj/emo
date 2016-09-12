@@ -160,7 +160,7 @@ margin-left:-30px;margin-right:-30px;
 	      style="margin:0">      
 	<span class="glyphicon glyphicon-menu-down"></span>  
       </button>
-      <a class="navbar-brand toggle-sidebar" style="cursor:pointer;">
+      <a class="navbar-brand toggle-sidebar" style="cursor:pointer;" title="Click to open menu">
    	XENON1T Data Acquisition 
       </a>
     </div>			
@@ -217,9 +217,8 @@ margin-left:-30px;margin-right:-30px;
     
     <div class="sidebar-left-collapse sidebar left" style="padding-top:5px{% if request.user.username == 'maris'%};background-color:#ff69b3;{% endif %}" id="main_nav_sidebar">
       <button class="btn btn-mini btn-info toggle-sidebar sidebar-opentoggle"
-              style="background-color:#36bc98;color:#EEEEEE;margin-top:-1px;border-top-right-radius:0;border-bottom-right-radius:0;z-index:10;position:absolute;top:0px;right:13px;padding:1px;padding-right:5px;padding-left:3px;"
+              style="background-color:#36bc98;color:#EEEEEE;margin-top:-1px;border-top-right-radius:0;border-bottom-right-radius:0;z-index:10;position:absolute;top:0px;right:13px;padding:1px;padding-right:5px;padding-left:3px;display:none;"
               type="button" aria-expanded="false"><span class="glyphicon glyphicon-chevron-left"></span>
-
 </button>
 
       <a href="/" class="company-logo"></a>
@@ -303,11 +302,10 @@ margin-left:-30px;margin-right:-30px;
       </div>
       <button class="btn btn-default js-gitter-toggle-chat-button" style="position:absolute;margin-left:17px;width:130px;bottom:15px;background-color:#36bc98;color:white;font-family: sans-serif;font-size: 10px;letter-spacing: 1px;text-transform: uppercase;text-align: center;text-decoration: none;padding-top:8px;padding-bottom:20px;font-weight:normal;" id="open_chat">Toggle Chat</button>
     </div>
-    <div id="content" class="container-fluid emo-sidebar-show"><!-- col-sm-offset-2">-->
+    <div id="content" class="container-fluid emo-sidebar-hide"><!-- col-sm-offset-2">-->
       <button class="btn btn-mini btn-info toggle-sidebar sidebar-opentoggle" 
-	      style="background-color:white;color:#444444;border-left:0px;margin-top:-1px;border-top-left-radius:0;border-bottom-left-radius:0;z-index:10;position:absolute;top:0;left:0;padding:1px;display:none;" 
+	      style="background-color:white;color:#444444;border-left:0px;margin-top:-1px;border-top-left-radius:0;border-bottom-left-radius:0;z-index:10;position:absolute;top:0;left:0;padding:1px;" 
 	      type="button" aria-expanded="false"><span class="glyphicon glyphicon-chevron-right"></span>
-
 </button>
 
 
@@ -512,7 +510,9 @@ margin-left:-30px;margin-right:-30px;
 			var maxtdiff = 1000000;
 			var recentTime;
 	                var status_html="";
+			console.log(data);
 			for (x = 0; x < data['status'].length; x++) {
+			      if(!data['status'][x]) continue;
 				status = data['status'][x]['state'];
 				if (status == "Running")
 					status_html+="<i style='color:green;' class='fa fa-check-circle'></i>";
@@ -532,6 +532,7 @@ margin-left:-30px;margin-right:-30px;
 			status_more = "<strong><div class='row emo-status-menu-entry'><div class='col-xs-2'>Detector</div>" +
 					"<div class='col-xs-2'>Status</div><div class=col-xs-4>Mode</div><div class='col-xs-4'>Run name</div></div></strong>";
 			for (x = 0; x < data['status'].length; x++) {
+if(!data['status'][x]) continue;
 				status_more += "<div class='row emo-status-menu-entry'><div class='col-xs-2'><strong>" +
 						data['status'][x]['detector'] + "</strong></div>" + "<div class='col-xs-2'>";
 				if( data['status'][x]['state'] == "Running" ) {

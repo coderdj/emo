@@ -146,7 +146,7 @@
 function format ( d ) {
     // `d` is the original data object for the row
     var ret =
-   '<div class="slider"><table cellpadding="5" cellspacing="0" border="0" style="width:99%;margin-bottom:10px;">';
+   '<div class="slider" style="background-color:#eeeeee;padding-left:0;padding-right:0;"><table cellpadding="5" cellspacing="0" border="0" style="background-color:white;width:100%;margin-bottom:10px;">';
  
       if(d.comments != null){
       for( x=0; x<d.comments.length; x+=1){
@@ -158,20 +158,20 @@ function format ( d ) {
 				     ("0"+m.getUTCMinutes()).slice(-2) + ":" + 
 				     ("0"+m.getUTCSeconds()).slice(-2);
 
-        ret += '<tr style="border-width:1px;border-color:#999999;border-style:solid;">'+
+        ret += '<tr style="border-width:1px;border-color:#999999;border-style:solid;border-left:0;border-right:0;">'+
           '<td valign="top" style="width:15%;padding:5px;">'+dateString+'</td>'+
-          '<td valign="top" style="width:10%;padding:5px;">'+d.comments[x].user+'</td>'+
+          '<td valign="top" style="width:10%;padding:5px;"><stong>'+d.comments[x].user+'</strong></td>'+
           '<td style="min-width:60%;background-color:white;padding:5px;" class="hashes">'+ d.comments[x].text+ '</td>'+
         '</tr>';
      }}
 ret += '</table>';
      console.log(d);
-     ret += "<form onsubmit='if(!OKtoSubmit) event.preventDefault();' id='comment_form' action='/log/new_comment/' style='width:99%;padding-right:1px;' method='post'>" +
+     ret += "<form onsubmit='if(!OKtoSubmit) event.preventDefault();' id='comment_form' action='/log/new_comment/' style='width:100%;' method='post'>" +
 				     "{% csrf_token %}" +     
-            '<textarea id="' + d._id['$oid'] + '_formtext" name="content" placeholder="New threaded comment...">New threaded comment...</textarea>' +  
+            '<textarea id="' + d._id['$oid'] + '_formtext" name="content" placeholder="New threaded comment..." style="width:100%;border-left:0;border-right:0">New threaded comment...</textarea>' +  
              '<br>' +                                                            
              '<input style="margin-top:10px;" type="hidden" name="redirect_url" value="{{ request.get_full_path }}"/>' +  
-             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;" onclick="SubmitComment()">New comment</button>' + 
+             '<button class="btn btn-info" type="submit" value="' + d._id['$oid'] + '" name="log_id" style="margin-bottom:15px;margin-left:15px" onclick="SubmitComment()">New comment</button>' + 
 		'<input type="hidden" name="log_id" value="' + d._id['$oid'] + '"/>';
      if(d.priority == 2 || d.priority ==3 || d.priority ==4 ){
 		ret += '&nbsp;<button class="btn btn-warning" onclick="ConfirmClose()">Submit and Close Issue</button>';
@@ -321,7 +321,7 @@ $(".hashes").linkify(toHashtagUrl);
 	    tr.addClass('shown', 250, 'linear', 
             function(){
                  $("#"+row.data()['_id']['$oid']+"_formtext").summernote({
-                     "height": 300,
+                     "height": 150,
 			"disableDragAndDrop": true,
 		      toolbar: [
                       

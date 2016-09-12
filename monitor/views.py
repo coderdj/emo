@@ -39,6 +39,11 @@ wfclient = MongoClient(settings.WAVEFORM_DB_ADDR)
 wfdb = wfclient[settings.WAVEFORM_DB_NAME]
 # Connect to buffer DB
 bufferclient = MongoClient( settings.BUFFER_DB_ADDR)
+bufferClients = ["mongodb://"+settings.BUFFER_USER+":"+settings.BUFFER_PW+
+                 "@eb0:27000/admin", "mongodb://"+settings.BUFFER_USER+":"+
+                 settings.BUFFER_PW+"@eb1:27000/admin", "mongodb://"+
+                 settings.BUFFER_USER+":"+settings.BUFFER_PW+"@eb2:27000/admin"]
+
 
 """TRIGGER SECTION"""
 #triggerClients = ["eb2:27001", "eb0:27017", "eb1:27017", "master:27017"]
@@ -1256,31 +1261,74 @@ def getWaveform(request):
                     searchdict = {"module": listing['digitizer']['module'],
                                   "channel": listing['digitizer']['channel']}
     
+    # OK let's make it smarter. We want to know where to look. 
+    # Query the runs DB
+    if "module" not in searchdict or "channel" not in searchdict:
+        return HttpResponse({"ret":
+                             "ERROR: No data found. Is the DAQ running?"},
+                            content_type="application/json")
+    # Get most recent runs doc
+    runsClient = MongoClient(settings.RUNS_DB_ADDR)
+    runsDB = runsClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
     try:
-        server = MongoClient(settings.BUFFER_DB_ADDR)
+        newest_run = runsDB.find({"detector": "tpc"}).sort("number", -1).limit(1)[0]
+    except:
+        logger.error("Error getting newest run")
+        return HttpResponse({"ret":
+                             "ERROR: No data found. Is the DAQ running?"},
+                            content_type="application/json")
+        
+    # Get reader
+    reader = -1
+    reader_ini = newest_run['reader']['ini']['boards']
+    for board in reader_ini:
+        if board["serial"] == str(searchdict['module']):
+            reader = board['reader']
+    if reader == -1:
+        logger.error("Didn't find the reader")
+        return HttpResponse({"ret":
+                             "ERROR: Couldn't find which reader we need"},
+                            content_type="application/json")
+    
+    # Get mongo
+    hosts = newest_run['reader']['ini']['mongo']['hosts']
+    if ("reader" + str(reader)) not in hosts:
+        logger.error("Reader not in hosts")
+        return HttpResponse({"ret":
+                             "ERROR: Couldn't find which reader we need"},
+                            content_type="application/json")
+    mongo_addr = hosts[("reader"+str(reader))]
+    mongo_addr = mongo_addr[10:]
+    actual_mongo_addr = ( "mongodb://"+settings.BUFFER_USER+":"+settings.BUFFER_PW+
+                          "@"+mongo_addr )
+
+    try:
+        server = MongoClient(actual_mongo_addr)
         database = server['untriggered']
     except:
         return HttpResponse({"ret": 
-                             "ERROR: Database not found, is the server running?"}, 
+                             "ERROR: Database not found, is the server running?"},
                             content_type="application/json")
     
     # Find most recent collection
-    logger.error(len(database.collection_names()))
     collections=list(database.collection_names())
     collections.sort()
-    logger.error(collections)    
+    if "status" in collections:
+        collections.remove("status")
     collections = list(reversed(collections))
+    logger.error(collections)
     if len(collections) == 0:
         return HttpResponse({"ret":
                              "ERROR: No collections found!"},
                             content_type="application/json")
     cl = collections[0].split("_")
+    logger.error(cl)
     current_run = cl[0]+"_"+cl[1]
     highest_coll = int(cl[2])
 
     for coll in reversed(range(highest_coll)):
         collection = current_run + "_" + str(coll)
-        cursor = database[collection].find(searchdict).limit(10)
+        cursor = database[collection].find(searchdict).limit(30)
         if cursor.count() < 10:
             continue
         
@@ -1294,12 +1342,12 @@ def getWaveform(request):
                 if ( listing['digitizer']['module'] == doc['module'] and 
                      listing['digitizer']['channel'] == doc['channel'] ):
                     pmt = listing['pmt_position']
-
+                    
             # Get time reset counter
             arr = collection.split("_")
             counter = int(arr[len(arr)-1])
             ttime = (counter * 2147483647) + doc['time'];
-
+            
             # Put bins into dygraphs format
             intformat = np.frombuffer(doc['data'],np.int16)
             bins = []
@@ -1312,7 +1360,7 @@ def getWaveform(request):
                         "data": bins,
                         "time": ttime,
                         "rawtime": doc['time']
-                    }
+            }
             retdict['waveforms'].append(waveform)
         return HttpResponse(json_util.dumps(retdict), content_type="application/json")
 

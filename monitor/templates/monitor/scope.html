@@ -15,14 +15,14 @@
 {% endblock %}
 {% block content %}
 <div class="container" style="width:100%;padding-left:20px;padding-right:10px;"> 
-  <p class="bg-info" style="width:100%;padding-left:20px">This can be thought of as a live scope. It's under construction. It will try to pull the newest data from the buffer database (pre-trigger) and plot it. It pulls 10 occurrences at a time. To get new ones hit the green button. If the DAQ isn't running it will just keep pulling the 10 newest and they will be the same (or there will be none).</p>
+  <p class="bg-info" style="width:100%;padding-left:20px">This can be thought of as a live scope. It will try to pull the newest data from the buffer database (pre-trigger) and plot it. It pulls 30 occurrences at a time. To get new ones hit the green button. If the DAQ isn't running it will just keep pulling data that hasn't been cleared from the buffer yet (if there is any).</p>
   
-  <div class="row">       
-    <div class="col-md-9 col-xs-12"> 
-      <div class="panel panel-default"> 
-        <div id="scope_panel" class="panel-body" style="width:95%;height:400px;">
+  <div class="row" style="height:500px">       
+    <div class="col-md-9 col-xs-12" style="background-color:white;height:100%"> 
+      <!--<div class="panel panel-default"> -->
+        <div id="scope_panel" class="panel-body" style="width:95%;height:90%">
 	</div>   
-      </div>   <!-- end panel -->
+      <!--</div>   <!-- end panel -->
     </div> <!-- end col-md-9 -->    
     <div class="col-md-3 col-xs-12">  
       <div id="channelPanel" class="panel panel-default">

@@ -65,15 +65,37 @@
 
    <div class="col-sm-3 col-xs-12" id="mainwindow" style="height:100%; overflow-y:scroll;background-color:white">
      
-     <div class="row">
-       <div class="col-xs-12"><h3>Aggregate information</h3>
+
+     <div class="row" style="margin-top:15px;">       
+       <div class="col-sm-10 col-xs-12"><h3>Aggregate information</h3>
+       </div>
+       <div class="col-sm-2 col-xs-12">
+	 <button class="btn btn-default" onclick="ToggleShowAggregate()">Show/hide</button>
+       </div>
+       <div class="col-xs-12">
+	 <hr style="margin-top:3px;">       
        </div>
      </div>
+     <div id="aggregate_div">
      <div class="row">
        <div class="col-xs-12">
          <div class="col-xs-12">
          <strong>Event rates last 100 runs: </strong>
          </div>
+	 <div id="loading_event_history" style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+
          <div class="col-xs-12" id="plot_event_history" style="height:25vh">
        </div>
        </div>
@@ -83,11 +105,24 @@
          <div class="col-xs-12">
          <strong>Electron lifetime last few days: </strong>
          </div>
+	 <div id="loading_elife_history" style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;">
+	   <div class="sk-cube-grid">
+	     <div class="sk-cube sk-cube1"></div>
+	     <div class="sk-cube sk-cube2"></div>
+	     <div class="sk-cube sk-cube3"></div>
+	     <div class="sk-cube sk-cube4"></div>
+	     <div class="sk-cube sk-cube5"></div>
+	     <div class="sk-cube sk-cube6"></div>
+	     <div class="sk-cube sk-cube7"></div>
+	     <div class="sk-cube sk-cube8"></div>
+	     <div class="sk-cube sk-cube9"></div>
+	   </div>
+	 </div>
          <div class="col-xs-12" id="plot_elife_history" style="height:35vh">
        </div>
        </div>
      </div>
-
+   </div>
      <div class="row">
        <div class="col-xs-12"><hr>
        </div>
@@ -96,7 +131,7 @@
      <div class="col-xs-12" id="container_info">
        <div class="row">
 	 <div class="col-sm-6 col-xs-12">
-	   <h3>Detail for Run <span id="info_run_number"></span></h3>
+	   <h3>Detail for Run <span id="info_run_number">(select a run)</span></h3>
 	 </div>
 	 <div class="col-sm-6 col-xs-12">
 	   <h4>Name: <span id="info_run_name"></span></h4>
@@ -133,6 +168,21 @@
 	 <div class="col-xs-12">
          <strong>Event rates this run(note: scaled up from prescaled sample!): </strong>
 	 </div>
+	 <div id="loading_event_rate" 
+	      style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+
 	 <div class="col-xs-12" id="plot_event_rate" style="height:25vh">
        </div>
        </div>
@@ -143,6 +193,21 @@
        <div class="col-xs-12">
 	 <strong>S1 Energies: </strong>
        </div>
+       <div id="loading_s1"
+              style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+
        <div class="col-xs-12" id="plot_s1" style="height:45vh">
        </div>
      </div>
@@ -151,25 +216,67 @@
        <div class="col-xs-12">
 	 <strong>S2 Energies: </strong>
        </div>
+       <div id="loading_s2"
+              style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
        <div class="col-xs-12" id="plot_s2" style="height:45vh">
        </div>
      </div>
      </div>
      <div class="row" style="margin-top:20px;margin-bottom:20px">
      <div class="col-sm-6 col-xs-12"
-          style="min-height:300px;height:45vh">
+          style="min-height:300px;height:50vh">
        <div class="col-xs-12">
          <strong>x-y Distribution: </strong>
        </div>
-       <div class="col-xs-12" id="plot_xy" style="height:45vh">
+       <div id="loading_xy"
+              style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+       <div class="col-xs-12" id="plot_xy" style="height:50vh">
        </div>
      </div>
      <div class="col-sm-6 col-xs-12"
-          style="min-height:300px;height:45vh">
+          style="min-height:300px;height:50vh">
        <div class="col-xs-12">
          <strong>r-dt Distribution: </strong>
        </div>
-       <div class="col-xs-12" id="plot_rdt" style="height:45vh">
+       <div id="loading_rdt"
+              style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+       <div class="col-xs-12" id="plot_rdt" style="height:50vh">
        </div>       
      </div>
       <div class="row" style="margin-top:20px;margin-bottom:20px">
@@ -178,6 +285,21 @@
        <div class="col-xs-12">
          <strong>S2 vs dt Distribution: </strong>
        </div>
+       <div id="loading_s2dt"
+              style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
+           <div class="sk-cube-grid">
+             <div class="sk-cube sk-cube1"></div>
+             <div class="sk-cube sk-cube2"></div>
+             <div class="sk-cube sk-cube3"></div>
+             <div class="sk-cube sk-cube4"></div>
+             <div class="sk-cube sk-cube5"></div>
+             <div class="sk-cube sk-cube6"></div>
+             <div class="sk-cube sk-cube7"></div>
+             <div class="sk-cube sk-cube8"></div>
+             <div class="sk-cube sk-cube9"></div>
+           </div>
+         </div>
+
        <div class="col-xs-12" id="plot_s2dt" style="height:45vh">
        </div>
      </div>
@@ -199,6 +321,14 @@
  </div>
 
  <script type="text/javascript">
+function ToggleShowAggregate(){
+ if($("#aggregate_div").is(":hidden")){
+   $("#aggregate_div").show("slow");
+ }
+ else{
+    $("#aggregate_div").slideUp();
+}
+}
 
    function DrawHists(runname){
       $("#Loading").show();
@@ -218,7 +348,7 @@
      var runURL = "/runs/get_run/?detector=tpc;name="+runname;
      $.getJSON(runURL, function(rundoc){
          document.getElementById("info_run_number").innerHTML = rundoc['number'];
-      document.getElementById("info_run_name").innerHTML = rundoc['name'] + "&nbsp;&nbsp;&nbsp;&nbsp;<a class='btn btn-default' href='/runs/?startdate=&enddate=&mode=All&custom=%7B%22name%22%3A+%22"+rundoc['name']+"%22%7D&submit='>See in runs DB</a>";
+      document.getElementById("info_run_name").innerHTML = rundoc['name'] + "&nbsp;&nbsp;&nbsp;&nbsp;<a class='btn btn-default' href='/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22name%22%3A+%22"+rundoc['name']+"%22%7D&submit='>See in runs DB</a>";
       var start = new Date(rundoc.start['$date']);
       var dstring = start.getUTCFullYear() +"/"+
                     ("0" + (start.getUTCMonth()+1)).slice(-2) +"/"+
@@ -254,10 +384,11 @@ if("end" in rundoc){
 
 
 function GetELifeHistory(divname){
+   $("#loading_elife_history").show();
+
 var elifeURL="/online_monitor/get_elife_history/?runs=100;";
    $.getJSON(elifeURL, function(data){
 
-console.log(data);
 bins_time = [];
 for(x=0; x<data['t'].length;x+=1)
           bins_time.push(new Date(data['t'][x]*1000));
@@ -297,7 +428,7 @@ var traces = [trace1];
                    },
 
                    },
-                   yaxis: { title: "Electron lifetime-ish (mus)",
+                   yaxis: { title: "Electron lifetime (mus)",
 	     range: [0, 500],
 	     },
                    margin: {t: 10, b:50, l:45, r:25},
@@ -309,49 +440,49 @@ var traces = [trace1];
                    bargap :0.0
                    };
       Plotly.newPlot(divname, traces, layout);
-
+	     $("#loading_elife_history").hide();
 });
 }
 
 
    function GetEventHistory(divname, runname){
+   $("#loading_event_history").show();
+
    var histURL="/online_monitor/get_event_rate_history/?runs=100;run="+runname;
    $.getJSON(histURL, function(data){
+//      bins_time = [];
+  //     sqrts=[];
+
+     var traces =[];
+     for(var key in data){
       bins_time = [];
-       sqrts=[];
-   console.log(data);
-      for(x=0; x<data['times'].length;x+=1){
-          bins_time.push(new Date(data['times'][x]*1000));
-          sqrts.push(Math.sqrt(data['events'][x]));
-     }
+       sqrts=[];  
+        for(x=0; x<data[key]['times'].length;x+=1){
+             bins_time.push(new Date(data[key]['times'][x]*1000));
+             sqrts.push(Math.sqrt(data[key]['events'][x]));
+        }
 	var trace1 = {
           x: bins_time,
-	y: data['events'],
-error_y: { type: 'data', array: sqrts, thickness: 1 },
-//        error_x: {
-  //                        type: 'data',
-    //                      array: data['halftimes']*1000,
-      //                    color: '#888888',
-        //                  thickness: 5,
-          //                width: 0,
-            //              opacity: .1
-              //          },
-
-              mode: 'markers',
+	  y: data[key]['events'],
+          name: key,
+          error_y: { type: 'data', array: sqrts, thickness: 1 },
+          mode: 'markers',
           showline: true,
           marker: {
 		   opacity: .8,
-                           color: 'rgb(100,100,100)',
+          //                 color: 'rgb(100,100,100)',
           line: {
                        //color: 'rgb(255,255,255)',
-		   color: 'rgba(50,171,96,1.0)',
+	//	   color: 'rgba(50,171,96,1.0)',
           width: .1
           }
           }
 
 
       };
-		    var traces = [trace1];//, trace2];
+      traces.push(trace1);
+   }
+//		    var traces = [trace1];//, trace2];
 
 		   var layout = {
 		   xaxis: {
@@ -372,13 +503,15 @@ error_y: { type: 'data', array: sqrts, thickness: 1 },
 		   bargap :0.0
 		   };
       Plotly.newPlot(divname, traces, layout);
+		      $("#loading_event_history").hide();
 
    });
    }
    function GetEventSpread(divname, runname){
+		   $("#loading_event_rate").show();
+
       var spreadURL="/online_monitor/get_event_rates/?run="+runname;
       $.getJSON(spreadURL, function(data){
-          console.log(data);
           bins_time = [];
           for(x=0; x<data['events'].length;x+=1)
              bins_time.push(new Date(x*data['bin_size']*1000+((-2*3600000)+data['min_time']/1000000)))
@@ -443,15 +576,15 @@ titlefont: {
          bargap :0.0
       };
       Plotly.newPlot(divname, traces, layout);
+		                          $("#loading_event_rate").hide();
 
       });
    }
    function RDT(divname, runname){
+                   $("#loading_rdt").show();
+
         var URL = "/online_monitor/get_rdt?run="+runname;
-console.log("Pre RDT");
               $.getJSON(URL, function(data){
-console.log("RDT");
-console.log(data);
                 var series = [
                    {
            x: data['r'],
@@ -492,7 +625,7 @@ var layout = {
 autorange: "reversed",
  tickformat : ":04,2f"
        },
-   margin: {t: 10, b:50, l:25, r:25},
+   margin: {t: 10, b:50, l:45, r:25},
    title: '',
          font:{
           family: 'Raleway, snas-serif'
@@ -502,15 +635,18 @@ autorange: "reversed",
       };
 
 Plotly.newPlot(divname, series, layout);
+                   $("#loading_rdt").hide();
+
 });
    }
 
 
    function Hist2D(divname, runname, xvar, yvar, xlab, ylab, xmin, xmax, xbin, logx, ymin, ymax, ybin, logy, showscatter){
+		       if(xvar == "dt") $("#loading_s2dt").show();
+                       if(xvar == "x") $("#loading_xy").show();
+
      var URL = "/online_monitor/get_series_2d?run="+runname+";x="+xvar+";y="+yvar;
      $.getJSON(URL, function(data){
-console.log("2D");
-console.log(data);
       xdata = data['x'];
       ydata = data['y'];
       if(logy){
@@ -595,16 +731,28 @@ if(data['m']!=0){
 }
 }
 
+if(xvar == "x") $("#loading_xy").hide();
+
+if(xvar == "dt")  $("#loading_s2dt").hide();
+
 Plotly.newPlot(divname, series, layout);
 
 });
    }
+
+
+
+
+
+
    function Hist1D(divname, runname, minimum, maximum, bins, variable){
+		    if(variable=="s1")  $("#loading_s1").show();
+                    if(variable=="s2")  $("#loading_s2").show();
+
      units = {"s1": "p.e.", "s2": "p.e."};
    var runURL = "/online_monitor/get_hist_1d/?var="+variable+";run="+runname+";min="+
    minimum.toString()+";max="+maximum.toString()+";bins="+bins.toString();
    $.getJSON(runURL, function(data){
-      console.log("Got run data");
       axis_label = (variable+ '['+units[variable]+']');
       var trace1 = {
           x: data['bins'],
@@ -642,6 +790,9 @@ titlefont: {
       };
  
       Plotly.newPlot(divname, traces, layout);
+		    if(variable=="s1")  $("#loading_s1").hide();
+                    if(variable=="s2")  $("#loading_s2").hide();
+
     });
 }
 $(function() {
@@ -674,13 +825,13 @@ function WindowResize(){
 var mainwidth = window.innerWidth; //document.getElementById("content").offsetWidth;
 offset = 0;
 if($("#content").hasClass("emo-sidebar-show")){
-console.log("HAS CLASS");
 offset +=166;
 }
- document.getElementById("mainwindow").style.width = mainwidth - 265 - offset + "px";
+$("#mainwindow").outerWidth((mainwidth - 251 - offset).toString() + "px");
+	
 // document.getElementById("main_row").style.height = height - 40 + "px";
 //document.getElementById("content").style.height = height - 40 + "px";
-document.getElementById("content").style.padding_right=0 + "px";
+$("#content").css("padding-right", "0px");
 
 
 

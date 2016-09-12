@@ -33,8 +33,9 @@ urlpatterns = [
  
     url(r'^$', TemplateView.as_view( template_name='base.html')),
     url(r'^game', login_required(TemplateView.as_view( template_name='game.html'))),
-    url(r'^pong', login_required(TemplateView.as_view( template_name='pong.html'))),
+#    url(r'^pong', login_required(TemplateView.as_view( template_name='pong.html'))),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^pong', include('pong.urls')),                                              
     url(r'^april', TemplateView.as_view(template_name='base_april.html')),
     url(r'^fancy', TemplateView.as_view(template_name='base_fancy.html')),
     url(r'^get_login/', views.get_login, name='get_login'),

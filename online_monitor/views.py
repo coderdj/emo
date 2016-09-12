@@ -29,7 +29,7 @@ def get_run_list(request):
     for i in range(0, len(collections)):
         if i > 100:
             break
-        if db[collections[i]].count() !=0:
+        if db[collections[i]].count() > 10:
             rundoc = runsDB.find_one({"name": collections[i]})
             if rundoc is not None:
                 available_runs.append({
@@ -148,7 +148,7 @@ def DoELFit(nowdts, nows2s, ret_times, ret_lifetimes, ret_errors, current_day):
 @login_required
 def get_elife_history(request):
 
-    allowed_modes = ["background_stable"]#, "cs137_stable", "cs137_gimped"]    
+    allowed_modes = ["background_stable", "background_gimped"]#, "cs137_stable", "cs137_gimped"]    
     days = 14
 
     if request.method != "GET":
@@ -315,7 +315,7 @@ def get_event_rate_history(request):
 
     # Return data
     #{ time: timeseconds, rate: events_built/(end-start), halftime: (end-start)/2}
-    retvals = {"times": [], "events": [], "halftimes": []}
+    retvals = {} #{"times": [], "events": [], "halftimes": []}
     for doc in lastn:
         if 'end' not in doc: 
             continue
@@ -327,9 +327,13 @@ def get_event_rate_history(request):
             events = doc['trigger']['events_built']
         except:
             print("No events")
-        retvals['times'].append(runtime)
-        retvals['events'].append(events/runlength)
-        retvals['halftimes'].append(runlength/2)
+        if doc['reader']['ini']['name'] not in retvals:
+            retvals[doc['reader']['ini']['name']] = {"times": [], "events": [],
+                                                     "halftimes": []}
+
+        retvals[doc['reader']['ini']['name']]['times'].append(runtime)
+        retvals[doc['reader']['ini']['name']]['events'].append(events/runlength)
+        retvals[doc['reader']['ini']['name']]['halftimes'].append(runlength/2)
 
     return HttpResponse(json_util.dumps(retvals),content_type="application/json")
         

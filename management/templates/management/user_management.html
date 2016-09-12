@@ -7,9 +7,19 @@
 <link href="{% static "emo/css/emo_logstyle.css" %}" rel="stylesheet">
 <link href="{% static "css/summernote.css" %}" rel="stylesheet">
 
-<script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
+<script src="{% static "DataTablesPackage/DataTables-1.10.12/js/jquery.dataTables.min.js"%}"></script> 
+<script src="{% static "DataTablesPackage/DataTables-1.10.12/js/dataTables.bootstrap.min.js"%}"></script>
+<link href="{% static "DataTablesPackage/DataTables-1.10.12/css/dataTables.bootstrap.min.css"%}" rel="stylesheet"/>
+<script src="{% static "DataTablesPackage/Buttons-1.2.2/js/dataTables.buttons.min.js"%}"></script>
+
+<script src="{% static "DataTablesPackage/Buttons-1.2.2/js/buttons.bootstrap.min.js"%}"></script>
+<link href="{% static "DataTablesPackage/Buttons-1.2.2/css/buttons.bootstrap.min.css"%}" rel="stylesheet"/>
+
+
+
+<!--<script src="{% static "DataTables-1.10.9/media/js/jquery.dataTables.min.js"%}"></script>
 <script src="{% static "DataTables-1.10.9/media/js/dataTables.bootstrap.min.js"%}"></script>
-<link href="{% static "DataTables-1.10.9/media/css/dataTables.bootstrap.min.css"%}" rel="stylesheet" />
+<link href="{% static "DataTables-1.10.9/media/css/dataTables.bootstrap.min.css"%}" rel="stylesheet" />-->
 <style>
 td.details-control {
     background: url('{%static "img/details_open.png" %}') no-repeat center center;
@@ -162,6 +172,9 @@ $(document).ready(function(){
    table_data = {{ users|safe }};
 console.log(table_data[0]);
    table = $("#user_table").DataTable({
+ buttons: [
+        'copy', 'excel', 'pdf'
+    ],
          "data": table_data,          
          "columns": [
             { "data": "username" },
