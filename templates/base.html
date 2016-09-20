@@ -71,6 +71,7 @@
 <link href="{% static "bootstrap-social-gh-pages/bootstrap-social.css" %}">
 <script src="{% static "js/jquery.sidebar.min.js" %}"></script>
 
+
 <style>
 .gitter-chat-embed {
   top: 40px;
@@ -173,7 +174,7 @@ margin-left:-30px;margin-right:-30px;
 	<ul class="nav navbar-nav">
           <li class="dropdown">
             <a class="dropdown-toggle" id="slow_control_nav" data-toggle="dropdown"
-               href="#"><span id="fieldspan"></span>&nbsp;PMTs <span id="scspan"></span></a>
+               href="#"><span id="fieldspan"></span>&nbsp;Buffer <span id="scspan"></span></a>
             <ul class="emo-status-menu dropdown-menu" id="sc_more" role="menu" aria-labelledby="pmts_on">
               More info here
             </ul>
@@ -182,7 +183,7 @@ margin-left:-30px;margin-right:-30px;
 	<ul class="nav navbar-nav">
   	  <li class="dropdown">
     	    <a class="dropdown-toggle" id="last_update_nav" data-toggle="dropdown"
-       	       href="#">Connected <span id="contact"></span></a>
+       	       href="#"> DAQ Net <span id="contact"></span></a>
     	    <ul class="emo-status-menu dropdown-menu" id="contact_more" role="menu" aria-labelledby="last_update">
 	      More info here
 	    </ul>
@@ -191,7 +192,7 @@ margin-left:-30px;margin-right:-30px;
 	<ul class="nav navbar-nav">
   	  <li class="dropdown">
     	    <a class="dropdown-toggle" id="daq_status_nav" data-toggle="dropdown"
-       	       href="#"> DAQ Status <span id="status"></span></a>
+       	       href="#"> Data <span id="status"></span></a>
     	    <ul class="emo-status-menu dropdown-menu" style="min-width:600px;padding-top:0px;" id="status_more" role="menu" aria-labelledby="daq_status_nav">
 	      More info here
 	    </ul>
@@ -200,7 +201,7 @@ margin-left:-30px;margin-right:-30px;
 	<ul class="nav navbar-nav">
   	  <li class="dropdown">
     	    <a class="dropdown-toggle" id="open_alerts_nav" data-toggle="dropdown"
-       	       href="#"> Open Alerts <span id="alerts"></span></a>
+       	       href="#"> Alerts <span id="alerts"></span></a>
     	    <ul class="emo-status-menu dropdown-menu" id="alerts_more" role="menu" aria-labelledby="opern_alerts_nav">
 	      More info here
 	    </ul>
@@ -477,6 +478,28 @@ margin-left:-30px;margin-right:-30px;
 
 <script type="text/javascript">
 	function DoUpdate(Url){
+
+	$.getJSON("/monitor/get_buffer_occupancy", function(data) {
+	     tot_tb = (data['tot']/Math.pow(2,40)).toFixed(2);
+	     free_tb = (data['free']/Math.pow(2,40)).toFixed(2);
+
+	
+	if(data['free']/data['tot'] > 0.1){
+	      document.getElementById("scspan").innerHTML="<i style='color:green;' class='fa fa-check-circle'></i>";
+    document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Looks good.";
+        }
+        else if(data['free']/data['tot'] > 0.05){
+              document.getElementById("scspan").innerHTML="<i style='color:orange;' class='fa fa-exclamation-triangle'></i>";
+              document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Getting pretty close there.";
+       }
+       else{ 
+              document.getElementById("scspan").innerHTML="<i style='color:red;' class='fa fa-exclamation-circle'></i>";
+	      document.getElementById("sc_more").innerHTML = "<strong>"+free_tb+"TB</strong> remaining of <strong>" + tot_tb + "TB </strong> total ("+(100*data['free']/data['tot']).toFixed(1)+"%). <p style='color:red'>Computing local buffer storage space is low!</p>";
+       }
+           
+
+	});
+
 
 	/*	
 	        sc_URL = "/slow_control/get_sc_info";

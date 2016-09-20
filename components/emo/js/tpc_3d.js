@@ -412,13 +412,15 @@ function UnzipWaveforms(data, format){
     for( i=0; i<data['sum_waveforms'].length; i+=1){
         if(data['sum_waveforms'][i]['name'] == 'veto_raw')
             idx_veto = i;
-        else if(data['sum_waveforms'][i]['name'] == 'tpc_raw')
+        else if(data['sum_waveforms'][i]['name'] == 'tpc' || 
+		data['sum_waveforms'][i]['name'] == 'tpc_raw')
             idx_tpc = i;
     }
-    if( idx_veto < 0 || idx_tpc < 0 )
+
+    if( idx_tpc < 0 )
         return;
     //bottleneck is transfer. so use browser to decompress waveform
-    for(i=0;i<data['sum_waveforms'][idx_veto]['samples'].length;i++){
+    /*for(i=0;i<data['sum_waveforms'][idx_veto]['samples'].length;i++){
         if(data['sum_waveforms'][idx_veto]['samples'][i]=="z"){
             nzeros=parseInt(data['sum_waveforms'][idx_veto]['samples'][i+1]);
             for(j=0;j<nzeros;j++)
@@ -428,7 +430,7 @@ function UnzipWaveforms(data, format){
         }
         else
             veto_waveform.push(parseFloat(data['sum_waveforms'][idx_veto]['samples'][i]));
-    }
+    }*/
     for(i=0; i<data['sum_waveforms'][idx_tpc]['samples'].length;i++){
         if(data['sum_waveforms'][idx_tpc]['samples'][i]=="z"){
             nzeros = parseInt(data['sum_waveforms'][idx_tpc]['samples'][i+1]);
@@ -450,6 +452,15 @@ function UnzipWaveforms(data, format){
     var tpcWasZero=true;
     var vetoWasZero=true;
     for(i=0;i<tpc_waveform.length;i++) {
+	if(veto_waveform.length == 0){
+	    if(format==1){
+		total_data["x"].push(i);
+		total_data["tpc"].push(tpc_waveform[i]);
+	    }
+	    else
+		total_data.push([i, tpc_waveform[i]]);
+	    continue;
+	}
         if (i < veto_waveform.length) {
 	    if(tpc_waveform[i]==0 && veto_waveform[i]==0) {
 		if(!tpcWasZero || !vetoWasZero){

@@ -27,7 +27,7 @@ import collections
 import scipy.ndimage as spi
 import math
 import logging
-
+import os
 # Get an instance of a logger
 #logger = logging.getLogger(__name__)
 logger = logging.getLogger("emo")
@@ -48,6 +48,23 @@ bufferClients = ["mongodb://"+settings.BUFFER_USER+":"+settings.BUFFER_PW+
 """TRIGGER SECTION"""
 #triggerClients = ["eb2:27001", "eb0:27017", "eb1:27017", "master:27017"]
 triggerClients = ["gw:27018"]
+
+@login_required
+def get_buffer_occupancy(request):
+    free = 1 
+    tot = 1
+    try:
+        free = ( os.statvfs(settings.BUFFER_PATH).f_frsize * 
+                 os.statvfs(settings.BUFFER_PATH).f_bavail )
+        tot = ( os.statvfs(settings.BUFFER_PATH).f_frsize *
+                os.statvfs(settings.BUFFER_PATH).f_blocks ) 
+    except:
+        print("Can't access local buffer.")
+    return HttpResponse(dumps({"free": free, "tot": tot}),
+                        content_type="application/json")
+
+
+
 @login_required
 def trigger_get_run_list(request):
     
@@ -210,9 +227,32 @@ def trigger_get_data(request):
                            total_data['trigger_signals_histogram'][i]))
             total_data['trigger_signals_histogram'] = [ total_data['trigger_signals_histogram'][0] ]
 
-        # Rebin big stuff              
-        max_size=1000.        
+
+        # Get sum over whole run of raw and coincident pulses
+        pulses = []
+        lone_pulses = []
+        for array_bin in total_data["count_of_lone_pulses"]:
+            if len(lone_pulses) ==0:
+                lone_pulses = array_bin.tolist()
+            else:
+                for i in range(0, len(array_bin)):
+                    lone_pulses[i] += array_bin[i]
+        for i in range(0, len(lone_pulses)):
+            lone_pulses[i] = lone_pulses[i] / len(total_data['count_of_lone_pulses'])
+
+        for array_bin in total_data["count_of_all_pulses"]:
+            if len(pulses) ==0:
+                pulses = array_bin.tolist()
+            else:
+                for i in range(0, len(array_bin)):
+                    pulses[i] += array_bin[i]
+        for i in range(0, len(pulses)):
+            pulses[i] = pulses[i] / len(total_data['count_of_all_pulses'])
+
+        # Rebin big stuff
+        max_size=1000.
         xbin = resize_arrs(total_data, max_size)
+
 
         # Convert np types
         for key in total_data:
@@ -224,7 +264,9 @@ def trigger_get_data(request):
             if key =="batch_info":
                 total_data[key]=[]
         ret = total_data
-    return HttpResponse(json_util.dumps({"xbin": xbin, "data": ret}), 
+    return HttpResponse(json_util.dumps({"xbin": xbin, "data": ret, 
+                                         "lone_pulses": lone_pulses,
+                                         "all_pulses": pulses}), 
                         content_type="application/json")
 
 
