@@ -32,6 +32,7 @@ runapi.register(RunsResource())
 urlpatterns = [
  
     url(r'^$', TemplateView.as_view( template_name='base.html')),
+    url(r'^test', TemplateView.as_view( template_name='base_test.html')),
     url(r'^game', login_required(TemplateView.as_view( template_name='game.html'))),
 #    url(r'^pong', login_required(TemplateView.as_view( template_name='pong.html'))),
     url(r'^admin/', include(admin.site.urls)),

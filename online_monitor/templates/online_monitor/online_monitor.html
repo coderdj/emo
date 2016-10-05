@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}Online Monitor{% endblock %}
 {% load staticfiles %}
 {% block head %}
 <style type="text/css">
@@ -101,7 +102,7 @@
      <div class="row">
        <div class="col-xs-12">
          <div class="col-xs-12">
-         <strong>Electron lifetime last few days: </strong>
+         <strong>Electron lifetime last few days: <i>Note: this plot it auto-generated using a simple fit of the background spectrum. It shows the general trend but is not meant to be as precise as the 'official' version.</i></strong>
          </div>
 	 <div id="loading_elife_history" style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;">
 	   <div class="sk-cube-grid">
@@ -164,7 +165,7 @@
      <div class="row" style="margin-top:20px;">
        <div class="col-xs-12">
 	 <div class="col-xs-12">
-         <strong>Event rates this run(note: scaled up from prescaled sample!): </strong>
+         <strong>Event rates this run: </strong>
 	 </div>
 	 <div id="loading_event_rate" 
 	      style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none">
@@ -328,13 +329,16 @@ function ToggleShowAggregate(){
 }
 }
 
-   function DrawHists(runname){
+   function DrawHists(runname, events){
       $("#Loading").show();
       LoadRunDoc(runname);
-      Hist1D("plot_s1", runname, 0, 10000, 80, 's1');
-      Hist1D("plot_s2", runname, 1, 1000000, 80, 's2');
-      Hist2D("plot_xy", runname, 'x', 'y', "x [cm]", "y[cm]", -50, 50, 2, false, -50, 50, 2, false, false);
-      Hist2D("plot_s2dt", runname, "dt", "s2", "drift time [ns]", "log s2 [log pe]", 0, 650000, 4000, false, 1, 20, 1, true, true);
+var binsy = 80;
+if(events > 10000)
+ binsy = 160;
+      Hist1D("plot_s1", runname, 0, 10000, binsy, 's1');
+      Hist1D("plot_s2", runname, 1, 1000000, binsy, 's2');
+      Hist2D("plot_xy", runname, 'x', 'y', "x [cm]", "y[cm]", -50, 50, 2, false, -50, 50, 2, false, false, false);
+      Hist2D("plot_s2dt", runname, "dt", "s2", "drift time [ns]", "log s2 [log pe]", 0, 650000, 4000, false, 1, 20, 1, true, true, false);
       RDT("plot_rdt", runname);
       // 
       GetEventSpread("plot_event_rate", runname);
@@ -388,6 +392,7 @@ var elifeURL="/online_monitor/get_elife_history/?runs=100;";
    $.getJSON(elifeURL, function(data){
 
 bins_time = [];
+console.log(data);
 for(x=0; x<data['t'].length;x+=1)
           bins_time.push(new Date(data['t'][x]*1000));
 var trace1 = {
@@ -518,7 +523,7 @@ var traces = [trace1];
           y: data['events'],
 		       y: data['events'],
                        error_y: {
-                          type: 'constant',
+                          type: 'sqrt',
                           value: 5,
                           color: '#888888',
                           thickness: 5,
@@ -527,7 +532,7 @@ var traces = [trace1];
                         },
 
 
-          type: 'line',
+		       //type: 'line',
 		       mode: 'markers',
           showline: true,
           marker: {
@@ -623,6 +628,10 @@ var layout = {
 autorange: "reversed",
  tickformat : ":04,2f"
        },
+zaxis: {
+title: "Events",
+type: "log"
+},
    margin: {t: 10, b:50, l:45, r:25},
    title: '',
          font:{
@@ -639,7 +648,7 @@ Plotly.newPlot(divname, series, layout);
    }
 
 
-   function Hist2D(divname, runname, xvar, yvar, xlab, ylab, xmin, xmax, xbin, logx, ymin, ymax, ybin, logy, showscatter){
+   function Hist2D(divname, runname, xvar, yvar, xlab, ylab, xmin, xmax, xbin, logx, ymin, ymax, ybin, logy, showscatter, logz){
 		       if(xvar == "dt") $("#loading_s2dt").show();
                        if(xvar == "x") $("#loading_xy").show();
 
@@ -647,12 +656,17 @@ Plotly.newPlot(divname, series, layout);
      $.getJSON(URL, function(data){
       xdata = data['x'];
       ydata = data['y'];
+var ztitle="events";
+//if(logz){
+//ztitle = "log(events)";
+//}
       if(logy){
         ydata = [];
         for(x=0;x<data['y'].length;x+=1){
           ydata.push(Math.log(data['y'][x]));
         }
        }
+
         var series = [
        {
            x: xdata,
@@ -664,6 +678,15 @@ Plotly.newPlot(divname, series, layout);
             end: xmax,
              size: xbin
          },
+    marker: {
+colorbar: {
+                    title: ztitle,
+                    //ticksuffix: 'Hz',
+                    //showticksuffix: 'last',
+                    thickness: 10
+                },
+
+},
     autobiny: false,
 		       ybins: {
 		       start: ymin,
@@ -699,6 +722,7 @@ range: [xmin, xmax],
          },
 		        tickformat : ":04,2f"
        },
+      zaxis: { type: "-"},
  yaxis: { title: ylab,
 range: [ymin, ymax],
          titlefont: {
@@ -715,6 +739,7 @@ range: [ymin, ymax],
          showlegend: false,
          
       };
+//if(logz) layout['zaxis']['type'] = 'log';
 //if(logx) layout['xaxis']['type'] = 'log';
 //if(logy) layout['yaxis']['type'] = 'log';
 if(xvar =="dt" && yvar=="s2"){
@@ -800,7 +825,18 @@ $(function() {
    var firstrun='0';
      for(var x=0; x<data['runs'].length; x+=1){      
         if(data['runs'][x]['collection'][0]!='s' && data['runs'][x]['collection'][0]!='o'){
-		html += ("<tr><td><strong>"+data['runs'][x]['number']+"</strong></td><td>"+data['runs'][x]['collection']+"</td><td><button class='btn btn-info btn-xs' style='cursor:pointer;cursor:hand;width:80px;width:50px' onclick='DrawHists("+'"' + data['runs'][x]['collection'] + '","'+data['runs'][x]['client']+'"'+", false)'>View</button></td></tr>");
+		color = "#000000";
+
+		if(data['runs'][x]['type'] == 'processed' && data['runs'][x]['finished'] == true)
+			color = '#008000';
+		else if(data['runs'][x]['type'] == 'processed')
+			color = '#ffa500';
+		else if(data['runs'][x]['finished']==false)
+					 color='#ff0000';
+		var events="?";
+		if(data['runs'][x]['events'] != null)
+			events=data['runs'][x]['events'].toString();
+		html += ("<tr><td><strong style='color:"+color+"'>"+data['runs'][x]['number']+"</strong></td><td>"+data['runs'][x]['collection']+"</td><td><button class='btn btn-info btn-xs' style='cursor:pointer;cursor:hand;width:80px;width:80px;padding-left:2px' onclick='DrawHists("+'"' + data['runs'][x]['collection'] + '","'+data['runs'][x]['events']+'"'+", false)'>View ("+events+")</button></td></tr>");
 if(firstrun=='0') firstrun=data['runs'][x]['collection'];
 }
 					 }

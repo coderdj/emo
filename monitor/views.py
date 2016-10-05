@@ -95,7 +95,9 @@ def trigger_get_run_list(request):
             if i >= len(collections):
                 break
             collection = collections[i]
-            rundoc = runsDB.find_one({"name": collection})
+            rundoc = runsDB.find_one({"name": collection, "detector": "tpc"})
+            if rundoc is None:
+                continue
             run_number = 0
             if "number" in rundoc:
                 run_number = rundoc['number']
@@ -127,8 +129,8 @@ def resize_arrs(data, max_size):
         for row in data[field]:
             
             if current_iter == resize_factor:                
-                for i in range(0, len(newrow)):
-                    newrow[i] = newrow[i] / current_iter
+                #for i in range(0, len(newrow)):
+                #    newrow[i] = newrow[i] / current_iter
                 newdata.append(newrow)
                 newrow = [0]*len(data[field][0])
                 current_iter = 0
@@ -161,6 +163,96 @@ def _flatten_trigger_monitor_data(data):
             if k in matrix_fields:
                 n = np.sqrt(data[k].shape[1]).astype('int')
                 data[k] = data[k].reshape((-1, n, n))
+
+
+@login_required
+def trigger_get_aggregate_data(request):
+    """
+    Go to each run and get all the trigger data. For each channel get the 
+    average rate per run. Then return rate versus run (and time) for each channel.
+
+    This function is computationally expensive... maybe. Basically extracting
+    and computing rate per run *is* expensive, but we're also going to cache
+    the extracted value in the collection to make the next call faster. There
+    isn't really a better solution without setting something up offline.
+
+    Aggregate doc format:
+           type: 'aggregate'
+           lone_pulses: array, 256 long, average lone pulse rate
+           all_pulses: array, 256 long, average pulse rate
+    """
+    
+    # In the future we could allow requests of various lengths. Right
+    # now I'll hardcode the number of runs to look back to 50.
+    # That should already kill it.
+    n_runs = 50
+
+    # Only really makes sense in background mode. Sources give false positive.
+    allowed_modes = ['background_stable']
+
+    runsClient = MongoClient(settings.RUNS_DB_ADDR)
+    runsDB = runsClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
+    runs_cursor = runsDB.find({"detector": "tpc", 
+                               "reader.ini.name": {"$in": allowed_modes }, 
+                               "end": {"$exists": True},
+                           }).sort(number, -1).limit(n_runs)
+
+    monClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
+                            settings.GEN_PW+"@"+client+"/"
+                            +settings.GEN_DB)
+    monDB = mongoClient["trigger_monitor"]
+    monCollections = list(monDB.collection_names())
+
+    ret_doc = {
+        "run_numbers": [],
+        "start_times": [],
+        "lone_pulses": [],
+        "all_pulses": []
+    }
+
+    for run_doc in runs_cursor:
+    
+        name = run_doc['name']
+        if not name in monCollections:
+            continue
+
+        # Look for an "Aggregate" doc in the collection
+        aggregate_doc = monDB[name].findOne({"type": "aggregate"})
+        
+        try:
+            lone_pulses = aggregate_doc['lone_pulses']
+            all_pulses = aggregate_doc['all_pulses']
+        except:
+            lone_pulses, all_pulses = aggregate_trigger_collection(name)
+        
+        # Fill ret doc
+        if len(lone_pulses) == 0 or len(all_pulses) == 0:
+            continue
+
+        ret_doc['run_numbers'].append(doc['number'])
+        ret_doc['start_times'].append(doc['start'])
+        if len(ret_doc['lone_pulses']) == 0:
+            ret_doc['lone_pulses'] = lone_pulses
+        else:
+            for i in range(0, len(ret_doc['lone_pulses'])):
+                if i < len(lone_pulses):
+                    ret_doc['lone_pulses'][i].append(lone_pulses[i])
+        if len(ret_doc['all_pulses']) == 0:
+            ret_doc['all_pulses'] = all_pulses
+        else:
+            for i in range(0, len(ret_doc['all_pulses'])):
+                if i < len(all_pulses):
+                    ret_doc['all_pulses'][i].append(all_pulses[i])
+
+    return HttpResponse(json_util.dumps(ret_doc),
+                        content_type="application/json")
+
+
+def aggregate_trigger_collection(col_name):
+    """
+    Helper for trigger_get_aggregate_data. Adds all rows together and 
+    puts summary doc after.
+    """
 
 
 @login_required

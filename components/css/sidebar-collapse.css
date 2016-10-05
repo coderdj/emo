@@ -12,17 +12,31 @@
 
 .sidebar-left-collapse {
     margin-top:40px;
+    border-right: solid #777777 1px;
 	font-family: Arial, Helvetica, sans-serif;
 	position: fixed;
 	top: 0;
 	left: 0;
+display: none;
+z-index: 1002;
 	background-color: #5992C2;
 /*#292c2f;*/
-	width: 180px;
+	width: 280px;
 	height: 100%;
 
 
 #	padding: 20px 0;
+}
+.mainHider {
+    display: none;
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    background-color:#333;
+    opacity:0.7;
+    z-index:1001;
 }
 
 .sidebar-left-collapse > a {

@@ -29,12 +29,30 @@ def get_run_list(request):
     for i in range(0, len(collections)):
         if i > 100:
             break
+        cursor = db[collections[i]].find({"type": "status"})
+        dtype="raw"
+        devents=0
+        dprescale=5
+        finished=False
+        if cursor.count() !=0:
+            if "mode" in cursor[0]:
+                dtype = cursor[0]['mode']
+            if "prescale" in cursor[0]:
+                dprescale = cursor[0]['prescale']
+            if "finished" in cursor[0]:
+                finished = cursor[0]['finished']
+            devents = db[collections[i]].find().count()-1
+
         if db[collections[i]].count() > 10:
             rundoc = runsDB.find_one({"name": collections[i]})
             if rundoc is not None:
                 available_runs.append({
                     "number": rundoc['number'],
                     "collection": collections[i],
+                    "events": devents,
+                    "type": dtype,
+                    "prescale": dprescale,
+                    "finished": finished
                 })
 
     return HttpResponse(dumps({"runs": available_runs}),
@@ -107,27 +125,32 @@ def get_series_2d(request):
     
 def DoELFit(nowdts, nows2s, ret_times, ret_lifetimes, ret_errors, current_day):
     # Another way to do it                                                 
-    thebins = [[], [], [], [], [], [], [], [], [], []]
-    
+    thebins = []#[[], [], [], [], [], [], [], [], [], []]
+    for x in range(0, len(range(50000, 575000, 25000))):
+        thebins.append([])
     fity=[]
     for i in range(0, len(nowdts)):
         
         drift_time = nowdts[i]
-        thebin = math.floor(drift_time / 50000) -1
+        thebin = math.floor(drift_time / 25000 ) -2#50000) -1
         if thebin >= len(thebins) or thebin <0:
             continue
         thebins[thebin].append(nows2s[i])
 
     for j in range(0, len(thebins)):
         s2bin = thebins[j]
-        hist, edges = np.histogram(s2bin, bins=np.arange(5, 20, 0.5))
+        hist, edges = np.histogram(s2bin, bins=np.arange(5, 20, 0.2))
         maxval = edges[np.argmax(hist)]
         fity.append(maxval)
 
     # Now fit her                                                          
     try:
-        out, cov = np.polyfit(range(75000, 575000, 50000),
-                              fity, 1, cov=True)
+        logger.error(len(fity))
+        logger.error(len(range(50000, 550000, 25000)))
+        out, cov = np.polyfit(range(50000, 575000, 25000),                            
+                              fity, 1, cov=True, full=False)  
+        #out, cov = np.polyfit(range(75000, 575000, 50000),
+        #                      fity, 1, cov=True, full=False)
         m = out[0]
         err = cov[0][0]
         lifetime = 1/(-1000*m)
@@ -191,6 +214,8 @@ def get_elife_history(request):
             # While not we can increment the day we're looking at
             while doc['start'].date() != current_day.date() and today<=days:
                 if len(nows2s)!=0 and len(nowdts)!=0:                    
+                    logger.error(current_day)
+                    logger.error(len(nows2s))
                     ret_times, ret_lifetimes, ret_errors = DoELFit(nowdts, nows2s, 
                                                                    ret_times, 
                                                                    ret_lifetimes, 
@@ -213,31 +238,6 @@ def get_elife_history(request):
                 nows2s.append(np.log(eldoc['s2']))
                 nowdts.append(eldoc['dt'])
 
-                '''
-                # One way to do it
-                try:
-                    out, cov = np.polyfit(nowdts,nows2s,1, cov=True)
-                    m = out[0]
-                    err = cov[0][0]
-                    lifetime = 1/(-1000*m)
-                    error = lifetime*(np.sqrt(err)/(-1*m))
-                    if ( lifetime > 0 and not np.isnan(error)
-                     and not np.isnan(lifetime) and not error >= .1*lifetime ):
-                        ret_lifetimes.append(lifetime)
-                        ret_errors.append(error)
-                        ret_times.append((current_day-
-                                          datetime.datetime(1970,1,1)
-                                      ).total_seconds())
-                except:
-                    print("Error fitting")
-                nows2s=[]
-                nowdts=[]
-                today+=1
-                '''
-    logger.error("Final fill?")
-    logger.error(len(nowdts))
-    logger.error(len(nows2s))
-    logger.error(ret_times)
     if len(nowdts)>0 and len(nows2s)>0:
         ret_times, ret_lifetimes, ret_errors = DoELFit(nowdts, nows2s,
                                                        ret_times,
@@ -363,9 +363,17 @@ def get_event_rates(request):
        bin_size = max_time_int / 1000 + 1
     events = []
     interactions = []
-    prescale=1
+    prescale=5
+
+    # Try to get the real prescale
+    try:
+        cursor = collection.find({"type": "status"})
+        prescale = cursor[0]['prescale']
+    except:
+        # Either no cursor, no doc, or no field. I don't care
+        prescale =5
+
     for doc in data:
-        prescale=5
         thebin = int(((doc['time']-min_time)/1e9)/bin_size)
         while thebin >= len(events):
             events.append(0)

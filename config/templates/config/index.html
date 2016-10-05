@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}DAQ Configuration{% endblock %}
 {% load staticfiles %}
 {% block head %}
     <script src="{% static "js/jsoneditor.min.js" %}"></script>
@@ -35,7 +36,7 @@ div.jsoneditor textarea.jsoneditor-text {
 
 <div class="row" id="main_row">
   <div class="col-xs-12" style="margin-top:10px;display:inline;">
-    <h3 style="display:inline">DAQ Run Modes</h3>
+    <!--<h3 style="display:inline">DAQ Run Modes</h3>-->
     <a class="pull-right" data-toggle="modal" href="#helpModal">Help</a>
   </div>
 

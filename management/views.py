@@ -239,7 +239,7 @@ def GetShiftStats(request):
             
             cursor = db['shifts'].find({"start": {"$gte": jan_first, 
                                                   "$lt": next_jan},
-                                        "type": { "$in": ["shifter", "responsible"] }})
+                                        "type": { "$in": ["shifter", "responsible", "run coordinator"] }})
             done_doc = {}
             for doc in cursor:
                 if doc['institute'] not in done_doc:

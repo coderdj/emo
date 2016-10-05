@@ -38,6 +38,15 @@ function Draw2DDisplay(data, div_top, div_bottom){
 		color: [],
 		sizeref: 50,
 		sizemin: 2,
+		"colorscale": [
+		    [0, 'rgb(3, 146, 207)'],
+		    [.25, 'rgb(123, 92, 167)'],
+		    [.5, 'rgb(253, 244, 152)'],
+		    [.75, 'rgb(243, 119, 54)'],
+		    [1, 'rgb(238, 64, 53)']
+
+            ],
+
 		colorbar: {
                     title: 'Rate',
                     ticksuffix: 'Hz',
@@ -57,6 +66,14 @@ function Draw2DDisplay(data, div_top, div_bottom){
 	    autocolorscale: true,
 	    showscale: true,
 	    marker: {
+		"colorscale": [
+                    [0, 'rgb(3, 146, 207)'],
+                    [.25, 'rgb(123, 92, 167)'],
+                    [.5, 'rgb(253, 244, 152)'],
+                    [.75, 'rgb(243, 119, 54)'],
+                    [1, 'rgb(238, 64, 53)']
+
+            ],
 //                sizemode: 'area',
                 size: [],
 		color: [],
@@ -126,7 +143,7 @@ function Draw2DDisplay(data, div_top, div_bottom){
 	    dat_top[0]['x'].push(g_pmt_map[x.toString()]['x']);
 	    dat_top[0]['y'].push(g_pmt_map[x.toString()]['y']);
 	    dat_top[0]['marker']['size'].push(sizefactor*data[x]);
-	    dat_top[0]['marker']['color'].push(sizefactor*data[x]);
+	    dat_top[0]['marker']['color'].push((sizefactor*data[x]));
 
 	    dat_top[0]['text'].push("PMT " + x.toString() + 
 				    ": " + data[x].toFixed(2) + " Hz");
@@ -137,7 +154,7 @@ function Draw2DDisplay(data, div_top, div_bottom){
 	    dat_bottom[0]['x'].push(g_pmt_map[x.toString()]['x']);
 	    dat_bottom[0]['y'].push(g_pmt_map[x.toString()]['y']);	   
 	    dat_bottom[0]['marker']['size'].push(sizefactor*data[x]);
-	    dat_bottom[0]['marker']['color'].push(sizefactor*data[x]);
+	    dat_bottom[0]['marker']['color'].push((sizefactor*data[x]));
 	    dat_bottom[0]['text'].push("PMT " + x.toString() +
                                     ": " + data[x].toFixed(2) + " Hz");
 

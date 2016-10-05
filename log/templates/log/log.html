@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}Logbook{% endblock %}
 {% load staticfiles %}
 {% load log_extras %}
 {% block content %}
@@ -89,9 +90,9 @@
 
 <div class="row" style="margin-top:110px;">
   <div class="col-xs-3 col-sm-3">
-    <h3>DAQ Logbook</h3>
+    <!--<h3>DAQ Logbook</h3>-->
   </div>
-  <div class="col-xs-1 col-sm-1 col-xs-offset-8">
+  <div class="col-xs-1 col-sm-1 col-xs-offset-8" style="padding-right:10px">
     <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#logModal">+ New Entry</button>
   </div>
 </div>
@@ -152,11 +153,12 @@ function format ( d ) {
       for( x=0; x<d.comments.length; x+=1){
           var m = new Date(d.comments[x].date['$date']);
              var dateString = m.getUTCFullYear() +
-                 "/"+ ("0"+m.getUTCMonth()+1).slice(-2) +"/"+ 
+                 "/"+ ("0"+(m.getUTCMonth()+1)).slice(-2) +"/"+ 
 				     ("0"+m.getUTCDate()).slice(-2) + " " +
                 ("0"+m.getUTCHours()).slice(-2) + ":" + 
 				     ("0"+m.getUTCMinutes()).slice(-2) + ":" + 
 				     ("0"+m.getUTCSeconds()).slice(-2);
+			console.log(m);
 
         ret += '<tr style="border-width:1px;border-color:#999999;border-style:solid;border-left:0;border-right:0;">'+
           '<td valign="top" style="width:15%;padding:5px;">'+dateString+'</td>'+

@@ -75,8 +75,99 @@ def last_run_per_det(request):
     return HttpResponse(dumps(retdoc), content_type="application/json")
 
 @login_required
-def runs(request):
+def runs_stream(request):
 
+    filter_query = {"detector": "tpc"}
+
+    # Connect to pymongo
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    db = client[ settings.RUNS_DB_NAME]
+    collection = db[ settings.RUNS_DB_COLLECTION ]
+    fieldslist = []
+
+    limit = 0
+    offset = 0
+    
+    logger.error(request.GET)
+
+    if request.method == 'GET':
+        if "limit" in request.GET:
+            limit = int(request.GET['limit'])
+        if "offset" in request.GET:
+            offset = int(request.GET['offset'])
+        if "detector" in request.GET:
+            filter_query['detector'] = request.GET['detector']
+        if "mongo_query" in request.GET:
+            filter_query = loads(request.GET['mongo_query'])
+    """
+    if request.method == 'GET':
+        filter_form = run_search_form( fieldslist, request.GET )
+        
+        if "limit" in request.GET:
+            limit = int(request.GET["limit"])
+        if filter_form.is_valid():
+            if filter_form.cleaned_data[ 'custom' ] is not "":
+                filter_query = loads( filter_form.cleaned_data['custom'] )
+            if ("detector" in filter_form.cleaned_data
+                and filter_form.cleaned_data['detector'] !=""):
+                filter_query['detector']=filter_form.cleaned_data['detector']
+            if filter_form.cleaned_data[ 'startdate' ] is not None:
+                filter_query[ 'start' ]= { "$gt"
+                                           : datetime.datetime.combine
+                                           (filter_form.cleaned_data
+                                            ['startdate'],
+                                            datetime.datetime.min.time() )}
+            if filter_form.cleaned_data[ 'enddate' ] is not None:
+                if 'start' in filter_query.keys():
+                    filter_query['starttimestamp']['$lt'] = (
+                        datetime.datetime.combine(
+                            filter_form.cleaned_data['enddate'],
+                            datetime.datetime.max.time() )
+                    )
+                else:
+                    filter_query[ 'start' ]= { "$lt" :
+                                               datetime.datetime.combine(
+                                                filter_form.cleaned_data
+                                                   ['enddate'],
+                                                   datetime.datetime.max.time
+                                                   () )}
+            if ( filter_form.cleaned_data[ 'mode' ] is not "" and
+                 filter_form.cleaned_data['mode'] != 'All' ) :
+                filter_query['source.type'] = filter_form.cleaned_data['mode']
+    else:
+        filter_form = run_search_form( fieldslist )
+    """
+    projection = {
+        "detector": 1,
+        "name": 1,
+        "start": 1,
+        "source": 1,
+        "data": 1,
+        "tags": 1,
+        "comments": 1,
+        "trigger.events_built": 1,
+        "number": 1,
+        "reader.self_trigger": 1
+    }
+    logger.error(filter_query)
+    retset = {}
+    if limit!=0 and offset!=0:
+        retset = collection.find( filter_query, projection ).sort( "name", -1 ).skip(offset).limit(limit)
+    elif limit !=0:
+        retset = collection.find( filter_query, projection ).sort( "name", -1 ).limit(limit)
+    else:
+        retset = collection.find( filter_query, projection ).sort( "name", -1 )
+
+    return HttpResponse( dumps(retset),
+                         #       "form" : filter_form,
+                          #      "query": filter_query}, 
+                         content_type="application/json" )
+
+@login_required
+def runs(request):
+    """
+    STAGED FOR REMOVAL ONCE RUNS_STREAM WORKING
+    """
     filter_query = {"detector": "tpc"}
 
     # Connect to pymongo
@@ -149,33 +240,6 @@ def runs(request):
     else:
         retset = collection.find( filter_query, projection ).sort( "name", -1 )
     
-    '''
-    retdocs = []
-    for doc in retset:
-        row = { "detector": doc['detector'],
-                "name": doc['name'],
-                "start": doc['start'],
-                "source": {"type": doc['source']['type']},
-                "data": [],
-                "tags": [],
-                "comments": [],
-            }
-        if "trigger" in doc and "events_built" in doc['trigger']:
-            row['trigger'] = {"events_built": doc['trigger']['events_built']}
-        if "number" in doc:
-            row['number'] = doc['number']
-        if "tags" in doc:
-            row['tags'] = doc['tags']
-        if "data" in doc:
-            row['data'] = doc['data']
-        if "comments" in doc:
-            row['comments'] = doc['comments']
-        if "reader" in doc and "self_trigger" in doc['reader']:
-            row['reader'] = {"self_trigger": doc['reader']['self_trigger']}
-        else:
-            row['reader'] = {"self_trigger": False}
-        retdocs.append(row)
-    '''
     return render( request, 'runs/runs.html', {"runs_list": dumps(retset), 
                                                "form" : filter_form,
                                                "query": filter_query} )

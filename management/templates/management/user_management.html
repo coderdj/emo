@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load staticfiles %}
+{% block title %}User List{% endblock %}
 {% block content %}
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <script src="{% static "js/summernote.min.js"%}"></script>
@@ -40,7 +41,7 @@ background-color:white;
 
 <div class="row" style="margin-top:10px;margin-bottom:20px;">
   <div class="col-xs-3 col-sm-3">
-    <h3>User Management</h3>
+    <!--<h3>User Management</h3>-->
   </div>
   <div class="col-xs-1 col-sm-1 col-xs-offset-8">
     {% if request.user.username == "messina" or request.user.username == "coderre" %}

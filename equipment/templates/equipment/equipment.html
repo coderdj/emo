@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}DAQ Equipment Database{% endblock %}
 {% load staticfiles %}
 {% load crispy_forms_tags %}
 {% block content %}
@@ -31,7 +32,7 @@ background-color:white;
 
 <div class="row" style="margin-top:10px;margin-bottom:20px;">
   <div class="col-xs-3 col-sm-3">
-    <h3>DAQ Equipment Database</h3>
+    <!--<h3>DAQ Equipment Database</h3>-->
   </div>
   <div class="col-xs-1 col-sm-1 col-xs-offset-8">
     <button data-toggle="modal" onclick="NewEntry()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewEntry </button>

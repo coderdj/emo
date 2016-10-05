@@ -50,6 +50,7 @@
 <link href="{% static "css/animate.css" %}" rel="stylesheet">
 <!-- Declare here any global javascript -->
 <script src="{% static "jquery/js/jquery.min.js" %}"></script>
+<script src="{% static "js/jquery-ui.min.js" %}"></script>
 
 <!--<script src="{% static "Highcharts-4.2.1/js/highcharts.js" %}"></script>-->
 <!--<script src="{% static "Highcharts-4.2.1/js/modules/exporting.js" %}"></script>
@@ -73,62 +74,27 @@
 
 
 <style>
-.gitter-chat-embed {
-  top: 40px;
-}
+//.gitter-chat-embed {
+//  top: 40px;
+//}
 </style>
 {% if user.is_authenticated %}
 <script>
 
-$(function(){
+/*$(function(){
   ((window.gitter = {}).chat = {}).options = {
     room: 'XENON1T/operations',
    preload: true,
 //targetElement: '#main_nav_sidebar'
    activationElement: "#open_chat"
   };
-});
+});*/
 </script>
 
 {% endif %}
 <style>
 
-.hero-unit {
-//    background-image:url("/components/img/pano2.jpg");
-    background-size:cover;
-    background-color: #4fa783;
-    height: 20%;
-    min-height:150px;
-    margin-left: -30px;
-    margin-right: -30px;
-    box-shadow: 0 6px 60px 0 #131313;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #666666;
- //   margin-top: 0px;
-  }
-.hero-unit h1 {
-   margin-left:10%;
-  // margin-top: 0px;
-    color: #FFFFFF;
-    font-size: 60px;
-    letter-spacing: -1px;
-    line-height: 1;
-    margin-bottom: 0;
-    
-}
-.hero-unit h2 {
-   margin-left:10%;
-    font-size: 25px;
-    color: #FFFFFF;
-   
-}
-.hero-unit p{
-   margin-left:10%;
-}
-.hero-unit p a {
-background-color: #6F6E88;
-}
+
 
 .fill{width:110%;background-position:center;background-size:cover;
 margin-left:-30px;margin-right:-30px;
@@ -145,6 +111,13 @@ margin-left:-30px;margin-right:-30px;
      
     /* Landscape phones and down */
     @media (max-width: 480px) { ... }
+
+.nohover{
+color: #000000;
+}
+.nohover:hover{
+color: #000000;
+};
 </style>
 {% block head %}
 {% endblock %}
@@ -161,9 +134,18 @@ margin-left:-30px;margin-right:-30px;
 	      style="margin:0">      
 	<span class="glyphicon glyphicon-menu-down"></span>  
       </button>
-      <a class="navbar-brand toggle-sidebar" style="cursor:pointer;" title="Click to open menu">
-   	XENON1T Data Acquisition 
-      </a>
+      <div class="emo-navbar-brand" id="navbar-brand">
+	<!--<a class="toggle-sidebar" style="cursor:pointer;height:40px;width:40px;" title="Click to open menu">-->
+	<div class="bs_button toggle-sidebar" style="cursor:pointer">
+	  <span class="glyphicon glyphicon-nav" style="cursor:pointer;background-color:#5992c2;"></span></div>
+	<!--</a>-->
+	<!--<a style="color:black">-->
+	<!--<div style="cursor:default;height:40px;padding-bottom:10px;padding-top:10px;position:absolute;top:0">-->
+	  XENON1T Data Acquisition
+      <!--</div>-->
+	<!--	</a>-->
+	
+      </div>
     </div>			
     <div class="collapse navbar-collapse" style="overflow:hidden;height:40px;">
       {% block login_toggle %}
@@ -214,121 +196,141 @@ margin-left:-30px;margin-right:-30px;
   <!-- If user is not logged in just show them a pretty picture -->
   {% if user.is_authenticated %}
   <!-- Sidebar -->
+  <div class="mainHider"></div>
   <div id="main" class="container-fluid">
     
-    <div class="sidebar-left-collapse sidebar left" style="padding-top:5px{% if request.user.username == 'maris'%};background-color:#ff69b3;{% endif %}" id="main_nav_sidebar">
-      <button class="btn btn-mini btn-info toggle-sidebar sidebar-opentoggle"
-              style="background-color:#36bc98;color:#EEEEEE;margin-top:-1px;border-top-right-radius:0;border-bottom-right-radius:0;z-index:10;position:absolute;top:0px;right:13px;padding:1px;padding-right:5px;padding-left:3px;display:none;"
-              type="button" aria-expanded="false"><span class="glyphicon glyphicon-chevron-left"></span>
-</button>
-
-      <a href="/" class="company-logo"></a>
-      <hr style="margin-left:25px;margin-right:40px;">
-      <div class="sidebar-links" style="position-relative">
-	
-	<div class="link-blue">
-	  
-	  <a href="#">
-	    <i class="fa fa-hdd-o"></i>DAQ
-	  </a>
-	  
-	  <ul class="sub-links">
-	    <li><a href="/control/fancy">DAQ Control</a></li>
-	    <li><a href="/config">Run Modes</a></li>
-	    <li><a href="/log">DAQ Logbook</a></li>
-	    <li><a href="/equipment">DAQ Equipment</a></li>
-	    <!--<li><a href="/slow_control/high_voltage">PMT High Voltage</a></li>-->
-	  </ul>
-	  
-	</div>
-	
-	<div class="link-red">
-	  
-	  <a href="#">
-	    <i class="fa fa-eye"></i>Monitor
-      </a>
-	  
-	  <ul class="sub-links">
-	    <!--<li><a href="/monitor/noise">Noise Spectra</a></li>-->
-	    <li><a href="/monitor/waveforms">Live Waveforms</a></li>
-	    <li><a href="/online_monitor">Online Monitor</a></li>
-	    <li><a href="/monitor/scope">Data Browser</a></li>
-	    <li><a href="/monitor/trigger_diagnostics">Trigger Monitor</a></li>
-	    <!--<li><a href="/slow_control">XE100 Slow Control</a></li>-->
-	    <!--<li><a href="/monitor/eventdisplay">Event Display</a></li>-->
-	  </ul>
-	  
-	</div>
-	
-	<div class="link-yellow">
-	  
-	  <a href="#">
-	    <i class="fa fa-folder-open"></i>Runs      </a>
-	  
-	  <ul class="sub-links">
-	    <li><a href="/runs">Runs List</a></li>
-	    <li><a href="/monitor/runstats">Runs Info</a></li>
-	  </ul>
-	  
-	</div>
-	<div class="link-orange">
-	  <a href="#">
-            <i class="fa fa-cog"></i>Management</a>
-          <ul class="sub-links">
-            <li><a href="/management">User list</a></li>
-	    {% if request.user.username == 'messina' or request.user.username == 'coderre' %}
-	    <li><a href="/management/shift_rules">Shift Responsibility</a></li>
-	    {% endif %}
-	    <li><a href="/management/shift_calendar">Shift Calendar</a></li>
-          </ul>
-
-	  </div>
-
-	<div class="link-green">
-	  
-	  <a href="#">
-	    <i class="fa fa-info"></i>Help/Links
-	  </a>
-	  
-	  <ul class="sub-links">
-	    <li><a href="/docs">Docs</a></li>
-	    <li><a href="/docs/contact">Contact</a></li>
-	    <li><a href="/docs/about">About</a></li>	
-	    <li><a href="https://cloud.mongodb.com">Mongo Cloud (ext)</a></li>
-	    <li><a href="https://www.github.com/coderdj/emo">Github (ext)</a></li>
-	  </ul>
-	  
-	</div>
-	
+    <div class="sidebar-left-collapse sidebar left" style="padding-top:5px;{% if request.user.username == 'maris'%}background-color:#ff69b3;{% endif %}overflow-y:auto;" id="main_nav_sidebar">
+      <!--      <button class="btn btn-mini btn-info toggle-sidebar sidebar-opentoggle"
+		style="background-color:#36bc98;color:#EEEEEE;margin-top:-1px;border-top-right-radius:0;border-bottom-right-radius:0;z-index:10;position:absolute;top:0px;right:13px;padding:1px;padding-right:5px;padding-left:3px;display:none;"
+		type="button" aria-expanded="false"><span class="glyphicon glyphicon-chevron-left"></span>
+		</button>-->
+      
+      <!--<a href="/" class="company-logo"></a>-->
+      <div style="background-color:#5992c2">
+      <br>
+      <div class="text-center" style="padding-right:20px"><h3 style="color:white">{% block title %}Home{% endblock %}</h3>     
+	<br>
       </div>
-      <button class="btn btn-default js-gitter-toggle-chat-button" style="position:absolute;margin-left:17px;width:130px;bottom:15px;background-color:#36bc98;color:white;font-family: sans-serif;font-size: 10px;letter-spacing: 1px;text-transform: uppercase;text-align: center;text-decoration: none;padding-top:8px;padding-bottom:20px;font-weight:normal;" id="open_chat">Toggle Chat</button>
-    </div>
-    <div id="content" class="container-fluid emo-sidebar-hide"><!-- col-sm-offset-2">-->
-      <button class="btn btn-mini btn-info toggle-sidebar sidebar-opentoggle" 
-	      style="background-color:white;color:#444444;border-left:0px;margin-top:-1px;border-top-left-radius:0;border-bottom-left-radius:0;z-index:10;position:absolute;top:0;left:0;padding:1px;" 
-	      type="button" aria-expanded="false"><span class="glyphicon glyphicon-chevron-right"></span>
-</button>
+      <div class="text-center">
+	<a class="emo-hoverlink" href="/" title="Home">
+	  <span class="glyphicon glyphicon-home" style="font-size:20px">
+	  </span> Home</a>&nbsp;
+	<a class="emo-hoverlink" href="https://github.com/XENON1T"
+	   title="XENON1T GitHub">
+	  <span class="fa fa-github" style="font-size:25px"></span> GitHub</a>&nbsp;
+	<a class="emo-hoverlink" href="https://gitter.im/XENON1T/operations"
+	   title="Gitter Operations Chat">
+	  <span style="font-size:25px" class="fa fa-github-alt"></span> Gitter</a>&nbsp;
+	<a class="emo-hoverlink" href="/docs/about"
+           title="About">
+          <span style="font-size:25px" class="fa fa-commenting"></span> About</a>&nbsp;
+      </div>
+      <hr style="margin-left:25px;margin-right:40px;margin-top:10px;">      
+      </div>
+      <div style="width:100%;min-height:350px;">
+      <div class="emo-sidebar-link-green">
+	<a href="/control" class="emo-sidebar-link-square emo-sidebar-square-green" style="width:100%;float:left;">
+	  <div class="text-center"><i style="font-size:20px" class="fa fa-hdd-o"></i></div>
+	  <div class="text-center">DAQ Control</div>
+	</a>
+	<a href="/log" class="emo-sidebar-link-square emo-sidebar-square-green" style="float:left">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-book"></i></div>
+          <div class="text-center">Logbook</div>
+        </a>
+	<a href="/equipment" class="emo-sidebar-link-square emo-sidebar-square-green">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-wrench"></i></div>
+          <div class="text-center">Equipment</div>
+        </a>
+
+      </div>
+
+      <div class="emo-sidebar-link-blue">
+	<a href="/runs" class="emo-sidebar-link-square emo-sidebar-square-blue" style="width:100%">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-list"></i></div>
+          <div class="text-center">Runs Database</div>
+        </a>
+
+      </div>
 
 
+      <div class="emo-sidebar-link-red">
+	<a href="/monitor/trigger_diagnostics" class="emo-sidebar-link-square emo-sidebar-square-red" style="float:left">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-line-chart"></i></div>
+          <div class="text-center">Trigger Monitor</div>
+        </a>
+        <a href="/online_monitor" class="emo-sidebar-link-square emo-sidebar-square-red">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-bar-chart"></i></div>
+          <div class="text-center">Data Monitor</div>
+        </a>
+        <a href="/monitor/scope" class="emo-sidebar-link-square emo-sidebar-square-red" style="float:left">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-area-chart"></i></div>
+          <div class="text-center">Live Scope</div>
+        </a>
+        <a href="/monitor/waveforms" class="emo-sidebar-link-square emo-sidebar-square-red">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-eye"></i></div>
+          <div class="text-center">Live Waveforms</div>
+        </a>
 
+      </div>
+      <div class="emo-sidebar-link-yellow">
+	<a href="/management/shift_calendar" class="emo-sidebar-link-square emo-sidebar-square-yellow" style="float:left">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-calendar"></i></div>
+          <div class="text-center">Shift Calendar</div>
+        </a>
+	<a href="/management/user_list" class="emo-sidebar-link-square emo-sidebar-square-yellow">
+          <div class="text-center"><i style="font-size:20px" class="fa fa-list-ul"></i></div>
+          <div class="text-center">User List</div>
+        </a>
+
+      </div>
+
+      <div class="emo-sidebar-link-dark" >
+	<a href="/docs/contact" class="emo-sidebar-link-square emo-sidebar-square-dark" 
+	   style="float:left">
+          <div class="text-center"><i style="font-size:18px;" class="fa fa-envelope"></i></div>
+          <div class="text-center">Contact</div>
+        </a>
+	<a href="/docs" 
+	   class="emo-sidebar-link-square emo-sidebar-square-dark">
+          <div class="text-center">
+	    <i style="font-size:18px" class="fa fa-question-circle"></i></div>
+          <div class="text-center">Docs</div>
+        </a>
+      </div>
+
+      <div style="position:absolute;bottom:40px;left:0;width:100%;padding-top:15px;padding-bottom:5px;background-color:#5992c2;">
+	{% if request.user.username == 'messina' or request.user.username == 'coderre' %}       
+	<div style="padding-left:15px;float:left;">
+	  <a class="btn emo-btn-outline" href="/config">
+	    <div class="text-center"><i class="fa fa-cog"></i></div>
+	    <div class="text-center">DAQ Settings</div>
+	  </a>
+	</div>
+	<div style="padding-left:145px">
+	<a class="btn emo-btn-outline" href="/management/shift_rules">
+	  <div class="text-center"><i class="fa fa-cog"></i></div>
+	  <div class="text-center">Shift Settings</div>
+	  </a>
+	</div>
+	{% else %}
+	<div style="padding-left:30px">
+	  <a class="btn emo-btn-outline" href="/config">
+            <div class="text-center"><i class="fa fa-cog"></i></div>
+            <div class="text-center">DAQ Settings</div>
+          </a>
+        </div>
+	{% endif %}
+      </div>
+      </div>      
+</div>
+<div id="content" class="container-fluid emo-sidebar-hide"><!-- col-sm-offset-2">-->
       {% block content %}
 <!--      <ul class="pull-right" style="padding:3px;margin-top:3px;">
 	<a href="/april" class="notranslate">(zen mode)</a>
      </ul>-->
 
             {% include "homepage.html" %}
-      <!-- ANNOUNCEMENT -->
-<!--  <p class="bg-danger" stype="width:100%;padding-left:20px;" id="front_note">
-    <strong>Maintenance Notice 6.1.16:</strong> We're doing some tests to our databases over the next few days. Therefore the DAQ is offline at the moment. If you need it for something contact us and we can bring it up for you.
-  </p>-->
-  <!--<p class="bg-info" style="width:100%;padding-left:20px" id="front_note">
-    <strong>Welcome!</strong> In these early days of the experiment please coordinate with the DAQ group if you want to run acquisition, either by email or using the gitter chat embedded here. As always, please file issues at the GitHub. Happy Holidays, happy DAQ-ing! - DAQ Team
-  </p>-->
 
-<!--
-<div id="caldiv" class="col-xs-12">
-</div>
--->
 <!-- This page specific scripts -->
 <script type="text/javascript">
   $(function(){
@@ -405,7 +407,7 @@ margin-left:-30px;margin-right:-30px;
   </body>
       {% if user.is_authenticated %}
 
-    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+<!--    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>-->
     {% endif %}
 <script>
 // General modifications
@@ -429,16 +431,27 @@ margin-left:-30px;margin-right:-30px;
   $('body').on('click', '.toggle-sidebar', function (e) {
   e.preventDefault();
   $(".sidebar.left").trigger("sidebar:toggle");
-    $("#content").toggleClass('emo-sidebar-show');
-      $("#content").toggleClass('emo-sidebar-hide');
+  $(".sidebar.left").toggle("slide", {direction: "left"}, 100);
+  $(".mainHider").fadeToggle(100);
+  $("#navbar-brand").toggleClass("emo-highlighted", 500);
+//  $("#content").toggleClass('emo-sidebar-show');
+  //$("#content").toggleClass('emo-sidebar-hide');
       $(".sidebar-opentoggle").toggle();
 
       
 //     $('div#main').toggleClass('sidebar-show');  
   
-     window.dispatchEvent(new Event('resize'));
+//     window.dispatchEvent(new Event('resize'));
 
   });
+  $(".mainHider").on('click', function(e){
+     e.preventDefault();
+     $(".sidebar.left").trigger("sidebar:toggle");
+  $(".sidebar.left").toggle("slide", {direction: "left"}, 100);
+  $(".mainHider").fadeToggle(100);
+  $("#navbar-brand").toggleClass("emo-highlighted", 500);
+$(".sidebar-opentoggle").toggle();
+});
  
 
   // Menu handling
@@ -452,12 +465,12 @@ margin-left:-30px;margin-right:-30px;
         $(this).addClass('active-parent');
         var current = $(this).next();
         if (current.is(':visible')) {
-           li.find("ul.dropdown-menu").slideUp('fast');
+           li.find("ul.dropdown-menu").slideUp(50);
            li.find("ul.dropdown-menu a").removeClass('active')
         }
         else {
-           another_items.find("ul.dropdown-menu").slideUp('fast');
-           current.slideDown('fast');
+           another_items.find("ul.dropdown-menu").slideUp(50);
+           current.slideDown(50);
         }
      }
      else {
@@ -607,12 +620,7 @@ le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?prio
 	}
 $(function(){
         var UpdateUrl = "/control/get_status_update";
-				       if($(window).width()<=450){
-          $(".sidebar.left").trigger("sidebar:toggle");
-          $("#content").toggleClass('emo-sidebar-show');
-          $("#content").toggleClass('emo-sidebar-hide');
-          window.dispatchEvent(new Event('resize'));
-							      }
+
 	$(".sidebar-links div a").on('click', function(){
 	  if($(this).closest('div').hasClass("selected"))
 	    $(".sidebar-links div").removeClass("selected");
