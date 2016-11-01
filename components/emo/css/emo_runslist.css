@@ -4,6 +4,18 @@
   D. Coderre, Uni Bern, 26.01.2015
 */
 
+.runsHider {
+    display: none;
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    background-color:#333;
+    opacity:0.7;
+    z-index:10;
+}
+
 .emo-search-bar{
 /*    width: -moz-calc(100% - 5px);
     width: -webkit-calc(100% - 5px);

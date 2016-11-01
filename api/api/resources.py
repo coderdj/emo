@@ -86,6 +86,7 @@ class StatusResource(Resource):
     start = fields.DateTimeField()
     bltrate = fields.IntegerField(attribute="bltrate")
     state = fields.CharField(attribute="state")
+    alerts = fields.IntegerField(attribute="alerts")
     
     class Meta:
         resource_name = 'daq_status'
@@ -133,21 +134,43 @@ class StatusResource(Resource):
         return self._create_obj(det)
         
     def _create_obj(self, det):
-        doc = self._db()['daq_status'].find({"detector": 
-                                             det}).sort("_id", -1).limit(1)[0]
-        ret = {
-            "detector": doc["detector"],            
-            "node": "all",
-            "state": doc['state'],
-            "user": doc['startedBy'],
-            "start": doc['startTime'],
-            "bltrate": 0,
-            "cpu": 0, 
-            "ram": 0,
-            "run": doc['currentRun'],
-            "datarate": 0,
-            "mode": doc['mode']
-        }
+        try:
+            doc = self._db()['daq_status'].find({"detector": 
+                                                 det}).sort("_id", -1).limit(1)[0]
+            ret = {
+                "detector": doc["detector"],            
+                "node": "all",
+                "state": doc['state'],
+                "user": doc['startedBy'],
+                "start": doc['startTime'],
+                "bltrate": 0,
+                "cpu": 0, 
+                "ram": 0,
+                "run": doc['currentRun'],
+                "datarate": 0,
+                "mode": doc['mode'],
+                "alerts": 0
+            }
+        except:
+            ret = {
+                "error": "error",
+                "datarate": 0,
+                "bltrate": 0,
+                "cpu": 0,
+                "alerts": 0,
+                "ram": 0
+            }
+
+        # Alerts
+        try:
+            logcollection = self._db()["log"]
+            if logcollection.find({"priority": {"$gt": 2, "$lt": 5}}).count() != 0:
+                ret["alerts"] = 1
+        except:
+            ret['alerts'] = 2
+
+        # This line disables SC alarms!
+        #ret['alerts'] = 0
 
         nodes = ["reader5"]
         if det == "tpc":
@@ -155,7 +178,7 @@ class StatusResource(Resource):
                     "reader6", "reader7"]
         for node in nodes:
             cursor = self._db()['daq_rates'].find({"node":
-                                                 node}).sort("_id", -1).limit(1)
+                                                   node}).sort("_id", -1).limit(1)
             if cursor.count() > 0:
                 ret['datarate'] += cursor[0]['datarate']
                 ret['bltrate'] += cursor[0]['bltrate']

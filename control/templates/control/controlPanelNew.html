@@ -33,8 +33,6 @@
 {% block content %}
 
 <!-- Title bar-->                                                                
-<!--<div class="row"><h5>DAQ Run Control</h5></div>  -->
-
 <div class="grid-stack" style="width:100%;margin-top:10px;margin-bottom:10px">
 
     <!-- THIS IS THE RATES WINDOW -->   
@@ -96,12 +94,182 @@
       </div>
     </div>
     <!-- END RATES WINDOW -->    
-    
-    <!-- THIS IS THE LOG WINDOW -->                                              
+
+    <!-- THIS IS THE EVENT BUILDER WINDOW -->
     <div class="grid-stack-item"
          data-gs-x="0" data-gs-y="4"
-         data-gs-width="8" data-gs-height="6" id="log-gridstack" 
-	 data-gs-min-width="4" data-gs-min-height="4">
+	  data-gs-width="8" data-gs-height="3" id="trigger-gridstack"
+	  data-gs-min-width="4" data-gs-min-height="3">
+      <div class="grid-stack-item-content gridbox" id="triggerwindowgs">
+	<div class="window-handle"></div>
+        <div class="window-content" style="overflow-y:hidden">
+	  <!--<div class="window-title" id="trigger_title" 
+	       style="padding-top:0px;min-height:26px;height:26px;">
+	    <h4 style="padding:3px;margin:0">
+              <strong>Data Pipeline (beta)</strong>
+	    </h4>
+	  </div>	  -->
+          <div id="trigger_body" style="overflow-y:auto;overflow-x:hidden;padding-right:20px;">
+	    <div class="row" style="overflow-y:auto">
+	      <!-- Quick status funny face -->
+	      <div class="col-sm-2 col-xs-12">
+		<strong>Quick Status</strong>
+		<hr style="margin:0;padding:0;margin-bottom:20px">
+		<div id="theimage" style="width:100%;height:90%">
+                </div>
+		<div class="text-center" style="width:100%">
+                  <span id="thetext"></span></div>
+              </div>
+	      
+	      <div class="col-sm-5 col-xs-12">		
+		<!-- Last trigger doc -->
+		<strong>Last Status Doc</strong>
+		<hr style="margin:0;padding:0;">
+		<strong>Last collection: </strong>
+                <span id="trigger_last_collection"></span>		  
+		<p style="margin-bottom:0">
+		  <strong>Time: </strong>                     
+                  <span id="trigger_time"></span>    
+		</p>
+		<strong>Event rate: </strong>
+                <span id="trigger_event_rate"></span> events/s
+		<div class="row">
+		  <div class="col-xs-2"><strong>Buffer</strong></div>
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0;position:relative;"
+                       id="eb_lag_progress"></div>
+                  <div class="col-xs-12"><strong>Triggering: </strong>
+                    <span id="eb_working"></span>
+                  </div>
+                </div>
+		<p style="margin-bottom:0;margin-top:8px">
+		  <strong>Deadtime info run <span id="deadtime_run_name"></span></strong>
+		  <hr style="margin:0;padding:0;">
+		</p>
+		<div class="row">                      
+                  <div class="col-xs-2"><strong>Last</strong></div>                             
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"  
+                       id="busy_progress"></div>                                                                                                        
+                </div>  
+		<div class="row">
+                  <div class="col-xs-2"><strong>Total</strong></div>
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+		       id="busy_tot_progress"></div>
+                </div>
+	      </div>
+	      
+	      <!-- Pipeline DB Info -->
+	      <div class="col-sm-5 col-xs-12">
+		<!-- Last trigger doc -->
+		<strong>Mongodb Buffers</strong>
+		<hr style="margin:0;padding:0;margin-bottom:5px;">
+		<div class="row">
+		  <div class="col-xs-2"><strong>Updated:</strong></div>
+		  <div class="col-xs-10" id="mongo_update_time"></div>
+                  <div class="col-xs-2"><strong>eb0</strong></div>
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                       id="eb0_progress"></div>
+                  <div class="col-xs-12"><strong>Collections: </strong>
+                    <span id="eb0_collections"></span>
+                    <strong>Docs: </strong><span id="eb0_docs"></span>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-2"><strong>eb1</strong></div>
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                       id="eb1_progress"></div>
+                  <div class="col-xs-12"><strong>Collections: </strong>
+                    <span id="eb1_collections"></span>
+                    <strong>Docs: </strong><span id="eb1_docs"></span>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-2"><strong>eb2</strong></div>
+                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                       id="eb2_progress"></div>
+                  <div class="col-xs-12"><strong>Collections: </strong>
+                    <span id="eb2_collections"></span>
+                    <strong>Docs: </strong><span id="eb2_docs"></span>
+                  </div>  
+		</div>
+	      </div>
+	      
+	    </div>
+	    <!--
+	    <div class="row">
+	      <div class="col-sm-4 col-xs-12">
+		<strong>Last collection: </strong>
+		<span id="trigger_last_collection"></span>
+	      </div>
+	      <div class="col-sm-4 col-xs-12">
+		<strong>Check in: </strong>
+		<span id="trigger_time"></span>		
+	      </div>
+	      <div class="col-sm-4 col-xs-12">
+                <strong>Event rate: </strong>
+                <span id="trigger_event_rate"></span> events/s
+              </div>
+	    </div>
+	    <div class="row" style="padding-right:25px;padding-top:5px;">
+	      <div class="col-xs-2">
+		<div id="theimage" style="width:100%;height:90%">
+		</div>
+		<div class="text-center" style="width:100%">
+		  <span id="thetext"></span></div>
+	      </div>
+	      <div class="col-xs-10">
+		<div class="row">
+		  <div class="col-xs-2"><strong>Busy</strong></div>
+		  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0" 
+		       id="busy_progress"></div>
+		</div>
+		<div class="row">
+                  <div class="col-xs-2"><strong>EB buffer</strong></div>
+                  <div class="col-xs-7 progress" style="margin-bottom:5px;padding:0;position:relative;"
+                       id="eb_lag_progress"></div>
+		  <div class="col-xs-3"><strong>Triggering: </strong>
+		    <span id="eb_working"></span>
+		  </div>
+                </div>
+		<div class="row">
+		  <div class="col-xs-2"><strong>eb0</strong></div>
+		  <div class="col-xs-5 progress" style="margin-bottom:5px;padding:0" 
+		       id="eb0_progress"></div>
+		  <div class="col-xs-5"><strong>Collections: </strong>
+                    <span id="eb0_collections"></span>
+		    <strong>Docs: </strong><span id="eb0_docs"></span>
+		  </div>
+		</div>
+		<div class="row">
+		  <div class="col-xs-2"><strong>eb1</strong></div>
+                  <div class="col-xs-5 progress" style="margin-bottom:5px;padding:0" 
+		       id="eb1_progress"></div>
+		  <div class="col-xs-5"><strong>Collections: </strong>
+                    <span id="eb1_collections"></span>
+		    <strong>Docs: </strong><span id="eb1_docs"></span>
+		  </div>
+		</div>
+		<div class="row">
+		  <div class="col-xs-2"><strong>eb2</strong></div>
+                  <div class="col-xs-5 progress" style="margin-bottom:5px;padding:0"
+		       id="eb2_progress"></div>
+		  <div class="col-xs-5"><strong>Collections: </strong>
+                    <span id="eb2_collections"></span>
+		    <strong>Docs: </strong><span id="eb2_docs"></span>
+		  </div>
+		</div>
+	      </div>	      
+	    </div>-->
+          </div>
+	</div>
+      </div>
+    </div>
+
+    <!-- END EVENT BUILDER WINDOW -->
+    <!-- THIS IS THE LOG WINDOW -->                                              
+    <div class="grid-stack-item"
+         data-gs-x="0" data-gs-y="7"
+         data-gs-width="8" data-gs-height="3" id="log-gridstack" 
+	 data-gs-min-width="4" data-gs-min-height="3">
       <div class="grid-stack-item-content gridbox" id="logwindowgs">
 	<div class="window-handle"></div>                                          
 	<div class="window-content" style="overflow-y:hidden">
@@ -199,6 +367,7 @@
 <script>                                                                         
 
   // DEFAULTS
+  var rate_update_counts=30;
   var chartdiv = "rates_panel";
   var updateFreq = 1000;          // 5 second update polling
   var updateCounts = 10;
@@ -327,6 +496,7 @@ console.log("made here");
 	function(){
 				   RefreshPlaylist(true);
 				   ResizeDetailWindows();
+				   ResizeTriggerWindow();
 
        var updatecounter=0;
 				   FeedbackLoop();
@@ -337,7 +507,65 @@ console.log("made here");
   });
   }
   function timerLoop(progress, thechart){
-console.log(progress);
+    if(rate_update_counts==30){
+    $.getJSON("/control/get_tpc_event_rate", function(data){
+console.log(data);
+         document.getElementById("trigger_event_rate").innerHTML=parseFloat(data['rate']).toFixed(2);
+         document.getElementById("trigger_last_collection").innerHTML=data['rname']+"("+data['rnumber']+")";
+         var tdate = new Date(1000*(parseFloat(data['eventbuilder_info']['time'])));
+         var ttime = tdate.getFullYear()+"."+('0'+tdate.getMonth()).slice(-2)+"."+('0'+tdate.getDate()).slice(-2)+
+				" at "+('0'+tdate.getHours()).slice(-2)+":"+('0'+tdate.getMinutes()).slice(-2);
+         document.getElementById("trigger_time").innerHTML=ttime;
+        var docdate = new Date(1000*(parseFloat(data['time'])));
+	var doctime = docdate.getFullYear()+"."+('0'+docdate.getMonth()).slice(-2)+"."+
+				   ('0'+docdate.getDate()).slice(-2)+
+                                " at "+('0'+docdate.getHours()).slice(-2)+":"+
+				   ('0'+docdate.getMinutes()).slice(-2);
+	document.getElementById("mongo_update_time").innerHTML=doctime;
+	busy = data['deadtime'];
+	document.getElementById("deadtime_run_name").innerHTML=data['deadtime_run']
+        document.getElementById("busy_tot_progress").innerHTML = GetGradProgress(data['deadtime_total'],
+				   "dead time", 0.1, 0.5, data['deadtime_total']*100, "%");
+	document.getElementById("busy_progress").innerHTML=GetGradProgress(busy, "dead time", 0.1, 0.5, busy*100, "%");
+	document.getElementById("eb_lag_progress").innerHTML = GetGradProgress(
+            data['eventbuilder_info']['eventbuilder_queue_size']/10000, "in queue",
+            0.3, 0.7, data['eventbuilder_info']['eventbuilder_queue_size'], " events");
+         if(data['eventbuilder_info']['working_on_run']==true)
+            document.getElementById("eb_working").innerHTML="Yes";
+         else
+            document.getElementById("eb_working").innerHTML="Nope";
+	document.getElementById("eb0_progress").innerHTML=GetGradProgress(
+           data['eb0:27000']['storageSize']/60e9, "in cache ",0.5, 0.7, 
+				   data['eb0:27000']['storageSize']/1e9, "GB");
+document.getElementById("eb1_progress").innerHTML=GetGradProgress(
+	data['eb1:27000']['storageSize']/60e9, "in cache",0.5, 0.7,
+                                   data['eb1:27000']['storageSize']/1e9, "GB");
+document.getElementById("eb2_progress").innerHTML=GetGradProgress(
+		data['eb2:27000']['storageSize']/60e9, "in cache",0.5, 0.7,
+                                   data['eb2:27000']['storageSize']/1e9, "GB");
+        var pctarray = [];
+var staticdir = "{% static "emo/js" %}";
+        pctarray.push(busy);
+        pctarray.push(data['eb0:27000']['storageSize']/60e9);
+        pctarray.push(data['eb1:27000']['storageSize']/60e9);
+        pctarray.push(data['eb2:27000']['storageSize']/60e9);
+	pctarray.push(data['eventbuilder_info']['eventbuilder_queue_size']/10000);
+				   health = GetHealth(pctarray, staticdir, tdate);
+				   console.log(health);
+ document.getElementById("theimage").innerHTML=health['image'];
+	document.getElementById("thetext").innerHTML=health['text'];
+        document.getElementById("eb0_collections").innerHTML=data['eb0:27000']['collections'];
+	document.getElementById("eb1_collections").innerHTML=data['eb1:27000']['collections'];
+document.getElementById("eb2_collections").innerHTML=data['eb2:27000']['collections'];
+document.getElementById("eb0_docs").innerHTML=data['eb0:27000']['objects'];
+document.getElementById("eb1_docs").innerHTML=data['eb1:27000']['objects'];
+document.getElementById("eb2_docs").innerHTML=data['eb2:27000']['objects'];
+    rate_update_counts=0;
+     })
+    }
+    else 
+      rate_update_counts+=1;
+//console.log(progress);
     if(progress==updateCounts){
           pageupdatebar.animate(1.);
           UpdatePage( thechart );
@@ -423,6 +651,7 @@ var frm = $('#new_log_entry');
           ResizeLogWindow();
           ResizePlaylistWindow();
           ResizeDetailWindows();
+		    ResizeTriggerWindow();
           });    
 
      });                                                                              
@@ -457,6 +686,13 @@ var theight = $("#playlistwindowgs").height();
 var wantheight = theight - hheight;
 $("#playlist_body").height(wantheight);
 }
+function ResizeTriggerWindow(){
+var hheight = $("#trigger_title").height();
+var theight = $("#triggerwindowgs").height();
+var wantheight = theight - hheight;
+$("#trigger_body").height(wantheight);
+}
+
 
 function ResizeDetailWindows(){
     var hheight = $("#tpc_title").innerHeight() + $("#tpc_title_2").innerHeight();

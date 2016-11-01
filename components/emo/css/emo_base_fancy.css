@@ -1,0 +1,135 @@
+.content-block-one {
+  padding: 30px;
+  margin-bottom: 0px;
+  color: inherit;
+  background-color: #fff;
+}
+.content-block-one h1,
+.content-block-one .h1 {
+  color: inherit;
+}
+.content-block-one p {
+  margin-bottom: 15px;
+  font-size: 21px;
+  font-weight: 200;
+}
+.content-block-one > hr {
+  border-top-color: #d5d5d5;
+}
+.container .content-block-one {
+  border-radius: 6px;
+}
+.content-block-one .container {
+  max-width: 100%;
+}
+@media screen and (min-width: 768px) {
+  .content-block-one {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+  .container .content-block-one {
+    padding-right: 60px;
+    padding-left: 60px;
+  }
+  .content-block-one h1,
+  .content-block-one .h1 {
+    font-size: 63px;
+  }
+}
+.content-space-one {
+  padding: 0px;
+  margin-bottom: 0px;
+  color: inherit;
+  background: url("/components/img/daq_banner0.png") 100% 0 repeat fixed; 
+/*no-repeat center center fixed; */
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+.content-space-two {
+  padding: 0px;
+  margin-bottom: 0px;
+  color: inherit;
+  background: url("/components/img/daq_banner1.png") 100% 0 repeat fixed;
+/*no-repeat center center fixed; */
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+.page-break {
+    width: 50%;
+    height: 3px;
+    background-color: #5992c2;
+    margin: 0 auto;
+}
+
+
+body{
+background-color: white;
+}
+.emobox{
+    background-color: white;
+    border-width: 1px;
+    border-color: #D5D5D5; /*#5992c2w;*/
+    border-style: solid;
+    width:100%;
+    min-height:40px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    /*box-shadow: 10px 10px 5px #888888;*/
+    padding-top:10px;
+    
+    }
+.emobox_flat{
+    background-color: white;
+    border-width: 1px;
+    border-color: #CCCCCC;
+    border-style: solid;
+    #width:100%;
+    min-height:40px;
+
+    }
+.emo-sidebar-show{
+margin-left:166px;
+width: calc(100% - 166px);
+}
+.emo-sidebar-hide{
+    margin-left: 0px;
+    width: 100%;
+}
+.btn-info{
+background-color: #5992C2;
+}
+.emo-det-header {
+//background-color: #ADEDD4;
+#border-color: #7876DC;
+background-color: #5a54bd;
+border-color: #5a54bd;
+color: #EEEEEE;
+}
+.emo-det-row{
+//border-color:#AAAAAA;
+border-color: #7876DC;
+color:#353535;
+}
+.emo-node-header{
+background-color: #4FA783;
+border-color: #4FA783;
+color: #EEEEEE;
+}
+.emo-node-line{
+border-color: #4FA783;
+color:#353535;
+}
+
+@media(max-width: 767px){
+ .gitter-chat-embed{
+     display: none;
+ }
+}

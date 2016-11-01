@@ -700,3 +700,88 @@ function UpdateNodes( nodes_div, nodesUrl ){
 
 }
 
+
+function GetGradProgress(percent, name, warnpct, errpct, rawval, rawunit){
+
+    rethtml = "";
+
+    var first_width = percent;
+    var second_width = 0;
+    var third_width =0;
+    if(first_width > warnpct)
+        first_width = warnpct;
+    var leftpct = percent - warnpct;
+    if(leftpct > 0){
+        second_width = leftpct;
+        if(second_width > (errpct-warnpct))
+            second_width = (errpct-warnpct);
+        leftpct -= (errpct-warnpct);
+        if(leftpct > 0){
+            third_width = leftpct;
+	    if(third_width > 1.-errpct)
+		third_width = 1.-errpct;
+        }
+    }
+
+    rethtml += '<div class="progress-bar progress-bar-success" role="progressbar" style="border-top-right-radius:0;border-bottom-right-radius:0;width:'+(Math.floor(100*first_width)).toString()+'%">';
+      if(percent > .3) rethtml +=' '+rawval.toFixed(2)+' '+rawunit+' '+name;
+      rethtml += '</div>';
+      if(second_width != 0){
+          rethtml += '<div class="progress-bar progress-bar-warning" role="progressbar" style="border-radius:0;width:'+(Math.floor(100*second_width)).toString()+'%"></div>';
+      }
+    if(third_width !=0 ){
+	rethtml += '<div class="progress-bar progress-bar-danger" role="progressbar" style="border-top-left-radius:0;border-bottom-left-radius:0;width:'+(Math.floor(100*third_width)).toString()+'%"></div>';
+      }
+    if(percent <=.3){
+       rethtml += ' '+rawval.toFixed(2)+' '+rawunit+' '+name;
+    }
+    return rethtml;
+
+}
+
+function GetHealth(pctarray, static_dir, update_time){
+    health="Good";
+    largest = 0.;
+    for(i=0; i<pctarray.length;i+=1){
+	if(pctarray[i]>largest)
+	    largest = pctarray[i];
+    }
+    image = "";
+
+    if (largest >= .9)
+	image="<img src='"+static_dir+"/doom_faces/dead.png'";
+    else if (largest > .8)
+	image= "<img src='"+static_dir+"/doom_faces/bloody_pissed.png'";
+    else if (largest > .5)
+	image="<img src='"+static_dir+"/doom_faces/bloody_smile.png'";
+    else if (largest > .3)
+	image="<img src='"+static_dir+"/doom_faces/bruised_pissed.png'";
+    else if (largest > .2)
+	image="<img src='"+static_dir+"/doom_faces/clean_pissed.png'";
+    else
+	image="<img src='"+static_dir+"/doom_faces/clean_smile.png'";
+    image += " style='width:50px' class='center-block'>";
+
+    if(largest>.9)
+	health="<strong style='color:red'>He's dead Jim</strong>";
+    else if(largest > .7)
+	health="<strong style='color:orange'>Danger</strong>";
+    else if(largest > .5)
+	health="<strong style='color:yellow;background-color:black;'>Warning</strong>";
+    else if(largest > .2)
+	health="<strong style='color:blue'>Borderline</strong>";
+    else
+	health="<strong style='color:green'>Healthy</strong>";
+
+    var now = new Date();
+    var timeDiff=0;
+console.log("HERE!!!");
+console.log(update_time);
+    if (! isNaN( update_time.getTime() ) )
+	timeDiff = Math.abs(now.getTime() - update_time.getTime())/1000.;
+    if(isNaN( update_time.getTime() ) || timeDiff > 300){
+	health = health="<strong style='color:red'>Trigger not responding</strong>";
+	image="<img src='"+static_dir+"/doom_faces/dead.png' style='width:50px' class='center-block'>";
+    }
+    return {"text": health, "image": image};
+}

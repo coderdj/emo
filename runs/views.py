@@ -97,8 +97,22 @@ def runs_stream(request):
             offset = int(request.GET['offset'])
         if "detector" in request.GET:
             filter_query['detector'] = request.GET['detector']
+        if "startdate" in request.GET and "enddate" in request.GET:
+            start = datetime.datetime.strptime(request.GET['startdate'], "%Y-%m-%d").date()
+            end = datetime.datetime.strptime(request.GET['enddate'], "%Y-%m-%d").date()
+            filter_query['start'] = {"$gte": datetime.datetime.combine(start, datetime.datetime.min.time()),
+                                     "$lte": datetime.datetime.combine(end, datetime.datetime.max.time())}
+        elif "startdate" in request.GET:
+            start = datetime.datetime.strptime(request.GET['startdate'], "%Y-%m-%d").date()
+            filter_query['start'] = {"$gte": datetime.datetime.combine(start, datetime.datetime.min.time())}
+        elif "enddate" in request.GET:
+            end = datetime.datetime.strptime(request.GET['enddate'], "%Y-%m-%d").date()
+            filter_query['start'] = {"$lte": datetime.datetime.combine(end, datetime.datetime.max.time())}
+
+        # mongo_query supercedes everything and makes all other boxes invalid
         if "mongo_query" in request.GET:
             filter_query = loads(request.GET['mongo_query'])
+            
     """
     if request.method == 'GET':
         filter_form = run_search_form( fieldslist, request.GET )
@@ -203,7 +217,7 @@ def runs(request):
                                             datetime.datetime.min.time() )}
             if filter_form.cleaned_data[ 'enddate' ] is not None:
                 if 'start' in filter_query.keys():
-                    filter_query['starttimestamp']['$lt'] = (
+                    filter_query['startdate']['$lt'] = (
                         datetime.datetime.combine(
                             filter_form.cleaned_data['enddate'],
                             datetime.datetime.max.time() )

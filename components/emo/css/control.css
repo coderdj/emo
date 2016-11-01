@@ -1,0 +1,74 @@
+.gridbox{
+    background-color: white;
+    border-width: 1px;
+    border-color: #D5D5D5; /*#5992c2w;*/
+    border-style: solid;
+    margin-top: 10px;
+    margin-right:10px;
+    padding:0;
+    position: relative;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+
+    
+}
+.option-label{
+    color: #5992c2;
+    font-size: 12px;
+}
+.window-title{
+    /*min-height:30px;*/
+        background-color: white;
+    width:100%;
+    padding-top:5px;
+    margin:0;
+    border-bottom: solid #D5D5D5 1px;
+}
+
+.window-handle{
+    height:100%;
+    width:20px;
+    background-color:#5992c2;
+    #background-color: #DDDDFF;
+    padding:0;
+    margin:0;
+    cursor: move;
+    position: absolute;
+    left: 0;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.window-content{
+    height:100%;
+    padding:0;
+    margin:0;
+    /*width: calc(100% - 20px);*/
+    width: -moz-calc(100% - 20x);
+    width: -webkit-calc(100% - 20px);
+    width: -o-calc(100% - 20px);
+    width: calc(100% - 20px);
+    position: absolute;
+    right: 0;
+}
+
+.range{
+    height: 25px;
+    padding: 2px;
+    background-color: white;
+    font-size: 10px;
+}
+
+.bin{
+    height: 25px;
+    padding: 2px;
+    background-color: white;
+    font-size: 10px;
+}       
+
+.var{
+    height: 25px;
+    padding: 2px;
+    background-color: white;
+    font-size: 10px;
+}

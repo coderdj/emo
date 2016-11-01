@@ -51,6 +51,9 @@ triggerClients = ["gw:27018"]
 
 @login_required
 def get_buffer_occupancy(request):
+
+    return HttpResponse({}, content_type="application/json")
+'''
     free = 1 
     tot = 1
     try:
@@ -62,7 +65,7 @@ def get_buffer_occupancy(request):
         print("Can't access local buffer.")
     return HttpResponse(dumps({"free": free, "tot": tot}),
                         content_type="application/json")
-
+'''
 
 
 @login_required
@@ -142,7 +145,7 @@ def resize_arrs(data, max_size):
     return xbin
 
 #from jelle
-def _flatten_trigger_monitor_data(data):
+def _flatten_trigger_monitor_data(data, new_format):
 
     matrix_fields = ['trigger_signals_histogram', 'count_of_2pmt_coincidences']
 
@@ -154,12 +157,12 @@ def _flatten_trigger_monitor_data(data):
         # Dictionaries describing data                                                
         #    data[k] = pd.DataFrame(data['batch_info'])                               
         #data[k]                                                                      
-
+        
         if k == 'trigger_signals':
             data[k] = np.concatenate(data[k])
         else:
             data[k] = np.vstack(data[k])
-
+            
             if k in matrix_fields:
                 n = np.sqrt(data[k].shape[1]).astype('int')
                 data[k] = data[k].reshape((-1, n, n))
@@ -253,71 +256,104 @@ def aggregate_trigger_collection(col_name):
     Helper for trigger_get_aggregate_data. Adds all rows together and 
     puts summary doc after.
     """
-
+    return
 
 @login_required
 def trigger_get_data(request):
+    '''
+    Refactor for new data format
+    '''
 
     ret = {}
     matrix_fields = ['trigger_signals_histogram', 'count_of_2pmt_coincidences']
     data_types = {
         #'trigger_signals': datastructure.TriggerSignal.get_dtype(),                  
-            'trigger_signals_histogram': np.float,
+        'trigger_signals_histogram': np.float,
     }
+
     if request.method == "GET" and "run" in request.GET and "client" in request.GET:
 
-        run = request.GET['run']        
+        run = request.GET['run']
         client=request.GET['client']
-
         # Check if run is number. If so check if run exists
         if '_' not in run:
             try:
                 runClient = MongoClient(settings.RUNS_DB_ADDR)
-                doc = runClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION].find_one(
-                    { "number": int(run) })
-                logger.error(doc)
+                runDB = runClient[settings.RUNS_DB_NAME]
+                runColl = runDB[settings.RUNS_DB_COLLECTION]
+                doc = runColl.find_one({ "number": int(run) })
                 if doc is None:
-                    return HttpResponse(json_util.dumps({"xbin": 0, "data": [], "error": "Invalid run"}),
+                    return HttpResponse(json_util.dumps(
+                        {"xbin": 0, "data": [], "error": "Invalid run"}),
                                         content_type="application/json")
                 else:
                     run = doc['name']
-            except:
-                return HttpResponse(json_util.dumps({"xbin": 0, "data": [], "error": "Can't reach runs DB"}),
+            except Exception as e:
+                return HttpResponse(json_util.dumps(
+                    {"xbin": 0, "data": [], "error": "Can't reach runs DB " + 
+                     str(e)}),
                                     content_type="application/json")
 
+        # Now connect to our monitor DB
         mongoClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
                                   settings.GEN_PW+"@"+client+"/"
                                   +settings.GEN_DB)
         mongoDB = mongoClient["trigger_monitor"]
         mongoCollection = mongoDB[run]
-
         total_data = collections.defaultdict(list)
 
-        #logger.error("START QUERY")
+        new_format = False
         for data_type in mongoCollection.distinct('data_type'):
 
-            for d in mongoCollection.find({"data_type": data_type}):
-                if 'data' in d:
-                    d = np.fromstring(d['data'],
-                                      dtype=data_types.get(data_type, np.int))
-                total_data[data_type].append(d)
-        #logger.error("FINISHED CLEARING")
-        _flatten_trigger_monitor_data(total_data)
-        #logger.error("FINISHED FLATTEN")
+            for doc in mongoCollection.find({"data_type": data_type}).sort("_id",1):
+                d = None
+                if 'data' in doc and ( type(doc['data']) == type([])):
+                    new_format = True
 
-        # ADD HISTOGRAMS                                                              
-        if len(total_data['count_of_2pmt_coincidences']) > 1:
-            for i in range(1, len(total_data['count_of_2pmt_coincidences'])):
-                total_data['count_of_2pmt_coincidences'][0] = (
-                    np.add(total_data['count_of_2pmt_coincidences'][0],
-                           total_data['count_of_2pmt_coincidences'][i]))
-            total_data['count_of_2pmt_coincidences'] = [ total_data['count_of_2pmt_coincidences'][0] ]
-        if len(total_data['trigger_signals_histogram']) > 1:
-            for i in range(1, len(total_data['trigger_signals_histogram'])):
-                total_data['trigger_signals_histogram'][0] = (
-                    np.add(total_data['trigger_signals_histogram'][0],
-                           total_data['trigger_signals_histogram'][i]))
-            total_data['trigger_signals_histogram'] = [ total_data['trigger_signals_histogram'][0] ]
+                    # We can just do the addition here
+                    for i in range(0, len(doc['data'])):
+                        el = doc['data'][i]
+
+                        # Check if we have a histogram
+                        if type(el) == type([]):
+                            if len(total_data[data_type]) == 0:
+                                total_data[data_type] = doc['data']
+                                break
+                            for j in range(0, len(el)):
+                                total_data[data_type][i][j] += el[j]
+                        else:
+                            #type(el) in [int, float]:
+                            #if len(total_data[data_type]) == 0:
+                            #    for e in doc['data']:
+                            #        total_data[data_type].append([e])
+                            #    break
+                            total_data[data_type].append(doc['data'])
+                            break
+                            #total_data[data_type][i].append(el)
+                            
+                elif 'data' in doc:
+                    d = np.fromstring(doc['data'],
+                                      dtype=data_types.get(data_type, np.int))
+                if d is not None:
+                    total_data[data_type].append(d)
+        #logger.error("FINISHED CLEARING")
+        if not new_format:
+            _flatten_trigger_monitor_data(total_data, new_format)
+            #logger.error("FINISHED FLATTEN")
+
+            # ADD HISTOGRAMS                                                              
+            if len(total_data['count_of_2pmt_coincidences']) > 1:
+                for i in range(1, len(total_data['count_of_2pmt_coincidences'])):
+                    total_data['count_of_2pmt_coincidences'][0] = (
+                        np.add(total_data['count_of_2pmt_coincidences'][0],
+                               total_data['count_of_2pmt_coincidences'][i]))
+                total_data['count_of_2pmt_coincidences'] = [ total_data['count_of_2pmt_coincidences'][0] ]
+            if len(total_data['trigger_signals_histogram']) > 1:
+                for i in range(1, len(total_data['trigger_signals_histogram'])):
+                    total_data['trigger_signals_histogram'][0] = (
+                        np.add(total_data['trigger_signals_histogram'][0],
+                               total_data['trigger_signals_histogram'][i]))
+                total_data['trigger_signals_histogram'] = [ total_data['trigger_signals_histogram'][0] ]
 
 
         # Get sum over whole run of raw and coincident pulses
@@ -325,7 +361,10 @@ def trigger_get_data(request):
         lone_pulses = []
         for array_bin in total_data["count_of_lone_pulses"]:
             if len(lone_pulses) ==0:
-                lone_pulses = array_bin.tolist()
+                if type(array_bin) is list:
+                    lone_pulses = array_bin
+                else:
+                    lone_pulses = array_bin.tolist()
             else:
                 for i in range(0, len(array_bin)):
                     lone_pulses[i] += array_bin[i]
@@ -334,7 +373,10 @@ def trigger_get_data(request):
 
         for array_bin in total_data["count_of_all_pulses"]:
             if len(pulses) ==0:
-                pulses = array_bin.tolist()
+                if type(array_bin) is list:
+                    pulses = array_bin
+                else:
+                    pulses = array_bin.tolist()
             else:
                 for i in range(0, len(array_bin)):
                     pulses[i] += array_bin[i]
@@ -356,10 +398,16 @@ def trigger_get_data(request):
             if key =="batch_info":
                 total_data[key]=[]
         ret = total_data
-    return HttpResponse(json_util.dumps({"xbin": xbin, "data": ret, 
-                                         "lone_pulses": lone_pulses,
-                                         "all_pulses": pulses}), 
-                        content_type="application/json")
+
+    try:
+
+        json_ret = json_util.dumps({"xbin": xbin, "data": ret,
+                                    "lone_pulses": lone_pulses,
+                                    "all_pulses": pulses})
+    except Exception as e:
+        logger.error("Couldn't encode " + str(e))
+        return HttpResponse({}, content_type="application/json")
+    return HttpResponse(json_ret, content_type="application/json")
 
 
 """END TRIGGER SECTION"""

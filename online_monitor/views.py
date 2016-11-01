@@ -9,7 +9,6 @@ import numpy as np
 import math
 import datetime
 
-
 # Get an instance of a logger
 logger = logging.getLogger("emo")
 
@@ -393,5 +392,184 @@ def get_event_rates(request):
                                         "min_time": min_time, "bin_size": bin_size}),
                         content_type="application/json")
 
+
+'''
+#
+##
+###
+####
+##### NEW PAGE
+####
+###
+##
+#
+'''
+
+@login_required
+def get_modes_in_range(request):
+    '''
+    We send some selection criteria, we return a list of run modes
+    in that range of runs. 
+    '''
+    
+    if request.method != 'GET':
+        return HttpResponse({},content_type="application/json")
+
+    query = {"detector": "tpc"}
+    limit = -1
+    if "lastn" in request.GET:
+        limit = int(request.GET['lastn'])
+    elif "startrun" in request.GET:
+        query['number'] = {"$gte": int(request.GET['startrun'])}
+        if "endrun" in request.GET:
+            query['number']['$lte'] = int(request.GET['endrun'])
+    elif "startdate" in request.GET and "enddate" in request.GET:
+        query['start'] = {"$gte": 
+                          datetime.datetime.combine(
+                              datetime.date.fromtimestamp(
+                                  int(request.GET['startdate'])), 
+                              datetime.datetime.min.time()),
+                          "$lte": 
+                          datetime.datetime.combine(
+                              datetime.date.fromtimestamp(
+                                  int(request.GET['enddate'])),
+                              datetime.datetime.max.time())}
+    filtermodes = []
+    try:
+        for mode in request.GET.getlist('modes[]'):
+            filtermodes.append(mode)
+    except:
+        print("I guess no modes")
+
+    runsClient = MongoClient(settings.RUNS_DB_ADDR)
+    runsDB = runsClient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
+    
+    collections = list(db.collection_names())
+
+    # Query for runs
+    if len(filtermodes) > 0:
+        query['reader.ini.name'] = {"$in": filtermodes}
+        if limit == -1:
+            cursor = runsDB.find(query, {"name": 1})
+        else:
+            cursor = runsDB.find(query, {"name": 1}).sort("number", -1).limit(limit)
+        ret = []
+        for doc in cursor:
+            if ( doc['name'] in collections ):
+                ret.append(doc['name'])
+        return HttpResponse(dumps(ret),content_type="application/json")
+
+
+    # Query for modes
+    if limit == -1:
+        cursor = runsDB.find(query, {"name": 1, "reader.ini.name": 1})
+    else:
+        cursor = runsDB.find(query, {"name": 1, "reader.ini.name": 1}).sort("number", -1).limit(limit)
+        
+    modes = []
+    for doc in cursor:
+        if ( doc['name'] in collections and 
+             doc['reader']['ini']['name'] not in modes ):
+            modes.append(doc['reader']['ini']['name'])
+    return HttpResponse(dumps(modes),content_type="application/json")
+
+
+@login_required 
+def get_plot_xy(request):
+    
+    if request.method != "POST":
+        return HttpResponse(dumps({}),content_type="application/json")
+    
+    logger.error(request.POST)
+    ret = {"did": "it"}
+    keys = None
+    xret = [] 
+    yret = []
+    try:
+        runlist = request.POST.getlist('runs[]')
+        x = request.POST['x']
+        y = request.POST['y']
+    except Exception as e:
+        logger.error(str(e))
+        return HttpResponse(dumps({}),content_type="application/json")
+
+    for collection in runlist:
+        if keys == None:
+            keys = list(db[collection].find_one({"type": "data"}).keys())
+            keys.append('r')    
+            
+        query = {}
+        limiter = {}
+        nancheck = []
+        if x != 'r':
+            query[x] = {"$ne":None}
+            limiter[x] = 1
+            nancheck.append(x)
+        else:
+            query = {"x": {"$ne": None}, "y": {"$ne": None}}
+            limiter['x'] = 1
+            limiter['y'] = 1
+            nancheck.append("x")
+            nancheck.append("y")
+        if y != 'r':
+            query[y] = {"$ne":None}
+            limiter[y] = 1
+            nancheck.append(y)
+        else:
+            query["x"] = {"$ne": None}
+            query["y"] = {"$ne": None}
+            limiter['x'] = 1
+            limiter['y'] = 1
+            nancheck.append('x')
+            nancheck.append('y')
+            
+        data = db[collection].find(query, limiter)
+        for doc in data:
+
+            skip = False
+            for var in nancheck:
+                if math.isnan(doc[var]):
+                    skip=True
+            if skip:
+                continue
+                
+            if x != 'r':
+                xret.append(doc[x])
+            else:
+                xret.append(np.sqrt(pow(doc['x'],2)+pow(doc['y'],2)))
+            if y != 'r':
+                yret.append(doc[y])
+            else:
+                yret.append(np.sqrt(pow(doc['x'],2)+pow(doc['y'],2)))
+                
+    ret = {"x": xret, "y": yret, "vars": keys}
+        
+    return HttpResponse(dumps(ret),
+                        content_type="application/json")
+
+@login_required
+def select_runs(request):
+
+    if request.method != "POST":
+        return HttpResponse(dumps({}),content_type="application/json")
+
+    logger.error(request.POST)
+    colls = []
+    try:
+        for coll in request.POST.getlist('runs[]'):
+            colls.append(coll)
+    except:
+        return HttpResponse(dumps({}),content_type="application/json")
+
+    ret = {}
+    events = 0
+    for coll in colls:
+        if coll in db.collection_names():            
+            events+=db[coll].count()
+    ret = {"collections": len(colls), "events": events}
+
+    return HttpResponse(dumps(ret),content_type="application/json")
+
+    
 
     

@@ -31,19 +31,22 @@ db = client[ settings.ONLINE_DB_NAME ]
 dayno = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
           "Friday": 4, "Saturday": 5, "Sunday": 6}
 
+'''
 @csrf_exempt
 def get_login(request):
-    user = authenticate(username=request.POST['username'],  password=request.POST['password'])
+    user = authenticate(username=request.POST['username'],  
+                        password=request.POST['password'])
     login(request, user)
     return HttpResponse("Logged In")
+'''
 
 @login_required
 def GetHs(request):
-    users = db['users'].find({"g_id": {"$exists": True}}).sort("g_id",pymongo.DESCENDING).limit(5)
+    users = db['users'].find({"g_id": {"$exists": True}}).sort("g_id",pymongo.DESCENDING).limit(8)
     ret=[]
     for usr in users:
-        #if usr['username'] != 'tunnell':
-        ret.append({"name": usr['username'], "g_id": usr['g_id']})
+        if usr['username'] != 'silva':
+            ret.append({"name": usr['username'], "g_id": usr['g_id']})
         ##else:
         #ret.append({"name": usr['username'], "g_id": 0})
     return HttpResponse(json.dumps({"list": ret}), content_type="application/json")

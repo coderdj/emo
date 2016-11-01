@@ -47,7 +47,7 @@ background-color:white;
       <th>Type</th>
       <th>Serial</th>
       <th>Status</th>
-      <th>Purchase Date</th>
+      <th>Institute</th>
       <th>Detail</th>
       <th>Edit</th>
     </tr>
@@ -247,14 +247,15 @@ $(document).ready(function(){
             { "data": "type" },
             { "data": "serial" },
             { "data": "status" },
-            { "data": "purchased", "width": "15%", "render": function (data) {
+/*            { "data": "purchased", "width": "15%", "render": function (data) {
               if(!data)
                  return "unknown";
               var m = new Date(data['$date']);
              var dateString = m.getUTCFullYear() +
                  "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " ";           
              return dateString;
-            }},
+            }},*/
+            { "data": "purchaser"},
             {
                 "className":      'details-control',
                 "orderable":      false,

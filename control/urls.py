@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^run_start_feedback', views.GetDispatcherReply, name='run_start_feedback'),
     url(r'^fancy', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanelNew.html"))),
+    url(r'^get_tpc_event_rate', views.GetTPCEventRate, name='get_tpc_event_rate'),
     url(r'$', login_required( TemplateView.as_view( template_name=
                                                     "control/controlPanelNew.html"))),
 

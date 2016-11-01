@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Runs UI{% endblock %}
+{% load staticfiles %}
+{% block head %}
+<link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
+<script src="{% static "js/jquery.json-view.js" %}"></script>
+<link href="{% static "css/jquery.json-view.css" %}" rel="stylesheet"/>
+<script src="{% static "jquery-hashtags-master/js/autosize.min.js" %}" type="text/javascript"></script>
+<script src="{% static "jquery-hashtags-master/js/jquery.hashtags.js" %}" type="text/javascript"></script>
+
+<link href="{% static "jquery-hashtags-master/css/jquery.hashtags.css" %}" rel="stylesheet">
+<script src="{% static "js/stream_table.js" %}"></script>
+<script src="{% static "js/mustache.min.js" %}"></script>
+<script src="{% static "emo/js/emo_runs_streamer.js" %}"></script>
+
+
+<style>
+#tablesearch {
+    width: 100px;
+    -webkit-transition: width 0.4s ease-in-out;
+    transition: width 0.4s ease-in-out;
+}
+#tablesearch:focus {
+    width: 100%;
+}
+</style>
+<script>
+  $(function() {
+     $( "#id_startdate" ).datepicker({
+       changeMonth: true,
+       changeYear: true
+     });
+  });
+  $(function() {
+     $( "#id_enddate" ).datepicker({
+        changeMonth: true,
+        changeYear: true
+     });
+  });
+</script>
+
+
+{% endblock %} 
+{% block content %}
+<div class="runsHider" onclick="HideDetail()"></div>
+<div style="position:relative">
+  <div class="collapse" id="search-bar">
+<div class="emo-search-bar" style="width:100%;">
+<!--  <form method="GET" action="/runs/">-->
+    <div class="row" style="padding-top:5px">
+      <div class="col-xs-2 col-sm-3" style="line-height:40px;padding-left:40px;width:130px"><strong>Search:</strong></div>
+      <div class="col-xs-6 col-sm-3">From: &nbsp;<input type="date" id="form_startdate"></input> </div>
+      <div class="col-xs-6 col-sm-3">To:&nbsp; <input type="date" id="form_enddate"></input></div>
+      <div class="col-xs-6 col-sm-3" style="line-height:40px;width:200px">Detector: 
+	<select id="form_detector">
+	  <option value="tpc" selected>TPC</option>
+	  <option value="muon_veto">Muon Veto</option>
+	</select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-8 col-sm-7" style="padding-left:130px;">Query: 
+	<input type="text" id="form_query"></input> </div>
+      <div class="col-xs-1">
+        <button class="btn btn-info btn-sm" onclick="RefreshTable()" style="height:30%;padding-left:50px;padding-right:50px;margin:8px;">Search</button>
+	<!--<a class="btn btn-warning btn-sm" href="/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22trigger.events_built%22%3A+%7B%22%24gt%22%3A+0%7D%2C+%22%24or%22%3A%09%5B%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22midway-login1%22%5D%7D%7D%2C%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22tegner-login-1%22%5D%7D%7D%2C+%7B%22data.status%22%3A+%22error%22%7D%5D%2C%22number%22%3A+%7B%22%24gt%22%3A+1000%7D%7D&submit=">Show transfer errors</a>-->
+	
+      </div>
+    </div>
+<!--  </form>-->
+</div>
+</div>
+  <div class="expand-pulldown" style="position:absolute;bottom:-10;left:45%;">
+    <button class="btn btn-mini btn-info" style="background-color:white;color:#444444;border-top:0px;margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0;" type="button" data-toggle="collapse" data-target="#search-bar" aria-expanded="false" aria-controls="emo-search-bar">Advanced Search</button>
+  </div>
+</div>
+
+<div class="row" id="main_row" style="margin-top:30px;">
+  <div class="col-xs-12"><strong>Records fetched: <span id="counterdiv"></span></strong></div>
+  <div class="col-sm-12 col-xs-12" id="table_window"
+       style="padding:5px;height:100%;">
+    <div class="row" style="margin:0;padding:0">
+      <div class="col-xs-12 col-sm-6" style="margin-top:20px;margin-bottom:20px;padding:0"><input type="text" name="search" placeholder="Search..." id="tablesearch"/></div>
+      <div class="col-xs-12 col-sm-6" style="padding:0">
+	<div class="pull-right paginat" style="margin:0"></div>
+      </div>
+    </div>
+    <table class="table table-bordered" id="runstable" style="background-color:white;table-layout: fixed;word-wrap:break-word;overflow-y:hidden">
+      <thead>
+	<tr>
+	  <th style="width:50px;"></th>
+	  <th style="width:80px">Num.</th>	  
+	  <th style="width:100px">Date</th>
+	  <th style="width:80px">Source</th>
+	  <th style="width:100px">Events</th>
+	  <th style="width:150px;">Status &nbsp;<a data-toggle="modal" href="#helpModal" style="padding-left:3px" title="Help">?</a></th>
+	  <th style="width:100px">Tags</th>
+	  <!--<th style="width:10px"><span class="glyphicon glyphicon-comment"></span></th>-->
+	  <th style="min-width:200px">Top Comment</th>
+	</tr>
+      </thead>
+      <tbody>
+      </tbody> 
+    </table>
+    <div class="pull-right paginat" style="margin:0"></div>
+  </div>
+</div>
+  <div class="col-sm-6 col-sm-offset-6 col-xs-12" id="detail_window" 
+       style="display:none;z-index:100;position:fixed;top:40px;right:0px;height:150%;overflow-y:hidden;padding:0;background-color:white;border-left:1px;border-color:#666;border-style:solid;border-top:0;border-right:0;">
+    <div class="emobox" id="tab_content" 
+	 style="padding:10px;margin:0px;overflow-y:hidden;overflow-x:hidden;border-bottom:0px;">
+      <div style="height:100%;">
+	<div id="run_detail_top">
+	</div>
+	<h4 style="margin-bottom:2px">Tags</h4>
+        <hr style="margin-top:0px;margin-bottom:4px;">
+        <div id="run_detail_tags"></div>
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs" role="tablist">
+	  <li role="presentation" class="active"><a href="#locations_tab" aria-controls="locations_tab" role="tab" data-toggle="tab">Storage</a></l>
+          <li role="presentation"><a href="#comments_tab" aria-controls="comments_tab" role="tab" data-toggle="tab">Comments</a></li>
+	  <li role="presentation"><a href="#json" aria-controls="json" role="tab" data-toggle="tab">JSON</a></li>
+	</ul>
+	
+	<!-- Tab panes -->
+	<div class="tab-content">
+	  <div role="tabpanel" class="tab-pane active" id="locations_tab" style="height:60vh;overflow-y:scroll;">
+            <div id="detail_locations">No storage sites registered for this run.</div>
+	  </div>
+	  <div role="tabpanel" class="tab-pane" id="comments_tab" style="height:60vh;overflow-y:scroll;">
+	    <h4 style="margin-bottom:2px">Comments</h4>
+            <hr style="margin-top:0px;margin-bottom:4px;">
+            <div id="detail_comments"></div>
+	  </div>
+	  <div role="tabpanel" class="tab-pane" id="json" style="height:60vh;overflow-y:scroll;">...</div>
+	</div>
+	
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+	Close</button>
+        <h4 class="modal-title">Help</h4>
+      </div>
+      <div class="model-body" style="padding:10px;">
+        <p>
+          These little boxes indicate the status at each analysis site. Remember you can also see a detailed status by clicking the run and looking at the storage tab.
+
+	  Each column is a data site:
+	  <ul>
+	    <li><strong>Column 0: </strong> DAQ</li>
+	    <li><strong>Column 1: </strong> XENON1T-DataManager. This is the surface buffer at LNGS. The DAQ has finished acquiring a run once this site shows 'transferred'.</li>
+	    <li><strong>Column 2: </strong> Chicago Midway. Gets both raw and processed data automatically transferred by cax.</li>
+	    <li><strong>Column 3: </strong> Stockholm PDC. Gets both raw and processed data automatically transferred by cax.</li>
+	  </ul>
+        </p>
+	<p>
+	  The color of the boxes indicates the status of that site for this run. The colors are as follows:
+	  <p><span class="glyphicon glyphicon-stop" style="color:#ff0000;"></span>
+	    &nbsp No information for this site
+	  </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#ffcc00;"></span>
+            &nbsp Data currently transferring to this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#006600;"></span>
+            &nbsp Raw data successfully transferred to this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#000099;"></span>
+            &nbsp Data currently processing at this site
+          </p>
+	  <p><span class="glyphicon glyphicon-stop" style="color:#3399ff;"></span>
+            &nbsp Processed data exists at this site
+          </p>
+	  <p><span class="glyphicon glyphicon-exclamation-sign" style="color:#ff6600;"></span>
+            &nbsp cax reports an error for this site
+          </p>	 
+	</p>
+	<p>
+	  For more information on a run, open it and browse to the data tab.
+	</p>
+</div>
+      <div class="modal-footer">
+        <a href="#" data-dismiss="modal" class="btn btn-danger">Close</a>
+      </div>
+    </div><!-- end content -->
+  </div> <!-- end dialog -->
+</div> <!-- end modal -->
+
+
+<script>
+
+$(function(){
+
+   MakeRunsTable("runstable", "/runs/runs_stream", "template", "counterdiv");
+
+});
+
+function RefreshTable(){
+
+   runs_url = "/runs/runs_stream";
+   // Get Options
+   var detector = $('#form_detector').find(":selected").val();
+   runs_url+="?detector="+detector+";";
+
+   console.log($("#form_startdate").val());
+   if($("#form_startdate").val() != null  && $("#form_startdate").val() != "")
+      runs_url += "startdate=" + $("#form_startdate").val() + ";";
+   if($("#form_enddate").val() != null && $("#form_enddate").val() != "")
+      runs_url += "enddate=" + $("#form_enddate").val() + ";";
+   if($("#form_query").val() != null && $("#form_query").val() != "")
+      runs_url += "mongo_query=" + encodeURIComponent($("#form_query").val());
+   console.log(runs_url);
+   MakeRunsTable("runstable", runs_url, "template", "counterdiv");
+
+}
+
+</script>
+
+<!-- BELOW ARE ALL THE TEMPLATES FOR VARIOUS PARTS OF THE PAGE -->
+<script id="template_run_header" type="text/html">
+  <h4 style="margin-bottom:2px" 
+      id="run_detail_head">Detail for run {% verbatim %}{{ run_number }}{% endverbatim %}
+  </h4>
+  <div style='position:absolute;right:50px;top:15px;'>
+    <button class='btn btn-default' style='color:black;background-color:white'
+            onclick="HideDetail()">
+      Hide
+    </button>
+  </div>
+  <hr style="margin-top:0px;margin-bottom:4px;">
+  <table>
+    <tbody>
+      <tr>
+	<td style="min-width:40px;padding-left:5px;">
+	  <strong>Run name</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ run_name }}{% endverbatim %}
+	</td>
+        <td style="min-width:40px;padding-left:15px;">
+	  <strong>Detector</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ detector }}{% endverbatim %}
+	</td>
+      </tr>
+      <tr>
+	<td style="min-width:40px;padding-left:5px;">
+	  <strong>Source type</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ source_type }}{% endverbatim %}
+	</td>
+        <td style="min-width:40px;padding-left:15px;">
+	  <strong>Starting User</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ user }}{% endverbatim %}
+	</td>
+      </tr>
+      <tr>
+	<td style="min-width:40px;padding-left:5px;">
+	  <strong>Start Date</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ start_date }}{% endverbatim %}
+	</td>
+        <td style="min-width:40px;padding-left:15px;">
+	  <strong>End Date</strong>
+	</td>
+	<td style="padding-left:5px">
+	  {% verbatim %}{{ end_date }}{% endverbatim %}
+	</td>
+      </tr>
+      <tr>
+	<td style="min-width:40px;padding-left:5px;">
+	  <strong>Events</strong>
+	</td>
+	<td style="padding-left:5px" id="detail_events">
+	  {% verbatim %}{{ events }}{% endverbatim %}
+	</td>
+      </tr>
+    </tbody>
+  </table>
+</script>
+
+
+<script id="template" type="text/html">
+  <tr>
+    <td>{{ link }}</td>
+    <td>{{ number }}</td>
+    <td>{{ date }}</td>
+    <td>{{ source }}</td>
+    <td>{{ events }}</td>
+    <td>{{ status }}</td>
+    <td>{{ tags }}</td>
+    <td>{{ top_comment }}</td>
+  </tr>
+</script>
+
+{% endblock %}
+

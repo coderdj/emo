@@ -25,6 +25,100 @@ client = MongoClient(settings.ONLINE_DB_ADDR)
 logclient = MongoClient(settings.LOG_DB_ADDR)
 
 @login_required
+def GetTPCEventRate(request):
+    """
+    Get most recent trigger data collection and some other stuff
+    """
+
+    # Connect to trigger monitor and get most recent collection info
+    monClient = MongoClient("mongodb://"+settings.GEN_USER+":"+
+                            settings.GEN_PW+"@gw:27018"+"/"
+                            +settings.GEN_DB)
+    monDB = monClient["trigger_monitor"]
+    monCollections = list(monDB.collection_names())
+    monCollections.sort(reverse=True)
+    newest = monCollections[0]
+
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    runsDB = client[ settings.RUNS_DB_NAME ][settings.RUNS_DB_COLLECTION]
+    pipelineDB = client[ settings.RUNS_DB_NAME ]["pipeline_status"]
+
+    # Defaults
+    retdoc = {
+        "deadtime": None, "rate": None, "time": None, "rname": None, 
+        "deadtime_total": None, "deadtime_run": None,
+        "rnumber": None, "eb0": { "storageSize": 0, "dataSize": 0, "collections": 0},
+        "eb1": { "storageSize": 0, "dataSize":0, "collections": 0},
+        "eb2": { "storageSize": 0, "dataSize":0, "collections": 0},
+        "eventbuilder_info": None
+    }
+
+    # Get most recent status doc
+    rnum = newest
+    rnumbackup=monCollections[1]
+    try:
+        for collection in monCollections:            
+            doc = monDB[collection].find_one({"data_type": "batch_info"},
+                                             sort=[("_id", -1)])
+            newest = collection
+            if doc is not None: 
+                break
+        if doc is not None:
+            rnum = newest
+            rundoc = runsDB.find_one({"name": rnum, "detector": "tpc"})
+            start = rundoc['start']
+            timestamp = (start - datetime.datetime(1970,1,1)).total_seconds()
+            retdoc['rate'] = doc['events_built']/21.
+            retdoc['time'] = str(timestamp+doc['last_time_searched']/1000000000.),
+            retdoc['rname'] = rnum
+            retdoc['rnumber'] = rundoc['number']
+    except Exception as e:
+        logger.error("Error " + str(e))
+        
+    try:
+        dead_time_doc = monDB[newest].find({"data_type": 
+                                            "dead_time_info"}).sort("_id", -1)[0]
+        time_bin = monDB[newest].find({"data_type":
+                                       "dead_time_info"}).sort("_id", 
+                                                               1)[0]['time']
+        retdoc['deadtime'] = dead_time_doc['busy'] / time_bin
+        retdoc['deadtime_run'] = newest
+        dead_time_doc = (list(monDB[newest].aggregate([
+            {"$match": {"data_type": "dead_time_info", "busy": {"$ne": 0}}}, 
+            {"$group": {"_id": None,  "count": {"$sum": "$busy"}, 
+                        "tot": {"$max": "$time"}}}, 
+            {"$project": {"deadtime": {"$divide": ["$count", "$tot"]}, 
+                          "busytime": "$count", "totaltime": "$tot"}}])))[0]
+        retdoc['deadtime_total'] = dead_time_doc['deadtime']
+    except Exception as e:
+        logger.error("Error " + str(e))
+        
+    # Pipeline status this run
+    try:
+        dead_time_doc = pipelineDB.find(
+            {"name": "daq_buffer"}).sort("time", -1).limit(1)[0]
+        retdoc['eb0:27000'] = dead_time_doc["eb0:27000"]
+        retdoc['eb1:27000'] = dead_time_doc["eb1:27000"]
+        retdoc['eb2:27000'] = dead_time_doc["eb2:27000"]        
+    except Exception as e:
+        logger.error("Error " + str(e))
+
+    # Eventbuilder queue and checkin
+    try:
+        ebdoc = pipelineDB.find({'name': 
+                                 'eventbuilder_info'}).sort("time",-1).limit(1)[0]
+        retdoc['eventbuilder_info'] = ebdoc
+        retdoc['eventbuilder_info']['time'] = (retdoc['eventbuilder_info']['time']- datetime.datetime(1970,1,1)).total_seconds()
+
+    except Exception as e:
+        logger.error("Error " + str(e))
+
+    return HttpResponse(dumps(retdoc),
+                        content_type="application/json")
+
+
+
+@login_required
 def GetQueueList(request):
     """
     Gets the queue as a json list
