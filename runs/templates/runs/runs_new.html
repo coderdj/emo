@@ -196,7 +196,7 @@
 <script>
 
 $(function(){
-
+   document.whoami="{{ request.user.username }}";
    MakeRunsTable("runstable", "/runs/runs_stream", "template", "counterdiv");
 
 });
@@ -224,11 +224,11 @@ function RefreshTable(){
 
 <!-- BELOW ARE ALL THE TEMPLATES FOR VARIOUS PARTS OF THE PAGE -->
 <script id="template_run_header" type="text/html">
-  <h4 style="margin-bottom:2px" 
+  <h4 style="margin-bottom:5px" 
       id="run_detail_head">Detail for run {% verbatim %}{{ run_number }}{% endverbatim %}
   </h4>
   <div style='position:absolute;right:50px;top:15px;'>
-    <button class='btn btn-default' style='color:black;background-color:white'
+    <button class='btn btn-default btn-lg' style='color:black;background-color:white'
             onclick="HideDetail()">
       Hide
     </button>
@@ -288,6 +288,70 @@ function RefreshTable(){
       </tr>
     </tbody>
   </table>
+</script>
+
+<script id="template_tagbutton" type="text/html">
+  
+  <span class="tagButton">
+    <a style="color:white;cursor:pointer;" onclick="ShowTag('{% verbatim %}{{ name }}{% endverbatim %}')">{% verbatim %}{{ name }}{% endverbatim %} </a>    
+    <div {% verbatim %}{{{ hideifnotme }}}{% endverbatim %}>
+      &nbsp;&nbsp;
+      <span class="badge" style="cursor:hand;cursor:pointer;" 
+	    onclick="RemoveTag('{% verbatim %}{{ oid }}{% endverbatim %}', '{% verbatim %}{{ name }}{% endverbatim %}')">x</span>
+    </div>
+  </span>&nbsp;  
+</script>
+
+
+<script id="template_site" type="text/html">
+  <div class='row'>
+    <div class='col-xs-12'>
+      <h5><strong>{% verbatim %}{{ host }}{% endverbatim %}</strong></h5>
+    </div>
+    <div class='col-xs-12'>
+      <strong style='padding-left:15px;'>Type: </strong>{% verbatim %}{{ type }}{% endverbatim %}
+      <strong style='padding-left:15px';>Status: </strong>
+      <strong style='padding-left:15px;color:{% verbatim %}{{{ status_color }}}{% endverbatim %}'>
+	{% verbatim %}{{ status }}{% endverbatim %}
+    </strong></div>
+    <div class='col-xs-12' {% verbatim %}{{{ display_paxversion }}}{% endverbatim %}>
+      <strong style='padding-left:15px'>Pax version: </strong>&nbsp;{% verbatim %}{{ pax_version }}{% endverbatim %}
+    </div>
+    <div class='col-xs-12'><strong>Location: </strong>&nbsp;{% verbatim %}{{ location }}{% endverbatim %}
+    </div>
+  </div>
+</script>
+
+<script id="template_storage" type="text/html">
+  <table>
+    <div>{% verbatim %}{{{ raw }}}{% endverbatim %}</div>
+    <div>{% verbatim %}{{{ processed }}}{% endverbatim %}</div>
+    <div>{% verbatim %}{{{ other }}}{% endverbatim %}</div>
+  </table>
+</script>
+
+<script id="template_tags" type="text/html">  
+  
+  {% verbatim %}{{{ tag_html }}}{% endverbatim %}
+  <form class='new_tag_form' method='get' onsubmit='return NewTag(this)'>
+    <div class="row">
+      <div class="col-xs-12 text-info">
+	<emph>
+	  Please avoid redundant tags, i.e. re-stating the source type as well as overly specific tags like the I-Belt position (this goes in comments). There does not have to be a tag for each run.
+	</emph>
+      </div>
+      <div class="col-xs-9">
+	<input type="text" id="{% verbatim %}{{ oid }}{% endverbatim %}_formtext" 
+	       style="width:100%" name="content"></input>
+      </div>
+      <div class="col-xs-3">
+	<input type="hidden" name="id" 
+	       value="{% verbatim %}{{ oid }}{% endverbatim%}"/>
+	<button class="btn btn-info" type="submit" 
+		style="margin-bottom:15px;">New Tag</button>
+      </div>
+    </div>
+  </form>
 </script>
 
 

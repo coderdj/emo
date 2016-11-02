@@ -290,6 +290,15 @@ function rotateAroundObjectAxis(object, axis, radians) {
     // new code for Three.js r59+:
     object.rotation.setFromRotationMatrix(object.matrix);
 }
+$(document).mousedown(function(e){
+
+    document.wantposx = ((e.clientX - window.innerWidth/2) );
+    document.wantposy = (-(e.clientY -window.innerHeight));
+    if(!document.autofire){
+	document.autofire=true;
+	fire();
+    }
+});
 
 $(document).on("keydown", function (e) {
 
@@ -365,6 +374,7 @@ function DetonateMissle(){
 
 }
 function FireBullet(n){
+    console.log("FIREBULLET");
     colors = [0x4444aa, 0x44aa44, 0xaa4444, 0xffffff];
     color = colors[0];
     if(n<colors.length)
@@ -409,6 +419,9 @@ function FireBullet(n){
 
 $(document).on("keyup", function(e){
 
+    document.wantposx = null;
+    document.wantposy = null;
+    document.autofire = false;
     if(e.which == 87)
 	document.udown=false;
     else if(e.which == 83)
@@ -457,9 +470,10 @@ function locationOf(element, array, key, start, end) {
 }
 
 function fire(){
+    console.log("FIRING");
     if(document.autofire == false) return;
     if(document.run_animation==false) return;
-
+    console.log("YES");
     autofire_rate = 250; // base rate
     if(document.score > 2500) autofire_rate-=50;
     if(document.score > 5000) autofire_rate-=50;
@@ -467,11 +481,11 @@ function fire(){
     if(document.score > 10000) autofire_rate-=50;
     if(document.score > 20000) autofire_rate-=25;
 
-    if(!document.fire){	
-	setTimeout(fire, autofire_rate);
-	return;
-    }
-    FireBullet();
+    //if(!document.fire){	
+//	setTimeout(fire, autofire_rate);
+//	return;
+  //  }
+    FireBullet(0);
     /*bullet = new THREE.Mesh(new THREE.SphereGeometry(5,1,1),
                                      new THREE.MeshBasicMaterial(
                                          {color: 0xff0000}))
@@ -622,7 +636,47 @@ function animate(){
     //console.log(document.powerWeaponCharge);
    
 
+    var osize=15;
+    // PLAYER MOVEMENT MOUSE
+    if(document.wantposx != null && document.player.position.x != 
+       document.wantposx){
+	myx = document.player.position.x;
+	console.log("POS");
+	console.log(myx);
+	console.log(document.wantposx);
+	if(myx < document.wantposx){
+	    if(Math.abs(document.wantposx - myx) < osize*clock_corr)
+		document.player.position.x = document.wantposx;
+	    else
+		document.player.position.x += osize*clock_corr;
+	}
+	else if(myx > document.wantposx){
+	    if(Math.abs(document.wantposx - myx) < osize*clock_corr)
+		document.player.position.x = document.wantposx;
+            else
+		document.player.position.x -= osize*clock_corr;
+	}
+    }
+    if(document.wantposy != null && document.player.position.y !=
+       document.wantposy){
+	myy = document.player.position.y;
+	if(myy < document.wantposy){
+            if(Math.abs(document.wantposy - myy) < osize*clock_corr)
+		        document.player.position.y = document.wantposy;
+            else
+		document.player.position.y += osize*clock_corr;
+        }
+	else if(myy > document.wantposy){
+            if(Math.abs(document.wantposy - myy) < osize*clock_corr)
+                document.player.position.y = document.wantposy;
+            else
+                document.player.position.y -= osize*clock_corr;
+        }
 
+    }
+	
+
+    // PLAYER MOVEMENT KEYBOARD
     var msize=15;
     if(document.udown && document.player.position.y < window.innerHeight){
 	document.player.position.y += msize*clock_corr;
@@ -1241,6 +1295,8 @@ document.n_stars=15;
       document.ldown=false;
       document.rdown=false;
       document.udown=false;
+    document.wantposx = null;
+    document.wantposy = null;
       document.impurities=0;
       document.ddown=false;
       document.en_bullet_chance=10; // 1-1000, rand()*1000 < num

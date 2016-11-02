@@ -58,11 +58,6 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 		tags+='<a style="cursor:pointer;" onclick="ShowTag('+"'"+
 		    record['tags'][x]['name']+"')" + '">'+
 		    record['tags'][x]['name']+' </a>';
-		//href='+"'"+
-		//    '/runs/?startdate=&enddate=&detector=tpc&custom=%7B"tags"'+
-//		    '%3A+%7B"%24elemMatch"%3A+%7B"name"%3A+"'+
-//		    record.tags[x]['name']+'"%7D%7D%7D&submit='+"'>"+
-//		    record.tags[x]['name']+"</a>&nbsp;";
 	    }
 	}
 
@@ -162,6 +157,8 @@ function ShowDetail(name, detector){
     };
     DrawDetailWindow(runs_url, params, 
 		     "template_run_header", "run_detail_top", 
+		     "template_tags", "template_tagbutton", "run_detail_tags",
+		     "template_storage", "template_site", "detail_locations", 
 		     function(){SlideOutDetail()});
 }
 
@@ -180,7 +177,10 @@ function DateToString(dateval){
     return ret;
 }
 
-function DrawDetailWindow(url, params, header_template, header_div, callback)
+function DrawDetailWindow(url, params, header_template, header_div, 
+			  tag_template, tagbutton_template, tag_div, 
+			  storage_template, storageloc_template, 
+			  storage_div, callback)
 //,
 /*//add piece by piece			  comment_template, comment_div,
 			  json_div, data_template, data_div, 
@@ -223,18 +223,126 @@ function DrawDetailWindow(url, params, header_template, header_div, callback)
 	};
 	$("#"+header_div).html(Mustache.render(title_template, 
 					      title_args));
-
-
+	$("#"+tag_div).html(DrawTagWindow(data, tag_template,
+					  tagbutton_template));
+	$("#"+storage_div).html(DrawStorageWindow(data, storage_template,
+						  storageloc_template));
 	callback();      
 			      
     });
     
-    
+}
+function GetColor(string){
+    if (string=="transferred" || string=="processing")
+	return "#36bc98";
+    if(string=="transferring" || string=="checking" || string=="verifying")
+	return "#f9a100";
+    else
+	return "#ec2c35";
+}
 
+
+function DrawStorageWindow(data, storage_template, storageloc_template){
+    var storageloctemplate= $.trim($("#"+storageloc_template).html());
+    Mustache.parse(storageloctemplate);
+
+    rawhtml="";
+    processedhtml="";
+    otherhtml="";
+
+    var untriggered = [];
+    var raw = [];
+    var processed = [];
+
+    for(i=0; i< data['data'].length; i+=1){
+	pars = {
+	    "host": data['data'][i]['host'],
+	    "status": data['data'][i]['status'],
+	    "type": data['data'][i]['type'],
+	    "location": data['data'][i]['location'],
+	    "status_color": GetColor(data['data'][i]['status']),
+	    "display_paxversion": "style='display:none'",
+	    "pax_version": "trolololol"
+	}
+	console.log(pars);
+	if(data['data'][i]['type'] == 'raw')
+	    raw.push(Mustache.render(storageloctemplate, pars));
+	else if(data['data'][i]['type'] == 'processed'){
+	    pars['pax_version'] = data['data'][i]['pax_version'];
+	    parx['display_paxcersion'] = "";
+	    processed.push(Mustache.render(storageloctemplate, pars));
+	}
+	else
+	    untriggered.push(Mustache.render(storageloctemplate, pars));
+    }
+    
+    if(raw.length!=0){
+	rawhtml += "<h4 style='margin-bottom:2px;'>Raw data</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+	for(x=0;x<raw.length;x+=1){
+	    rawhtml+=raw[x];
+	}	
+    }
+    if(processed.length!=0){
+	processedhtml+= "<h4 style='margin-bottom:2px;'>Processed data</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+	for(x=0;x<processed.length;x+=1){
+	    processedhtml+=processed[x];
+	}
+    }
+    if(untriggered.length!=0){
+	otherhtml += "<h4 style='margin-bottom:2px;'>Other</h4><hr style='margin-top:0px;margin-bottom:4px;'>";
+	for(x=0;x<untriggered.length;x+=1){
+            otherhtml+=untriggered[x];
+        }
+    }
+
+    var storagetemplate = $.trim($("#"+storage_template).html());
+    Mustache.parse(storagetemplate);
+    pars = {
+	"raw": rawhtml,
+	"processed": processedhtml,
+	"other": otherhtml
+    };
+    console.log(pars);
+    console.log( Mustache.render(storagetemplate, pars));
+    return Mustache.render(storagetemplate, pars);		    
+
+}
+function DrawTagWindow(data, tag_template, tagbutton_template){
+    var tagtemplate = $.trim($("#"+tag_template).html());
+    Mustache.parse(tagtemplate);
+    var tagbuttontemplate= $.trim($("#"+tagbutton_template).html());
+    Mustache.parse(tagbuttontemplate);
+
+    buttonhtml = "";
+    if("tags" in data){
+	buttonhtml="<br style='margin:1px'><div style='width:100%'>";
+	for(var i=0; i<data['tags'].length; i+=1){
+	    bargs = {
+		"name": data['tags'][i]['name'],
+		'oid': data['_id']['$oid'],
+		'hideifnotme': 'style="display:none"'
+	    };
+	    if(document.whoami == data['tags'][i]['user'])
+		bargs['hideifnotme'] = "";
+	    buttonhtml += Mustache.render(tagbuttontemplate, bargs);
+	}
+	buttonhtml += "</div><br style='margin:1px'>";
+    }
+    
+    targs = {
+	'oid': data['_id']['$oid'],
+	'tag_html': buttonhtml
+    };
+    console.log(targs);
+    return Mustache.render(tagtemplate, targs);
+    
 }
     
 
 function GetDataState(data){
+    
+    if(data==null)
+	return "";
 
     // Hosts
     hosts = {"reader": 0,
