@@ -2,6 +2,8 @@
 
 Experimental MOnitor framework
 
+[![DOI](https://zenodo.org/badge/35666027.svg)](https://zenodo.org/badge/latestdoi/35666027)
+
 Features:
 
  - Control of experimental data acquisition supporting independent/joint operation of multiple systems
