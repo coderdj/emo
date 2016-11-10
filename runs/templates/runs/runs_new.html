@@ -11,6 +11,9 @@
 <link href="{% static "jquery-hashtags-master/css/jquery.hashtags.css" %}" rel="stylesheet">
 <script src="{% static "js/stream_table.js" %}"></script>
 <script src="{% static "js/mustache.min.js" %}"></script>
+<script src="{% static "js/lodash.core.js" %}"></script>
+<script src="{% static "js/jquery.json-view.js" %}"></script>
+<link href="{% static "css/jquery.json-view.css" %}" rel="stylesheet"/>
 <script src="{% static "emo/js/emo_runs_streamer.js" %}"></script>
 
 
@@ -107,6 +110,22 @@
 </div>
   <div class="col-sm-6 col-sm-offset-6 col-xs-12" id="detail_window" 
        style="display:none;z-index:100;position:fixed;top:40px;right:0px;height:150%;overflow-y:hidden;padding:0;background-color:white;border-left:1px;border-color:#666;border-style:solid;border-top:0;border-right:0;">
+    <div id="loading_run"
+         style="z-index:10;width:100%;height:100%;position:absolute;top:0;left:0;display:none;background-color:white;">
+      <div class="sk-cube-grid">
+        <div class="sk-cube sk-cube1"></div>
+        <div class="sk-cube sk-cube2"></div>
+        <div class="sk-cube sk-cube3"></div>
+        <div class="sk-cube sk-cube4"></div>
+        <div class="sk-cube sk-cube5"></div>
+        <div class="sk-cube sk-cube6"></div>
+        <div class="sk-cube sk-cube7"></div>
+        <div class="sk-cube sk-cube8"></div>
+        <div class="sk-cube sk-cube9"></div>
+      </div>
+    </div>
+
+
     <div class="emobox" id="tab_content" 
 	 style="padding:10px;margin:0px;overflow-y:hidden;overflow-x:hidden;border-bottom:0px;">
       <div style="height:100%;">
@@ -293,13 +312,13 @@ function RefreshTable(){
 <script id="template_tagbutton" type="text/html">
   
   <span class="tagButton">
-    <a style="color:white;cursor:pointer;" onclick="ShowTag('{% verbatim %}{{ name }}{% endverbatim %}')">{% verbatim %}{{ name }}{% endverbatim %} </a>    
+    <a style="color:white;cursor:pointer;" onclick="ShowTag('{% verbatim %}{{ name }}{% endverbatim %}')">{% verbatim %}{{ tagname }}{% endverbatim %} </a>    
     <div {% verbatim %}{{{ hideifnotme }}}{% endverbatim %}>
-      &nbsp;&nbsp;
+      
       <span class="badge" style="cursor:hand;cursor:pointer;" 
-	    onclick="RemoveTag('{% verbatim %}{{ oid }}{% endverbatim %}', '{% verbatim %}{{ name }}{% endverbatim %}')">x</span>
+	    onclick="RemoveTag('{% verbatim %}{{ oid }}{% endverbatim %}', '{% verbatim %}{{ tagname }}{% endverbatim %}', '{% verbatim %}{{ name }}{% endverbatim %}', '{% verbatim %}{{ detector }}{% endverbatim %}')">x</span>
     </div>
-  </span>&nbsp;  
+  </span>  
 </script>
 
 
@@ -333,7 +352,29 @@ function RefreshTable(){
 <script id="template_tags" type="text/html">  
   
   {% verbatim %}{{{ tag_html }}}{% endverbatim %}
-  <form class='new_tag_form' method='get' onsubmit='return NewTag(this)'>
+
+  <form class='new_tag_form' style="display:inline"
+          onsubmit='return NewTag(this,
+          "{% verbatim %}{{ name }}{% endverbatim %}", "{% verbatim %}{{ detector }}{% endverbatim %}")'>
+      <div class="btn-group" role="group">
+	<input type="hidden" name="id" value="{% verbatim %}{{ oid }}{% endverbatim%}"/>
+	<input type="hidden" name="content" value="" id="tagid"/>
+	<input class="btn btn-warning" name="content" value="messy"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>	
+	<input class="btn btn-default" name="content" value="nofield"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	<input class="btn btn-danger" name="content" value="bad"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	<input class="btn btn-danger" name="content" value="donotprocess"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	<input class="btn btn-info" name="content" value="test"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	<input class="btn btn-default" name="content" value="ramping"
+	       type="submit" onclick="$('#tagid').val(this.value);"/>
+      </div>
+    </form>
+  <form class='new_tag_form' method='get' 
+	onsubmit='return NewTag(this, "{% verbatim %}{{ name }}{% endverbatim %}", "{% verbatim %}{{ detector }}{% endverbatim %}")'>
     <div class="row">
       <div class="col-xs-12 text-info">
 	<emph>
@@ -346,14 +387,48 @@ function RefreshTable(){
       </div>
       <div class="col-xs-3">
 	<input type="hidden" name="id" 
-	       value="{% verbatim %}{{ oid }}{% endverbatim%}"/>
+	       value="{% verbatim %}{{ oid }}{% endverbatim%}"></input>
 	<button class="btn btn-info" type="submit" 
 		style="margin-bottom:15px;">New Tag</button>
       </div>
     </div>
   </form>
 </script>
-
+<script id="template_comment" type="text/html">
+  <div class="emobox" style="padding:10px">
+    <p>
+      <strong>   
+	{% verbatim %}{{ user }}{% endverbatim %} 
+      </strong>
+      wrote on      
+      {% verbatim %}{{ date }}{% endverbatim %}
+    </p>
+    <p class="run_comment">
+      {% verbatim %}{{{ text }}}{% endverbatim %}
+    </p>
+  </div>
+</script>
+<script id="template_comments" type="text/html">
+  {% verbatim %}{{{ comments }}}{% endverbatim %}
+  <!-- New Comment Form -->
+  <form class="new_comment_form" method="post" 
+	onsubmit="return NewComment(this)">
+    {% csrf_token %}
+    <textarea class="formtextinput" 
+	      id="{% verbatim %}{{ oid }}{% endverbatim %}_formtext" 
+	      style="width:100%" name="content"></textarea>
+    <br>
+    <input type="hidden" name="run_id" 
+	   value="{% verbatim %}{{ oid }}{% endverbatim %}"/>
+    <input type="hidden" name="name" 
+	   value="{% verbatim %}{{ name }}{% endverbatim %}"/>
+    <input type="hidden" name="detector" 
+	   value="{% verbatim %}{{ detector }}{% endverbatim %}"/>
+    <button class="btn btn-info" type="submit" style="margin-bottom:15px;">
+      New comment</button>
+  </form>
+  
+</script>
 
 <script id="template" type="text/html">
   <tr>

@@ -10,6 +10,38 @@ from log.models import LogEntryForm, LogSearchForm, LogCommentForm
 from bson.json_util import dumps
 from django.conf import settings
 
+def add_status(request):
+    if request.method != "POST":
+        return HttpResponse({}, content_type="application/json")
+
+    new_form = LogEntryForm(request.POST)
+    c = MongoClient(settings.LOG_DB_ADDR)
+    d = c[settings.LOG_DB_NAME]
+    mongo_collection = d['log']
+
+    if new_form.is_valid():
+        new_entry = {
+            "message": new_form.cleaned_data['message'],
+            "priority": 60,
+            "sender": request.user.username,
+            "time": pytz.utc.localize(datetime.datetime.now()),
+            "run": new_form.cleaned_data['run_name'],
+            "detector": new_form.cleaned_data['detector'],
+            "tags": get_hash_tags(new_form.cleaned_data['message']),
+        }
+        mongo_collection.insert(new_entry)
+    return HttpResponsePermanentRedirect("/")
+
+def get_status(request):
+    c = MongoClient(settings.LOG_DB_ADDR)
+    d = c[settings.LOG_DB_NAME]
+    mongo_collection = d['log']
+    doc = mongo_collection.find({"priority": 60}).sort("time", -1).limit(1)[0]
+    if doc is None:
+        doc = {"message": "", "sender": "", "time": ""}
+    return HttpResponse(dumps(doc), content_type="application/json")
+
+
 def is_not_ro(user):
     if user.groups.filter(name='read_only').exists():
         return False

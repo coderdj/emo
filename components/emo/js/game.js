@@ -290,14 +290,30 @@ function rotateAroundObjectAxis(object, axis, radians) {
     // new code for Three.js r59+:
     object.rotation.setFromRotationMatrix(object.matrix);
 }
-$(document).mousedown(function(e){
+/*$(document).mousedown(function(e){
 
-    document.wantposx = ((e.clientX - window.innerWidth/2) );
-    document.wantposy = (-(e.clientY -window.innerHeight));
+    //document.wantposx = ((e.clientX - window.innerWidth/2) );
+    //document.wantposy = (-(e.clientY -window.innerHeight));
+    e.preventDefault();
+    if(e.clientX-window.innerWidth/2<0)
+	document.ldown=true;
+    else if(e.clientX-window.innerWidth/2>0)
+	document.rdown=true;
     if(!document.autofire){
 	document.autofire=true;
 	fire();
     }
+    return false;
+});
+$(document).mouseup(function(e){
+    e.preventDefault();
+    document.ldown=false;
+    document.rdown=false;
+    return false;
+});*/
+$(document).mouseup(function(e){         
+    e.preventDefault(); 
+    document.fire=true;
 });
 
 $(document).on("keydown", function (e) {
@@ -418,7 +434,7 @@ function FireBullet(n){
 }
 
 $(document).on("keyup", function(e){
-
+    document.mobile=false;
     document.wantposx = null;
     document.wantposy = null;
     document.autofire = false;
@@ -638,6 +654,7 @@ function animate(){
 
     var osize=15;
     // PLAYER MOVEMENT MOUSE
+    /*
     if(document.wantposx != null && document.player.position.x != 
        document.wantposx){
 	myx = document.player.position.x;
@@ -674,7 +691,7 @@ function animate(){
         }
 
     }
-	
+    */	
 
     // PLAYER MOVEMENT KEYBOARD
     var msize=15;
@@ -1285,7 +1302,7 @@ function reset(){
       document.max_enemy_size=40;
       document.min_enemy_size=30;
       document.player_x=0;
-      document.player_y = 0;
+      document.player_y = 10;
       document.background_stars=[];
 //      document.n_stars=20;
 document.n_stars=15;
@@ -1339,6 +1356,49 @@ document.n_stars=15;
     document.play_power_up=false;
     //document.objcolors=[0xFFFFFF];
     document.useSpotlight=false;
+    document.mobile=false;
+    
+    /* TILT CONTROLS */
+    if (window.DeviceOrientationEvent) {
+	console.log("MOBILEMODE");
+	document.mobile=true;	
+	//document.getElementById("doEvent").innerHTML = "DeviceOrientation";
+	// Listen for the deviceorientation event and handle the raw data
+	window.addEventListener('deviceorientation', function(eventData) {
+	    // gamma is the left-to-right tilt in degrees, where right is positive
+	    if(!document.mobile)
+		return;
+	    if(!document.autofire){
+		document.autofire=true;   
+		fire();  
+	    }
+
+	    var tiltLR = eventData.gamma;
+	    if(tiltLR > 15){
+		document.rdown=true;
+		document.ldown=false;
+	    }
+	    else if(tiltLR <-15){
+		document.rdown=false;
+		document.ldown=true;
+	    }
+	    else{
+		document.rdown=false;
+		document.ldown=false;
+	    }
+
+	    // beta is the front-to-back tilt in degrees, where front is positive
+	    var tiltFB = eventData.beta;
+	    
+	    // alpha is the compass direction the device is facing in degrees
+	    var dir = eventData.alpha
+	    
+	    // call our orientation event handler
+	    deviceOrientationHandler(tiltLR, tiltFB, dir);
+	}, false);
+    } else {
+	//document.getElementById("doEvent").innerHTML = "Not supported."
+    }
 
 }
 

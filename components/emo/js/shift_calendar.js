@@ -49,7 +49,9 @@ function MakeCalendar(divname, userList){
     var colors = {"free": "#36bc98", 
 		  "run coordinator": "#5a54bd", 
 		  "taken": "#5992c2",
-		  "training": "#ffa500"};
+		  "shifter": "#5992c2",
+		  "training": "#ffa500",
+		 "credit": "#ff3300"};
     document.userList = userList;
     console.log("Making calendar at " + divname);
     $('#' + divname).fullCalendar(
@@ -75,7 +77,9 @@ function MakeCalendar(divname, userList){
 		element.find('.fc-time').html("");
 		//          element.find('.fc-event-title').html(event.title);
 		type = 'free';
-		if(!event['available']) type='taken';
+		if(event['available']) type='free';
+		else type=event.type;//if(calEvent.type=='credit')
+		if(event.type=='credit') type='credit';
 		element.css('background-color', colors[type]);
 		event.color = colors[type];
             },
@@ -128,6 +132,10 @@ function MakeCalendar(divname, userList){
                                      "SignUpTrain('"+calEvent.type+"', '"
                                      +calEvent.start+"', '"
                                      +calEvent.end+"')");
+		$("#btn_credit").attr("onclick",
+				      "SignUpCredit('"+calEvent.type+"', '"
+                                      +calEvent.start+"', '"
+                                      +calEvent.end+"')");
 		// Put at proper location
 		var x = (jsEvent.clientX + 20) + 'px',
                     y = (jsEvent.clientY + 20) + 'px';
@@ -178,6 +186,22 @@ function SignUpTrain(shiftType, shiftStart, shiftEnd){
     document.getElementById("id_remove").checked = false;
     $("#id_remove").val(false);
 
+
+}
+
+function SignUpCredit(shiftType, shiftStart, shiftEnd){
+
+    $('#id_start_date').val(moment(parseInt(shiftStart)).format("YYYY-MM-DD"));
+    $("#id_start_date").prop("readonly", true);
+    $('#id_end_date').val(moment(parseInt(shiftEnd)).format("YYYY-MM-DD"));
+    $("#id_end_date").prop("readonly", true);
+    $('#signUpModal').modal('show');
+
+    ret = "";
+    ret+="<option value='credit'>credit</option>";
+    document.getElementById("id_shift_type").innerHTML=ret;
+    document.getElementById("id_remove").checked = false;
+    $("#id_remove").val(false);
 
 }
 

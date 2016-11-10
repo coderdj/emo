@@ -345,7 +345,7 @@ class RunsResource(Resource):
         allowed_methods = ['get', 'post', 'put']
         authorization = Authorization()
         authentication = ApiKeyAuthentication()
-        throttle = CacheThrottle(throttle_at=60, timeframe=60)
+        throttle = CacheThrottle(throttle_at=500, timeframe=60)
         
     def _db(self):
         try:

@@ -21,10 +21,29 @@
     border: 1px solid #AAAAAA;
 }
 .emo-navbar { 
-    background-color: white;
+    /* TRUMP */
+    background-color: black;
+    color: #eee;
+
+    /* NORMAL */
+    #background-color: white;
     min-height:40px;
     height:40px;
     margin-bottom:0px; /*#3498DB;*/}
+
+.emo-navbar-brand{
+    padding:10px;
+    font-size:18px;
+    line-height:20px;
+    padding-left:45px;
+    #color: #333;
+    /* TRUMP */
+    color: #eee;
+    height:40px;
+    width: 280px;
+    /*border-right: 1px solid #666;*/
+}
+
 
 .emo-navbar .navbar-nav>.active>a:hover,.emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus { 
     background-color: #DDDDDD /*#CACACA*/
@@ -47,9 +66,15 @@
 .emo-navbar .navbar-brand:hover 
 { color: #AAAAAA}
 .emo-navbar .navbar-nav>li>a 
-{ color: #777777; min-height:24px; height:24px; margin-left:0px;margin-right:-1px;margin-top:8px;margin-bottom:8px;padding-top:2px;padding-bottom:2px;padding-left:10px;padding-right:10px; border-left-width:1px; border-right-width:1px; border-color:#777777;border-style:solid;border-top-width:0px; border-bottom-width: 0px;}
-emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus 
-{ background-color: #EEEEEE; color:#555555; border-color:#555555;}
+{ 
+/* TRUMP */
+#color: #777777; 
+color: #eee;
+min-height:24px; height:24px; margin-left:0px;margin-right:-1px;margin-top:8px;margin-bottom:8px;padding-top:2px;padding-bottom:2px;padding-left:10px;padding-right:10px; border-left-width:1px; border-right-width:1px; border-color:#777777;border-style:solid;border-top-width:0px; border-bottom-width: 0px;}
+.emo-navbar .navbar-nav>li>a:hover, .emo-navbar .navbar-nav>li>a:focus 
+{ 
+background-color: #EEEEEE; 
+color:#111; border-color:#555555;}
 /*.emo-navbar .navbar-nav>.active>a,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover, .emo-navbar .navbar-nav>.open>a:focus { color: #ECF0F1}
 .emo-navbar .navbar-nav>.active>a:hover, .emo-navbar .navbar-nav>.active>a:focus { color: #ECF0F1; background-color:#EEEEEE}
 .dropdown-menu>li>a { color: #3498DB}*/

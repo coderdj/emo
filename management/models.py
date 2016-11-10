@@ -34,7 +34,7 @@ years = (( "2016", "2016"),
          ( "2025", "2025"),
          ( "2026", "2026"))
 shift_types = (("responsible", "responsible"), ("shifter", "shifter"),
-               ("training", "training"), ("run coordinator", "run coordinator"))
+               ("training", "training"), ("run coordinator", "run coordinator"), ("credit", "credit"))
 class ShiftDefinition(forms.Form):
     year = forms.ChoiceField(choices=years, required=True, label="Year valid", 
                              help_text="Only one rules definition allowed per year")

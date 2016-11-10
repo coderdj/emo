@@ -139,9 +139,11 @@ function ShowTag(tagname){
 }
 
 function SlideOutDetail(){
-    $("#detail_window > div").height($(window).height()-50);
+    $("#loading_run").hide();
+    //$("#detail_window > div").height($(window).height()-50);
   //  $(".runsHider").show("fade", 50);
-    $("#detail_window").show("slide", { direction: "right" }, 200);
+    //$("#detail_window").show("slide", { direction: "right" }, 200);
+    
 }
 function HideDetail(){
     $("#detail_window").hide("fade", 50);
@@ -150,6 +152,11 @@ function HideDetail(){
 
 function ShowDetail(name, detector){
     
+    $("#detail_window > #emobox").height($(window).height()-50);
+    $("#loading_run").show();
+    $("#detail_window").show("slide", { direction: "right" }, 200, 
+			     function(){
+
     runs_url = "/runs/get_run";
     params = {
 	"detector": detector,
@@ -159,7 +166,8 @@ function ShowDetail(name, detector){
 		     "template_run_header", "run_detail_top", 
 		     "template_tags", "template_tagbutton", "run_detail_tags",
 		     "template_storage", "template_site", "detail_locations", 
-		     function(){SlideOutDetail()});
+		     "template_comment", "template_comments", "detail_comments",
+		     function(){SlideOutDetail()});});
 }
 
 function DateToString(dateval){
@@ -180,7 +188,8 @@ function DateToString(dateval){
 function DrawDetailWindow(url, params, header_template, header_div, 
 			  tag_template, tagbutton_template, tag_div, 
 			  storage_template, storageloc_template, 
-			  storage_div, callback)
+			  storage_div, comment_template, comments_template,
+			  comments_div, callback)
 //,
 /*//add piece by piece			  comment_template, comment_div,
 			  json_div, data_template, data_div, 
@@ -227,6 +236,10 @@ function DrawDetailWindow(url, params, header_template, header_div,
 					  tagbutton_template));
 	$("#"+storage_div).html(DrawStorageWindow(data, storage_template,
 						  storageloc_template));
+	$("#"+comments_div).html(DrawCommentsWindow(data, comment_template,
+						    comments_template));
+	document.getElementById("json").innerHTML="";
+        $("#json").jsonView(data,  { collapsed: true });
 	callback();      
 			      
     });
@@ -241,6 +254,31 @@ function GetColor(string){
 	return "#ec2c35";
 }
 
+function DrawCommentsWindow(data, comment_template, comments_template){
+
+    var commenttemplate= $.trim($("#"+comment_template).html());
+    Mustache.parse(commenttemplate);
+    
+    var comments = "";
+    for(i=0; i<data['comments'].length; i+=1){
+	pars = {
+	    "user": data['comments'][i]['user'],
+	    "date": DateToString(data['comments'][i]['date']),
+	    "text": data['comments'][i]['text']
+	}
+	comments+=(Mustache.render(commenttemplate, pars));
+    }
+    
+    pars2 = {
+	"comments": comments,
+	"oid": data['_id']['$oid'],
+	"name": data['name'],
+	"detector": data['detector']
+    };
+    var commentstemplate = $.trim($("#"+comments_template).html());
+    Mustache.parse(commentstemplate);
+    return Mustache.render(commentstemplate, pars2);
+}
 
 function DrawStorageWindow(data, storage_template, storageloc_template){
     var storageloctemplate= $.trim($("#"+storageloc_template).html());
@@ -269,7 +307,7 @@ function DrawStorageWindow(data, storage_template, storageloc_template){
 	    raw.push(Mustache.render(storageloctemplate, pars));
 	else if(data['data'][i]['type'] == 'processed'){
 	    pars['pax_version'] = data['data'][i]['pax_version'];
-	    parx['display_paxcersion'] = "";
+	    pars['display_paxversion'] = "";
 	    processed.push(Mustache.render(storageloctemplate, pars));
 	}
 	else
@@ -318,12 +356,14 @@ function DrawTagWindow(data, tag_template, tagbutton_template){
 	buttonhtml="<br style='margin:1px'><div style='width:100%'>";
 	for(var i=0; i<data['tags'].length; i+=1){
 	    bargs = {
-		"name": data['tags'][i]['name'],
+		"tagname": data['tags'][i]['name'],
 		'oid': data['_id']['$oid'],
+		'detector': data['detector'],
+		'name': data['name'],
 		'hideifnotme': 'style="display:none"'
 	    };
 	    if(document.whoami == data['tags'][i]['user'])
-		bargs['hideifnotme'] = "";
+		bargs['hideifnotme'] = "style='display:inline;'";
 	    buttonhtml += Mustache.render(tagbuttontemplate, bargs);
 	}
 	buttonhtml += "</div><br style='margin:1px'>";
@@ -331,7 +371,9 @@ function DrawTagWindow(data, tag_template, tagbutton_template){
     
     targs = {
 	'oid': data['_id']['$oid'],
-	'tag_html': buttonhtml
+	'tag_html': buttonhtml,
+	'name': data['name'],
+	'detector': data['detector']
     };
     console.log(targs);
     return Mustache.render(tagtemplate, targs);
@@ -402,3 +444,85 @@ function GetDataState(data){
     }
     return html;
 }
+
+function NewComment(form){
+
+ //     e.preventDefault();
+        // validate
+    form_array = $(form).serializeArray();
+    name = "";
+    detector = "";
+    for(i=0;i<form_array.length;i+=1){
+	if(form_array[i]['name'] == 'name')
+	    name = form_array[i]['value'];
+	if(form_array[i]['name'] == 'detector')
+	    detector = form_array[i]['value'];
+        if(form_array[i]['name'] == "content"
+           && form_array[i]['value'] == "")
+            return false;
+    }
+    $.ajax({
+        type: "POST",
+        url: "/runs/newcomment",
+        data: $(form).serialize(),
+        success: function(data) {
+	    ShowDetail(name, detector);
+	    return false;
+        }	
+    });
+    return false;
+  };
+
+
+function RemoveTag(id, name, runname, detector){    
+    if(id!="" && name !=""){
+	URL="newtag?remove=true;id="+id+";tagname="+name;
+	$.ajax({
+            type: "GET",
+            url: "/runs/newtag",
+            data: {
+		"remove": true,
+		"id": id,
+		"tagname": name
+	    },
+            success: function(data) {
+		console.log("SUCCESS");
+		console.log(runname);
+		console.log(detector);
+		ShowDetail(runname, detector);
+		return false;
+	    },
+	    error: function(data){
+		console.log(data);
+	    },
+	});
+    }
+    return false;
+}
+
+function NewTag(form, name, detector){
+    arr = $(form).serializeArray();
+    var id="";
+    var content="";
+    console.log(arr);
+    for(var x=0;x<arr.length;x+=1){	
+	if(arr[x]["name"]=="content")
+	    content=arr[x]["value"];
+	else if(arr[x]["name"]=="id")
+	    id=arr[x]["value"];
+    }
+    if( content.indexOf(' ') >= 0 ){
+	alert("Tags should be one word. Please use the comments tab for more extensive comments.");
+	return false;
+    }
+    
+    if(id!="" && content !=""){
+	URL="newtag?id="+id+";tagname="+content;
+	
+	$.get(URL,function(){
+	    ShowDetail(name, detector);
+	    return false;
+	});
+    }
+    return false;
+};

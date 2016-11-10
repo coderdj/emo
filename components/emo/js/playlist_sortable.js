@@ -236,7 +236,7 @@ function SetPlaylistTitle(data){
 	html += "<div class='playlist-play-toggle'>Run DAQ: "+
             "<input type='checkbox' id='autoplay_toggle_checkbox' data-toggle='toggle'></div>";
     }
-    html+="<div style='position:absolute;left:280px;top:0;line-height:40px;font-size:12px;font-weight:bold'>Operator: "+document.superman+"</div>";
+    html+="<div style='position:absolute;left:280px;top:0;line-height:40px;font-size:12px;font-weight:bold'>("+document.superman+")</div>";
 
     //html += "<div class='playlist-help'><a href='/docs'>Help?</a></div>";
     

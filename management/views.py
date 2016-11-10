@@ -242,7 +242,7 @@ def GetShiftStats(request):
             
             cursor = db['shifts'].find({"start": {"$gte": jan_first, 
                                                   "$lt": next_jan},
-                                        "type": { "$in": ["shifter", "responsible", "run coordinator"] }})
+                                        "type": { "$in": ["shifter", "responsible", "run coordinator", "credit"] }})
             done_doc = {}
             for doc in cursor:
                 if doc['institute'] not in done_doc:
@@ -313,7 +313,8 @@ def shift_rules(request):
     shift_doc = db['shift_rules'].find({"year": str(year)}).limit(1)
     #shift_doc = db['shift_rules'].find()
     if shift_doc.count() != 0:        
-        shift_resp = shift_doc[0]['shifts']#GetShiftResponsibility(shift_doc[0]['collab_def_date'],
+        shift_resp = shift_doc[0]['shifts']
+    #GetShiftResponsibility(shift_doc[0]['collab_def_date'],
     #shift_doc[0]['start_date'])
 
     if request.method=="POST": 
@@ -404,6 +405,7 @@ def shift_calendar(request):
         #logger.error("post request")
         #logger.error(request.POST)
         signup_form = ShiftSignUp(request.POST)
+        
         if signup_form.is_valid():
             #logger.error(signup_form)
             # Update doc
@@ -422,7 +424,8 @@ def shift_calendar(request):
                 #"available": True,
                 "type": signup_form.cleaned_data["shift_type"]
             }            
-            if signup_form.cleaned_data['shift_type'] != "training":
+            if (signup_form.cleaned_data['shift_type'] != "training" and 
+                signup_form.cleaned_data['shift_type'] != 'credit'):
                 if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove']==True:                    
                     query['shifter'] = signup_form.cleaned_data['user']
                     db['shifts'].update(query,

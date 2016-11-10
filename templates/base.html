@@ -137,7 +137,7 @@ color: #000000;
       <div class="emo-navbar-brand" id="navbar-brand">
 	<!--<a class="toggle-sidebar" style="cursor:pointer;height:40px;width:40px;" title="Click to open menu">-->
 	<div class="bs_button toggle-sidebar" style="cursor:pointer">
-	  <span class="glyphicon glyphicon-nav" style="cursor:pointer;background-color:#5992c2;"></span></div>
+	  <span class="bs_button_nav glyphicon glyphicon-nav"></span></div>
 	<!--</a>-->
 	<!--<a style="color:black">-->
 	<!--<div style="cursor:default;height:40px;padding-bottom:10px;padding-top:10px;position:absolute;top:0">-->
@@ -206,7 +206,7 @@ color: #000000;
 		</button>-->
       
       <!--<a href="/" class="company-logo"></a>-->
-      <div style="background-color:#5992c2">
+      <div class="sidebar-color">
       <br>
       <div class="text-center" style="padding-right:20px"><h3 style="color:white">{% block title %}Home{% endblock %}</h3>     
 	<br>
@@ -298,7 +298,7 @@ color: #000000;
         </a>
       </div>
 
-      <div style="position:absolute;bottom:40px;left:0;width:100%;padding-top:15px;padding-bottom:5px;background-color:#5992c2;">
+      <div class="sidebar-color" style="position:absolute;bottom:40px;left:0;width:100%;padding-top:15px;padding-bottom:5px;">
 	{% if request.user.username == 'messina' or request.user.username == 'coderre' %}       
 	<div style="padding-left:15px;float:left;">
 	  <a class="btn emo-btn-outline" href="/config">

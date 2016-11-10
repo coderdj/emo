@@ -88,7 +88,7 @@ def runs_stream(request):
     limit = 0
     offset = 0
     
-    logger.error(request.GET)
+    #logger.error(request.GET)
 
     if request.method == 'GET':
         if "limit" in request.GET:
@@ -163,7 +163,7 @@ def runs_stream(request):
         "number": 1,
         "reader.self_trigger": 1
     }
-    logger.error(filter_query)
+    #logger.error(filter_query)
     retset = {}
     if limit!=0 and offset!=0:
         retset = collection.find( filter_query, projection ).sort( "name", -1 ).skip(offset).limit(limit)
@@ -309,7 +309,7 @@ def addTag(request):
             if update!={}:
                 coll.update(search, update)
 
-            return HttpResponse({"success": True}, content_type="application/json")
+            return HttpResponse(dumps({"success": True}), content_type="application/json")
     return HttpResponse({"success": False}, content_type="application/json")
 
 
@@ -394,11 +394,11 @@ def new_comment(request):
     mongo_collection = d[settings.RUNS_DB_COLLECTION]
 
     if request.method == 'POST':
-        logger.error(request.POST)
+        #logger.error(request.POST)
         comment = RunCommentForm(request.POST)
-        logger.error(comment)
+        #logger.error(comment)
         if comment.is_valid():
-            logger.error("valid")
+            #logger.error("valid")
             # Get data                                                          
             doc_id = comment.cleaned_data['run_id']
             user = request.user.username
@@ -408,7 +408,7 @@ def new_comment(request):
             if 'content' in comment.cleaned_data:
                 text = comment.cleaned_data['content']
                 user = request.user.username
-                logger.error(text)
+                #logger.error(text)
                 # If the entry exists append the comment to it                  
                 comment_dict = {
                     "text": text,

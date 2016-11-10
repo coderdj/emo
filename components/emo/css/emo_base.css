@@ -9,20 +9,12 @@ background-color: #ebebeb;
 .emo-hoverlink:hover{
     color: #333;
 }
-.emo-navbar-brand{
-    padding:10px;
-    font-size:18px;
-    line-height:20px;
-    padding-left:45px;
-    color: #333;
-    height:40px;
-    width: 280px;
-    /*border-right: 1px solid #666;*/
-}
 .emo-btn-outline{
     border-width:2px;
     border-color:white;
-    background-color: #5992c2;
+    /* TRUMP */
+    #background-color: #5992c2;
+    background-color: black;
     color: white;
     height: 50px;
     padding-left: 15px;
@@ -34,9 +26,17 @@ background-color: #ebebeb;
     color: #5992c2;
 }
 .emo-navbar-brand.emo-highlighted{
-    background-color: #5992c2;
+    /* TRUMP */
+    #background-color: #5992c2;
+    background-color: black;
     /*border-right: 1px solid #aaa;*/
     color: white;
+}
+.bs_button_nav{
+cursor:pointer;
+#background-color:#5992c2;
+/* TRUMP */
+background-color: black;
 }
 .bs_button{
 position: absolute;
@@ -47,7 +47,10 @@ top: 0;
 margin: 0;
 padding-top: 10px;
 padding-left: 10px;
-background-color: #5992c2;
+#background-color: #5992c2;
+/* TRUMP */
+background-color: black;
+
 border-style: solid;
 border-right: 1px;
 border-bottom: 1px;
@@ -233,7 +236,9 @@ color:#353535;
   left: 0;
   border-top: 2px solid white;
   border-bottom: 2px solid white;
-  background-color: #5992c2;
+  /* TRUMP */
+  #background-color: #5992c2;
+  background-color: black;
   top: 0px;
 }
 .glyphicon-nav:after {

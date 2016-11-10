@@ -9,7 +9,11 @@
 
 
 /* The left-collapsing sidebar */
-
+.sidebar-color{
+/* TRUMP */
+#background-color: #5992c2;
+background-color: black;
+}
 .sidebar-left-collapse {
     margin-top:40px;
     border-right: solid #777777 1px;
@@ -19,7 +23,8 @@
 	left: 0;
 display: none;
 z-index: 1002;
-	background-color: #5992C2;
+/*TRUMP	background-color: #5992C2;*/
+background-color:black;
 /*#292c2f;*/
 	width: 280px;
 	height: 100%;

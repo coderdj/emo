@@ -12,8 +12,8 @@ urlpatterns = [
     url(r'^runs_started', views.runs_started, name="runs_started"),
     url(r'^get_run', views.get_run, name="get_run"),
     url(r'^runs_stream', views.runs_stream, name="runs_stream"),
-    url(r'^new', login_required(TemplateView.as_view
+    url(r'^old', login_required( views.runs ), name='runs' ),
+    url(r'$', login_required(TemplateView.as_view
                                 (template_name="runs/runs_new.html"))),
-    url(r'$', login_required( views.runs ), name='runs' ),
 ]
 
