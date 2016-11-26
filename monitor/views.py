@@ -1513,7 +1513,8 @@ def getWaveform(request):
         cursor = database[collection].find(searchdict).limit(30)
         if cursor.count() < 10:
             continue
-        
+
+        logger.error(str(cursor.count()) + " events in collection " + collection)
         # Found something, fill ret dictionary
         retdict = {"collection": collection, "waveforms": [],
                    "ret": 'success'}

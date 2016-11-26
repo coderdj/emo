@@ -113,7 +113,7 @@
 	    <div class="row" style="overflow-y:auto">
 	      <!-- Quick status funny face -->
 	      <div class="col-sm-2 col-xs-12">
-		<strong>Quick Status</strong>
+		<strong>Trigger Status (Beta)</strong>
 		<hr style="margin:0;padding:0;margin-bottom:20px">
 		<div id="theimage" style="width:100%;height:90%">
                 </div>
@@ -134,9 +134,9 @@
 		<strong>Event rate: </strong>
                 <span id="trigger_event_rate"></span> events/s
 		<div class="row">
-		  <div class="col-xs-2"><strong>Buffer</strong></div>
+		  <!--<div class="col-xs-2"><strong>Buffer</strong></div>
                   <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0;position:relative;"
-                       id="eb_lag_progress"></div>
+                       id="eb_lag_progress"></div>-->
                   <div class="col-xs-12"><strong>Triggering: </strong>
                     <span id="eb_working"></span>
                   </div>
@@ -527,9 +527,9 @@ console.log(data);
         document.getElementById("busy_tot_progress").innerHTML = GetGradProgress(data['deadtime_total'],
 				   "dead time", 0.1, 0.5, data['deadtime_total']*100, "%");
 	document.getElementById("busy_progress").innerHTML=GetGradProgress(busy, "dead time", 0.1, 0.5, busy*100, "%");
-	document.getElementById("eb_lag_progress").innerHTML = GetGradProgress(
-            data['eventbuilder_info']['eventbuilder_queue_size']/10000, "in queue",
-            0.3, 0.7, data['eventbuilder_info']['eventbuilder_queue_size'], " events");
+	//document.getElementById("eb_lag_progress").innerHTML = GetGradProgress(
+        //    data['eventbuilder_info']['eventbuilder_queue_size']/10000, "in queue",
+        //    0.3, 0.7, data['eventbuilder_info']['eventbuilder_queue_size'], " events");
          if(data['eventbuilder_info']['working_on_run']==true)
             document.getElementById("eb_working").innerHTML="Yes";
          else

@@ -344,12 +344,14 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title,
 	    document.getElementById(tpc_div).innerHTML = tpcstr;
 	    document.getElementById(mv_div).innerHTML = mvstr;
 	    
-
+	   
 	// Update general info 	    
 	var aliases = {"tpc": "TPC", "muon_veto": "Muon Veto"};
 	for ( var status_id = 0; status_id < detector_data['status'].length; 
 	      status_id += 1){
-
+	    
+	    if(!detector_data['status'][status_id])
+		continue;
             // If we have a nicer name to display set it                           
 	    var display_name = detector_data['status'][status_id]['detector'];
             var det_name = display_name;

@@ -61,11 +61,13 @@ def GetTPCEventRate(request):
             doc = monDB[collection].find_one({"data_type": "batch_info"},
                                              sort=[("_id", -1)])
             newest = collection
-            if doc is not None: 
+            rundoc = runsDB.find_one({"name": newest, "detector": "tpc"})
+
+            if doc is not None and rundoc is not None: 
                 break
+            
         if doc is not None:
             rnum = newest
-            rundoc = runsDB.find_one({"name": rnum, "detector": "tpc"})
             start = rundoc['start']
             timestamp = (start - datetime.datetime(1970,1,1)).total_seconds()
             retdoc['rate'] = doc['events_built']/21.
@@ -73,7 +75,7 @@ def GetTPCEventRate(request):
             retdoc['rname'] = rnum
             retdoc['rnumber'] = rundoc['number']
     except Exception as e:
-        logger.error("Error " + str(e))
+        logger.error("Error status:" + str(e)+" "+str(newest))
         
     try:
         dead_time_doc = monDB[newest].find({"data_type": 
@@ -91,7 +93,7 @@ def GetTPCEventRate(request):
                           "busytime": "$count", "totaltime": "$tot"}}])))[0]
         retdoc['deadtime_total'] = dead_time_doc['deadtime']
     except Exception as e:
-        logger.error("Error " + str(e))
+        logger.error("Error deadtime run:" + str(e))
         
     # Pipeline status this run
     try:
@@ -101,7 +103,7 @@ def GetTPCEventRate(request):
         retdoc['eb1:27000'] = dead_time_doc["eb1:27000"]
         retdoc['eb2:27000'] = dead_time_doc["eb2:27000"]        
     except Exception as e:
-        logger.error("Error " + str(e))
+        logger.error("Error deadtime: " + str(e))
 
     # Eventbuilder queue and checkin
     try:
@@ -111,7 +113,7 @@ def GetTPCEventRate(request):
         retdoc['eventbuilder_info']['time'] = (retdoc['eventbuilder_info']['time']- datetime.datetime(1970,1,1)).total_seconds()
 
     except Exception as e:
-        logger.error("Error " + str(e))
+        logger.error("Error pipeline: " + str(e))
 
     return HttpResponse(dumps(retdoc),
                         content_type="application/json")

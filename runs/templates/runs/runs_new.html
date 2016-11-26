@@ -66,7 +66,8 @@
 	<input type="text" id="form_query"></input> </div>
       <div class="col-xs-1">
         <button class="btn btn-info btn-sm" onclick="RefreshTable()" style="height:30%;padding-left:50px;padding-right:50px;margin:8px;">Search</button>
-	<!--<a class="btn btn-warning btn-sm" href="/runs/?startdate=&enddate=&detector=tpc&custom=%7B%22trigger.events_built%22%3A+%7B%22%24gt%22%3A+0%7D%2C+%22%24or%22%3A%09%5B%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22midway-login1%22%5D%7D%7D%2C%7B%22data.host%22%3A+%7B+%22%24nin%22%3A+%5B%22tegner-login-1%22%5D%7D%7D%2C+%7B%22data.status%22%3A+%22error%22%7D%5D%2C%22number%22%3A+%7B%22%24gt%22%3A+1000%7D%7D&submit=">Show transfer errors</a>-->
+	<button class="btn btn-warning btn-sm" 
+		onclick="ShowTransferErrors()">Show transfer errors</button>
 	
       </div>
     </div>
@@ -220,8 +221,12 @@ $(function(){
 
 });
 
+function ShowTransferErrors(){
+  $("#form_query").val('{"data": {"$elemMatch": {"status": "error"}}}');
+  RefreshTable();
+}
 function RefreshTable(){
-
+console.log("Refresh");
    runs_url = "/runs/runs_stream";
    // Get Options
    var detector = $('#form_detector').find(":selected").val();
@@ -312,7 +317,7 @@ function RefreshTable(){
 <script id="template_tagbutton" type="text/html">
   
   <span class="tagButton">
-    <a style="color:white;cursor:pointer;" onclick="ShowTag('{% verbatim %}{{ name }}{% endverbatim %}')">{% verbatim %}{{ tagname }}{% endverbatim %} </a>    
+    <a style="color:white;cursor:pointer;" data-toggle="tooltip" title="Added by {% verbatim %}{{ user }}{% endverbatim %}" onclick="ShowTag('{% verbatim %}{{ name }}{% endverbatim %}')">{% verbatim %}{{ tagname }}{% endverbatim %} </a>    
     <div {% verbatim %}{{{ hideifnotme }}}{% endverbatim %}>
       
       <span class="badge" style="cursor:hand;cursor:pointer;" 

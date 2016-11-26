@@ -248,8 +248,10 @@ function DrawDetailWindow(url, params, header_template, header_div,
 function GetColor(string){
     if (string=="transferred" || string=="processing")
 	return "#36bc98";
-    if(string=="transferring" || string=="checking" || string=="verifying")
+    if(string=="transferring") 
 	return "#f9a100";
+    if(string == "checking" || string == "verifying")
+	return "#8f58f1";
     else
 	return "#ec2c35";
 }
@@ -260,13 +262,15 @@ function DrawCommentsWindow(data, comment_template, comments_template){
     Mustache.parse(commenttemplate);
     
     var comments = "";
-    for(i=0; i<data['comments'].length; i+=1){
-	pars = {
-	    "user": data['comments'][i]['user'],
-	    "date": DateToString(data['comments'][i]['date']),
-	    "text": data['comments'][i]['text']
+    if('comments' in data){
+	for(i=0; i<data['comments'].length; i+=1){
+	    pars = {
+		"user": data['comments'][i]['user'],
+		"date": DateToString(data['comments'][i]['date']),
+		"text": data['comments'][i]['text']
+	    }
+	    comments+=(Mustache.render(commenttemplate, pars));
 	}
-	comments+=(Mustache.render(commenttemplate, pars));
     }
     
     pars2 = {
@@ -355,14 +359,21 @@ function DrawTagWindow(data, tag_template, tagbutton_template){
     if("tags" in data){
 	buttonhtml="<br style='margin:1px'><div style='width:100%'>";
 	for(var i=0; i<data['tags'].length; i+=1){
+	    user = "autotagger";
+	    if ( 'user' in data['tags'][i] && data['tags'][i]['user'] != "" && 
+		 data['tags'][i]['user'] != null)
+		user = data['tags'][i]['user'];
 	    bargs = {
 		"tagname": data['tags'][i]['name'],
 		'oid': data['_id']['$oid'],
 		'detector': data['detector'],
 		'name': data['name'],
+		'user': user,
 		'hideifnotme': 'style="display:none"'
 	    };
-	    if(document.whoami == data['tags'][i]['user'])
+	    console.log(document.whoami);
+	    if(document.whoami == data['tags'][i]['user'] ||
+	       document.whoami == "coderre")
 		bargs['hideifnotme'] = "style='display:inline;'";
 	    buttonhtml += Mustache.render(tagbuttontemplate, bargs);
 	}
@@ -400,38 +411,42 @@ function GetDataState(data){
     for(i=0; i<data.length; i+=1){
 	if(!(data[i]['host'] in hosts))
             continue;
-	if(data[i]['status'] == 'error' || hosts[data[i]['host']] == 5)
-            hosts[data[i]['host']] = 5;
+	if(data[i]['status'] == 'error' || hosts[data[i]['host']] == 6)
+            hosts[data[i]['host']] = 6;
 	else if(data[i]['type'] == 'raw' || data[i]['type'] == 'untriggered'){
             if((data[i]['status'] == 'transferring' || 
 		data[i]['status']=='verifying')
-               && hosts[data[i]['host']]==0)
-		hosts[data[i]['host']] = 1;
+               && hosts[data[i]['host']]==0){
+		if(data[i]['status']=='verifying')
+		    hosts[data[i]['host']]=2;
+		else
+		    hosts[data[i]['host']] = 1;
+	    }
             else if(data[i]['status'] == 'transferred' && 
-		    (hosts[data[i]['host']] < 2))
-		hosts[data[i]['host']] = 2;
+		    (hosts[data[i]['host']] < 3))
+		hosts[data[i]['host']] = 3;
 	}
 	else if(data[i]['type'] == 'processed'){
             if(data[i]['status'] == 'transferring' || 
 	       data[i]['status']=='verifying')
-		hosts[data[i]['host']] = 3;
-            else if(data[i]['status'] == 'transferred')
 		hosts[data[i]['host']] = 4;
+            else if(data[i]['status'] == 'transferred')
+		hosts[data[i]['host']] = 5;
         }
     }// end for
     // Adjust DAQ
-    if(hosts['xe1t-datamanager']==2 || 
+    if(hosts['xe1t-datamanager']==3 || 
        (hosts['xe1t-datamanager']==1 && hosts['reader'] == 0))
-	hosts['reader'] = 2;
+	hosts['reader'] = 3;
     
     // Now create the html glyphicon glyphicon-stop
     html = "";
-    colors= ["#ff0000", "#ffcc00", "#006600", "#000099", 
-	     "#3399ff", "#ff6600"];
-    genstatus=["No data", "Transferring", "Transferred", 
-	       "Processing", "Processed", "Error"];
-   daqstatus=["Untriggered", "Triggering", "Triggered", 
-	      "Processing", "Processed", "Error"];
+    colors= ["#ff0000", "#ffcc00", "#9652f1", "#006600", "#000099", 
+	     "#3399ff", "#ff6600", "#9652F1"];
+    genstatus=["No data", "Transferring", "Verifying", "Transferred", 
+	       "Processing", "Processed", "Error", "Verifying"];
+   daqstatus=["Untriggered", "Triggering", "Triggered", "Verified", 
+	      "Processing", "Processed", "Error", "Verifying"];
     for(host in hosts){
 	status = genstatus[hosts[host]];
 	type="glyphicon-stop";
