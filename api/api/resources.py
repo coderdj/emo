@@ -345,7 +345,7 @@ class RunsResource(Resource):
         allowed_methods = ['get', 'post', 'put']
         authorization = Authorization()
         authentication = ApiKeyAuthentication()
-        throttle = CacheThrottle(throttle_at=50, timeframe=60)
+        throttle = CacheThrottle(throttle_at=500, timeframe=60)
         
     def _db(self):
         try:
@@ -370,6 +370,8 @@ class RunsResource(Resource):
 
         query = {}
         
+        if "query" in request.GET:
+            query = request.GET['query']
         if "number" in request.GET:
             query['number'] = int(request.GET['number'])
         if "detector" in request.GET:
@@ -378,6 +380,7 @@ class RunsResource(Resource):
             query['name'] = request.GET['name']
         if "_id" in request.GET:
             query['_id'] = request.GET['_id']
+            
             
         cursor = self._db()[settings.RUNS_DB_COLLECTION].find(query).sort("_id", -1)
 
@@ -529,4 +532,211 @@ class RunsResource(Resource):
         pass
 
     def rollback(self, bundles):
+        pass
+
+
+
+# Run
+class QualityResource(Resource):
+    number = fields.IntegerField(attribute="number")
+    _id = fields.CharField(attribute="_id")
+    detector = fields.CharField(attribute="detector")
+    name = fields.CharField(attribute="name")
+    doc = fields.DictField(attribute="doc")
+    class Meta:
+        resource_name = 'quality'
+        object_class = rundoc
+        allowed_methods = ['get', 'post', 'put']
+        authorization = Authorization()
+        authentication = ApiKeyAuthentication()
+        throttle = CacheThrottle(throttle_at=500, timeframe=60)
+
+    def _db(self):
+        try:
+            return (pymongo.MongoClient(settings.RUNS_DB_ADDR)
+                                [settings.RUNS_DB_NAME])
+        except:
+            return None
+            
+    def detail_uri_kwargs(self, bundle_or_obj):
+        kwargs = {}
+        if isinstance(bundle_or_obj, Bundle):
+                kwargs['pk'] = bundle_or_obj.obj._id
+        else:
+            kwargs['pk'] = bundle_or_obj._id
+            return kwargs
+
+    def get_object_list(self, request):
+        # This will return a stripped down version of the run doc 
+        # It includes _id, name, number (if applicable), and detector  
+        self.throttle_check(request)
+        self.log_throttled_access(request)
+
+        query = {}
+
+        if "query" in request.GET:
+            query = request.GET['query']
+        if "number" in request.GET:
+            query['number'] = int(request.GET['number'])
+        if "detector" in request.GET:
+            query['detector'] = request.GET['detector']
+        if "name" in request.GET:
+            query['name'] = request.GET['name']
+        if "_id" in request.GET:
+            query['_id'] = request.GET['_id']
+
+
+        cursor = self._db()[settings.RUNS_DB_COLLECTION].find(query).sort("_id", -1)
+
+        ret = []
+        for doc in cursor:
+            if 'number' in doc:
+                thedoc = {"number": doc['number'] }
+            else:
+                thedoc = {"number": -1}
+            thedoc['name'] = doc['name']
+            thedoc['_id'] = doc['_id']
+            thedoc['detector'] = doc['detector']
+            thedoc['doc'] = doc
+            ret.append(rundoc(initial=thedoc))
+
+        return ret
+
+
+    def obj_get_list(self, bundle, **kwargs):
+        return self.get_object_list(bundle.request)
+
+
+    def obj_get(self, bundle, **kwargs):
+        self.throttle_check(bundle.request)
+        self.log_throttled_access(bundle.request)
+        req = {}
+        if 'pk' in kwargs:
+            req['_id'] = kwargs['pk']
+            return self._create_obj(req)
+            return rundoc(initial={"error": "For now we only support searching for a run by number"})
+
+    def _create_obj(self, req):
+
+        doc = self._db()[settings.RUNS_DB_COLLECTION].find_one(
+            {"_id":
+             ObjectId(req['_id'])})
+        if doc is None:
+            return
+
+        ret = {}
+        if 'number' in doc:
+            ret['number'] = doc['number']
+        else:
+            ret['number'] = -1
+        ret['detector'] = doc['detector']
+        ret['_id'] = doc['_id']
+        ret['name'] = doc['name']
+        ret['doc'] = doc
+        ret_obj = rundoc(initial=ret)
+
+        return ret_obj
+
+    def obj_create(self, bundle, **kwargs):
+        return self.obj_update(bundle, kwargs)
+
+
+
+    def obj_update(self, bundle, **kwargs):
+        self.throttle_check(bundle.request)
+        self.log_throttled_access(bundle.request)
+        searchDict = {}
+        ret = {}
+
+        reader = codecs.getreader("utf-8")
+        request = (json.load(reader(bundle.request)))
+        logger.error(request)
+        if 'pk' in kwargs:
+            searchDict['_id'] = ObjectId(kwargs['pk'])
+        elif 'number' in request:
+            searchDict['number'] = int(request['number'])
+        elif 'name' in request and 'detector' in request:
+            searchDict['name'] = request['name']
+            searchDict['detector'] = request['detector']
+
+        # We REQUIRE the following format
+        # {
+        #     "qname": a unique name for this check
+        #     "version": the version info for this check 
+        #     "checks": [] a list of string/bool pairs i.e. {"deadtime": true}
+        #     "extracted": a dictionary of any format of size < 100kB
+        # }
+
+        
+        updateDict = {}
+        if ( 'qname' not in request or 'checks' not in request 
+             or 'version' not in request):
+            doc = self._default(
+            "ERROR",
+                        "Bad request. Require status, host, location, and type"
+                    )
+            bundle.obj = rundoc(initial=doc)
+            bundle = self.full_hydrate(bundle)
+            return bundle.obj
+
+        updateDict['qname'] = request['qname']
+        updateDict['checks'] = request['checks']
+        updateDict['version'] = request['version']
+
+        if 'extracted' in request:
+            if sys.getsizeof(request['extracted']) > 50000:
+                doc = self._default(
+                    "ERROR",
+                        "Bad request. Quality dictionary must be less than 50kB."
+                )
+                bundle.obj = rundoc(initial=doc)
+                bundle = self.full_hydrate(bundle)
+                return bundle.obj
+            else:
+                updateDict['extracted'] = request['extracted']
+
+        # Enforce string/bool types for checks array
+        for key, value in updateDict['checks']:
+            extre = "test"
+            if type(key) != type(extre) or type(value) != type(True):
+
+        elif request['status'] == 'processed':
+            if 'pax_version' not in request:
+                return {"number": doc['number'],
+                        "ERROR": "pax_version must be provided for processed data"}
+            updateDict['pax_version'] = request['pax_version']
+
+            # Status needed for new entry                                                                    
+            updateDict['status'] = request['status']
+            updateDict['creation_time'] = datetime.datetime.utcnow(),
+
+            # Now add a new entry                                                                            
+        res = self._db()[settings.RUNS_DB_COLLECTION].update_one(
+                searchDict,
+                {"$push": {"data": updateDict}})
+        doc = self._default(
+            "Success",
+            "Document updated",
+            res
+            )
+        bundle.obj = rundoc(initial=doc)
+        bundle = self.full_hydrate(bundle)
+
+        return rundoc(initial=doc)
+
+    def _default(self, message, longer, return_value):
+        doc = {
+            "number": -1,
+                "_id": -1,
+            "detector": "ret",
+                "name": message,
+            "doc": {
+                "message": longer,
+                        "success": message,
+                        "ret": return_value
+                        }
+            }
+        return doc
+
+    def obj_delete_list(self, bundle, **kwargs):
         pass

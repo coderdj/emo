@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+B{% extends "base.html" %}
 {% load staticfiles %}
 {% block head %}
 <script src="{% static "js/jquery-resize.min.js" %}" type="text/javascript"></script>
@@ -448,7 +448,7 @@ window.onresize = function() {
             };
 
 
-$("#content").resize(function()
+$(window).resize(function()
                 {
   if($('#chart_div').highcharts() != null)
  $('#chart_div').highcharts().setSize($("#chart_div").width(), 200, false);
