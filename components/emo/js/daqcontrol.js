@@ -272,8 +272,9 @@ return html;
 
 }
 function GetElapsedTime(startTimeString){
-    var currentDate = new Date();
+    var currentDate = new Date().getTime();
     var startDate = Date.parse(startTimeString);
+
     var seconds = Math.abs(currentDate - startDate)/1000;
     var hours = Math.floor(seconds/3600);
     var minutes = Math.floor((seconds - (hours*3600) ) /60);
