@@ -371,7 +371,7 @@ class RunsResource(Resource):
         query = {}
         
         if "query" in request.GET:
-            query = request.GET['query']
+            query = json.loads(request.GET['query'])
         if "number" in request.GET:
             query['number'] = int(request.GET['number'])
         if "detector" in request.GET:
@@ -698,8 +698,8 @@ class QualityResource(Resource):
         # Enforce string/bool types for checks array
         for key, value in updateDict['checks']:
             extre = "test"
-            if type(key) != type(extre) or type(value) != type(True):
-
+        if type(key) != type(extre) or type(value) != type(True):
+                pass
         elif request['status'] == 'processed':
             if 'pax_version' not in request:
                 return {"number": doc['number'],

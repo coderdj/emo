@@ -226,6 +226,7 @@ $(function(){
    resize();
 
 window.onresize=function(){ resize() };
+
 });
 
 function ShowTransferErrors(){
@@ -394,7 +395,7 @@ console.log("Refresh");
 	</emph>
       </div>
       <div class="col-xs-9">
-	<input type="text" id="{% verbatim %}{{ oid }}{% endverbatim %}_formtext" 
+	<input type="text" class="newtagtextclass" id="{% verbatim %}{{ oid }}{% endverbatim %}_formtext" 
 	       style="width:100%" name="content"></input>
       </div>
       <div class="col-xs-3">

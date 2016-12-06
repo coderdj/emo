@@ -167,7 +167,18 @@ function ShowDetail(name, detector){
 		     "template_tags", "template_tagbutton", "run_detail_tags",
 		     "template_storage", "template_site", "detail_locations", 
 		     "template_comment", "template_comments", "detail_comments",
-		     function(){SlideOutDetail()});});
+		     function(){
+			 SlideOutDetail()
+			 $(".newtagtextclass").on({
+			     keydown: function(e) {
+				 if (e.which === 32)
+				     return false;
+			     },
+			     change: function() {
+				 this.value = this.value.replace(/\s/g, "");
+			     }
+			 });
+		     });});
 }
 
 function DateToString(dateval){
