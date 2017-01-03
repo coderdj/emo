@@ -778,13 +778,17 @@ function GetHealth(pctarray, static_dir, update_time){
 
     var now = new Date();
     var timeDiff=0;
-console.log("HERE!!!");
-console.log(update_time);
     if (! isNaN( update_time.getTime() ) )
 	timeDiff = Math.abs(now.getTime() - update_time.getTime())/1000.;
     if(isNaN( update_time.getTime() ) || timeDiff > 300){
 	health = health="<strong style='color:red'>Trigger not responding</strong>";
 	image="<img src='"+static_dir+"/doom_faces/dead.png' style='width:50px' class='center-block'>";
     }
+    if(timeDiff >= 30){
+	document.getElementById("stale_header").innerHTML = 
+	    "<span class='bg-danger' style='width:100%;'>Warning, values more than 1 minute old. This may or may not be an issue.</span>";
+    }
+    if(timeDiff < 60)
+	document.getElementById("stale_header").innerHTML = "";
     return {"text": health, "image": image};
 }

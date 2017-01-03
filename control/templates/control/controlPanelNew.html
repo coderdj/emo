@@ -104,6 +104,7 @@
       <div class="grid-stack-item-content gridbox" id="triggerwindowgs">
 	<div class="window-handle"></div>
         <div class="window-content" style="overflow-y:hidden">
+	  <div id="stale_header" style="width:100%"></div>
 	  <!--<div class="window-title" id="trigger_title" 
 	       style="padding-top:0px;min-height:26px;height:26px;">
 	    <h4 style="padding:3px;margin:0">
@@ -164,7 +165,7 @@
 		<strong>Mongodb Buffers</strong>
 		<hr style="margin:0;padding:0;margin-bottom:5px;">
 		<div class="row">
-		  <div class="col-xs-2"><strong>Updated:</strong></div>
+		  <div class="col-xs-2"><strong>Updated: </strong></div>
 		  <div class="col-xs-10" id="mongo_update_time"></div>
                   <div class="col-xs-2"><strong>eb0</strong></div>
                   <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
@@ -518,11 +519,11 @@ console.log(data);
          document.getElementById("trigger_event_rate").innerHTML=parseFloat(data['rate']).toFixed(2);
          document.getElementById("trigger_last_collection").innerHTML=data['rname']+"("+data['rnumber']+")";
          var tdate = new Date(1000*(parseFloat(data['eventbuilder_info']['time'])));
-         var ttime = tdate.getFullYear()+"."+('0'+tdate.getMonth()).slice(-2)+"."+('0'+tdate.getDate()).slice(-2)+
+         var ttime = tdate.getFullYear()+"."+('0'+(1+tdate.getMonth())).slice(-2)+"."+('0'+tdate.getDate()).slice(-2)+
 				" at "+('0'+tdate.getHours()).slice(-2)+":"+('0'+tdate.getMinutes()).slice(-2);
          document.getElementById("trigger_time").innerHTML=ttime;
         var docdate = new Date(1000*(parseFloat(data['time'])));
-	var doctime = docdate.getFullYear()+"."+('0'+docdate.getMonth()).slice(-2)+"."+
+	var doctime = docdate.getFullYear()+"."+('0'+(1+docdate.getMonth())).slice(-2)+"."+
 				   ('0'+docdate.getDate()).slice(-2)+
                                 " at "+('0'+docdate.getHours()).slice(-2)+":"+
 				   ('0'+docdate.getMinutes()).slice(-2);
