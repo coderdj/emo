@@ -96,6 +96,7 @@
 	  <th style="width:80px">Num.</th>	  
 	  <th style="width:100px">Date</th>
 	  <th style="width:80px">Source</th>
+	  <th style="width:150px">Mode</th>
 	  <th style="width:100px">Events</th>
 	  <th style="width:150px;">Status &nbsp;<a data-toggle="modal" href="#helpModal" style="padding-left:3px" title="Help">?</a></th>
 	  <th style="width:100px">Tags</th>
@@ -445,14 +446,15 @@ console.log("Refresh");
 
 <script id="template" type="text/html">
   <tr>
-    <td>{{ link }}</td>
-    <td>{{ number }}</td>
-    <td>{{ date }}</td>
-    <td>{{ source }}</td>
-    <td>{{ events }}</td>
-    <td>{{ status }}</td>
-    <td>{{ tags }}</td>
-    <td>{{ top_comment }}</td>
+    <td>{% verbatim %}{{ link }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ number }}{% endberbatim %}</td>
+    <td>{% verbatim %}{{ date }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ source }}{% endberbatim %}</td>
+    <tb>{% verbatim %}{{ mode }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ events }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ status }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ tags }}{% endverbatim %}</td>
+    <td>{% verbatim %}{{ top_comment }}{% endverbatim %}</td>
   </tr>
 </script>
 

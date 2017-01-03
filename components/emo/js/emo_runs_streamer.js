@@ -6,7 +6,7 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 
     // The view describes how to make each row
     //var template = $.trim($("#"+templatediv).html());
-    var template = "<tr><td style='width:10px'>{{{ link }}}</td><td>{{ number }}</td><td style='width:30px'>{{ date }}</td><td>{{ source }}</td><td>{{ events }}</td><td>{{{ status }}}</td><td style='width:30px'>{{{ tags }}}</td><td style='width:100px'>{{{ top_comment }}}</td></tr>";
+    var template = "<tr><td style='width:10px'>{{{ link }}}</td><td>{{ number }}</td><td style='width:30px'>{{ date }}</td><td>{{ source }}</td><td>{{ mode }}</td><td>{{ events }}</td><td>{{{ status }}}</td><td style='width:30px'>{{{ tags }}}</td><td style='width:100px'>{{{ top_comment }}}</td></tr>";
     Mustache.parse(template);
     var view = function(record, index){
 	/*
@@ -64,6 +64,8 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 	    }
 	}
 
+	var mode = record.reader.ini.name;
+
 	var top_comment = "";
 	if("comments" in record && record.comments.length != 0){
 	    top_comment = record.comments[0]['text'];
@@ -73,8 +75,9 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 	// souce events status tags top_comment
 	return Mustache.render(template, {link: link, number: number, 
 					 date: datestring, source: source,
-					 events: events, status: status, 
-					 tags: tags, top_comment: top_comment});
+					 mode: mode, events: events, 
+					  status: status, tags: tags, 
+					  top_comment: top_comment});
     };
 
     var callbacks = {

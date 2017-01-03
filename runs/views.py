@@ -156,6 +156,7 @@ def runs_stream(request):
         "name": 1,
         "start": 1,
         "source": 1,
+        "reader.ini.name": 1,
         "data": 1,
         "tags": 1,
         "comments": 1,
