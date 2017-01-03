@@ -65,7 +65,7 @@ def fetch_mode_list(request):
     
     for det in detectors:
         modes = collection.find({"detector": det})
-        ret[det] = modes.distinct("name")
+        ret[det] = sorted(modes.distinct("name"))
     print("MADE HERE")
     print(detectors)
     print(ret)
