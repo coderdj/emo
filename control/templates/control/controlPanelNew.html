@@ -487,6 +487,10 @@ console.log("made here");
   function UpdatePage( thechart ){
          $.getJSON(currentShifterUrl, function(data){
              document.superman = data['starting_user'];
+	     document.canstartruns = false;
+             username = "{{ request.user.username }}";
+             if(username == document.superman)
+                 document.canstartruns=true;
           });
   update_graphic(function(){				   
     DrawLogWindow( "message_panel", logUrl, function(){

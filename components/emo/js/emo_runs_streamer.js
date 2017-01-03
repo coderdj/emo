@@ -1,5 +1,8 @@
 // REQUIRES SteamTable.js Mustache.js
 function MakeRunsTable(div, url, templatediv, counterdiv){
+    
+    // Don't allow further searches during this one
+    $(".btn-search-runs").prop("disabled", true);
 
     // The view describes how to make each row
     //var template = $.trim($("#"+templatediv).html());
@@ -78,7 +81,10 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 	"after_add": function(){
             //console.log(counterdiv);
             document.getElementById(counterdiv).innerHTML=this.data.length;
-	}
+	},
+	"stop_streaming": function(){
+	    $(".btn-search-runs").prop("disabled", false);
+	},
     };
     var options = {
 	view: view,                  //View function to render table rows.

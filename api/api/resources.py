@@ -12,7 +12,7 @@ import json
 import codecs
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-
+import sys
 import logging
 logger = logging.getLogger('emo')
 
@@ -638,7 +638,7 @@ class QualityResource(Resource):
         return ret_obj
 
     def obj_create(self, bundle, **kwargs):
-        return self.obj_update(bundle, kwargs)
+        return self.obj_update(bundle)
 
 
 
@@ -658,10 +658,18 @@ class QualityResource(Resource):
         elif 'name' in request and 'detector' in request:
             searchDict['name'] = request['name']
             searchDict['detector'] = request['detector']
+        else:
+            doc = self._default(
+                "ERROR",
+                        "Bad request. You must define a query of either id, number, or name/detector."
+            )
+            bundle.obj = rundoc(initial=doc)
+            bundle = self.full_hydrate(bundle)
+            return bundle.obj
 
         # We REQUIRE the following format
         # {
-        #     "qname": a unique name for this check
+        #     "checkname": a unique name for this check
         #     "version": the version info for this check 
         #     "checks": [] a list of string/bool pairs i.e. {"deadtime": true}
         #     "extracted": a dictionary of any format of size < 100kB
@@ -669,17 +677,19 @@ class QualityResource(Resource):
 
         
         updateDict = {}
-        if ( 'qname' not in request or 'checks' not in request 
+        if ( 'checkname' not in request or 'checks' not in request 
              or 'version' not in request):
             doc = self._default(
-            "ERROR",
-                        "Bad request. Require status, host, location, and type"
-                    )
+                "ERROR",
+                "Bad request. Require name, checks, and version."
+            )
             bundle.obj = rundoc(initial=doc)
             bundle = self.full_hydrate(bundle)
             return bundle.obj
 
-        updateDict['qname'] = request['qname']
+        updateDict['name'] = request['checkname']
+        updateDict['user'] = bundle.request.user.username
+        updateDict['date'] = datetime.datetime.now()
         updateDict['checks'] = request['checks']
         updateDict['version'] = request['version']
 
@@ -696,46 +706,43 @@ class QualityResource(Resource):
                 updateDict['extracted'] = request['extracted']
 
         # Enforce string/bool types for checks array
-        for key, value in updateDict['checks']:
+        for key, value in updateDict['checks'].items():
             extre = "test"
-        if type(key) != type(extre) or type(value) != type(True):
-                pass
-        elif request['status'] == 'processed':
-            if 'pax_version' not in request:
-                return {"number": doc['number'],
-                        "ERROR": "pax_version must be provided for processed data"}
-            updateDict['pax_version'] = request['pax_version']
+            if type(key) != type(extre) or type(value) != type(True):
+                doc = self._default(
+                    "ERROR",
+                        "Bad request. Checks field must be string/bool pairs."
+                )
+                bundle.obj = rundoc(initial=doc)
+                bundle = self.full_hydrate(bundle)
+                return bundle.obj
 
-            # Status needed for new entry                                                                    
-            updateDict['status'] = request['status']
-            updateDict['creation_time'] = datetime.datetime.utcnow(),
 
-            # Now add a new entry                                                                            
+                
         res = self._db()[settings.RUNS_DB_COLLECTION].update_one(
                 searchDict,
-                {"$push": {"data": updateDict}})
+                {"$set": {"quality."+str(request['checkname']): updateDict}})
         doc = self._default(
             "Success",
             "Document updated",
             res
-            )
+        )
         bundle.obj = rundoc(initial=doc)
         bundle = self.full_hydrate(bundle)
-
         return rundoc(initial=doc)
 
     def _default(self, message, longer, return_value):
         doc = {
             "number": -1,
-                "_id": -1,
+            "_id": -1,
             "detector": "ret",
-                "name": message,
+            "name": message,
             "doc": {
                 "message": longer,
-                        "success": message,
-                        "ret": return_value
-                        }
+                "success": message,
+                "ret": return_value
             }
+        }
         return doc
 
     def obj_delete_list(self, bundle, **kwargs):

@@ -766,9 +766,9 @@ function GetHealth(pctarray, static_dir, update_time){
     image += " style='width:50px' class='center-block'>";
 
     if(largest>.9)
-	health="<strong style='color:red'>He's dead Jim</strong>";
+	health="<strong style='color:red'>Dead</strong>";
     else if(largest > .7)
-	health="<strong style='color:orange'>Danger</strong>";
+	health="<strong style='color:orange'>Nearly dead</strong>";
     else if(largest > .5)
 	health="<strong style='color:yellow;background-color:black;'>Warning</strong>";
     else if(largest > .2)

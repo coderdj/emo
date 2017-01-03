@@ -21,13 +21,15 @@ from management import views
 from django.contrib.auth.decorators import login_required
 
 from tastypie.api import Api
-from api.api.resources import StatusResource, SlowControlResource, RunsResource
+from api.api.resources import StatusResource, SlowControlResource, RunsResource, QualityResource
 daqapi = Api(api_name="daq")
 daqapi.register(StatusResource())
 scapi = Api(api_name="history")
 scapi.register(SlowControlResource())
 runapi = Api(api_name="runs")
 runapi.register(RunsResource())
+qualityapi = Api(api_name="ui")
+qualityapi.register(QualityResource())
 
 urlpatterns = [
  
@@ -64,5 +66,7 @@ urlpatterns = [
     url(r'^api/', include(daqapi.urls)),
     url(r'^sc_api/', include(scapi.urls)),
     url(r'^runs_api/',include(runapi.urls)),
+    url(r'^qapi/', include(qualityapi.urls)),
     url(r'^online_monitor/', include('online_monitor.urls')),
+    
 ]
