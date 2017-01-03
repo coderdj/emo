@@ -391,6 +391,9 @@
   var display_counter=0;
   document.superman = "nobody";
 
+  // Check if page timed out with this one
+  var pageTimeoutTimer = 0;
+
   // The progress bar update for page refresh
 
   var pageupdatebar = new ProgressBar.Circle("#updatebar", {
@@ -403,6 +406,14 @@
   svgStyle: null
 });
 
+  function PageTimeoutCounter(){
+     if(pageTimeoutTimer > 60){
+       alert("Page has not updated for 60 seconds. You probably have a stale tab. Please refresh your browser.");
+       return;
+    }
+    pageTimeoutTimer += 5;
+    setTimeout(function(){ PageTimeoutCounter();}, 5000);
+  };
   // Update function for the run start messages
   function FeedbackLoop(){
      $.getJSON(feedbackURL, function(data){
@@ -487,6 +498,7 @@ console.log("made here");
 
   }
   function UpdatePage( thechart ){
+
          $.getJSON(currentShifterUrl, function(data){
              document.superman = data['starting_user'];
 	     document.canstartruns = false;
@@ -504,7 +516,8 @@ console.log("made here");
 				   ResizeDetailWindows();
 				   ResizeTriggerWindow();
 
-       var updatecounter=0;
+				   var updatecounter=0;
+				   pageTimeoutTimer = 0;
 				   FeedbackLoop();
 
        timerLoop(updatecounter, thechart);      
@@ -622,6 +635,7 @@ else if($("#"+element.id).find(".window-content").attr('id') == "rates_content")
   }
   
     $(function(){ //DOM Ready
+		    PageTimeoutCounter();
     document.autoplay=false;
     // Save some info from template tags
     document.user = "{{ request.user.username }}";
