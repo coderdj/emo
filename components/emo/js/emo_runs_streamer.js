@@ -108,7 +108,7 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
             prev_text: '&larr; Previous',
             //container_class: '.users-pagination', 
             //ul_class: '.larger-pagination',       
-            per_page_select: false,                 
+            //per_page_select: true,                 
             per_page_opts: [50, 100, 500],            
             //per_page_class: '.select-box',       
             per_page: 100,

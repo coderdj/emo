@@ -83,7 +83,15 @@
     return this.has_sorting ? this.getIndex().length : this.getData().length;
   }
 
+  _F.initJumpToPage = function(opts){
+     //this.pageopts = $.extend({jumptopage_container: "pagejump"}, opts);
+      var html = "<form id='stream_jumptopage'><strong>Jump to page: </strong><input style='width:35px' name='page' id='jumptopage' type='number' min='1'>&nbsp;<input type='submit' class='btn btn-default btn-tiny' value='Submit'></form>";
+      $(".pagejump").html(html);      
+      this.$jumptopage = $(".pagejump form");
+  };
+
   _F.initPagination = function(opts){
+      this.initJumpToPage(opts);
     this.paging_opts = $.extend({
       span: 5,
       prev_text: '&laquo;',
@@ -133,6 +141,21 @@
       });
     }
 
+      _self.$jumptopage.on('submit', function(e){
+	  e.preventDefault();
+	  var values = $(this).serializeArray();
+	  console.log(values);
+	  var page = parseInt(values[0]['value']);
+          if(page<1 || page>_self.pageCount())
+              return;
+          var current_page = _self.paginate(page);
+          if (current_page >= 0) {
+              $('.active', _self.$pagination).removeClass('active');
+              $('li[data-page='+ current_page +']',
+                _self.$pagination).addClass('active');
+          }
+          return false;
+      });
     _self.$pagination.on('click', 'a', function(e){
       var $this = $(this), page = parseInt($this.text()), current_page;
 
