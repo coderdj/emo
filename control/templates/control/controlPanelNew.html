@@ -87,7 +87,8 @@
               </div>                                                               
             </div>                                                                 
           </div>                                                                   
-	  <div id="rates_panel" style="position:relative;height:240px;width:100%;">
+	  <div id="rates_panel" 
+	       style="position:relative;height:240px;width:100%;">
 	    
 	  </div>                                                                     
 	</div>
@@ -592,10 +593,10 @@ document.getElementById("eb2_docs").innerHTML=data['eb2:27000']['objects'];
 				// Check rates
   ratesheight = $("#rates_panel").innerHeight() + $("#rates_title").innerHeight();
   if(ratesheight > height)
-    height = (ratesheight)/5;
+    height = (ratesheight)/4;
+height = (200 + $("#rates_title").innerHeight())/4;
 
-
-     height = window.innerHeight / 15;
+//     height = window.innerHeight / 15;
       if(height<40) height=40;
 console.log("CELL HEIGHT");
       console.log(height);
