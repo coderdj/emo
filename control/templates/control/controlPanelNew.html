@@ -406,11 +406,8 @@
   svgStyle: null
 });
 
+  
   function PageTimeoutCounter(){
-     if(pageTimeoutTimer > 60){
-       alert("Page has not updated for 60 seconds. You probably have a stale tab. Please refresh your browser.");
-       return;
-    }
     pageTimeoutTimer += 5;
     setTimeout(function(){ PageTimeoutCounter();}, 5000);
   };
@@ -635,7 +632,14 @@ else if($("#"+element.id).find(".window-content").attr('id') == "rates_content")
   }
   
     $(function(){ //DOM Ready
-		    PageTimeoutCounter();
+	PageTimeoutCounter();
+       document.alertshown=false;
+       $(document).mousemove(function() {
+          if(pageTimeoutTimer > 60 && !document.alertshown){
+            alert("Stale page detected. Please update your browser window to proceed.");
+            document.alertshown=true;
+         }
+       });
     document.autoplay=false;
     // Save some info from template tags
     document.user = "{{ request.user.username }}";
