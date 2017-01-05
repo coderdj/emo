@@ -421,8 +421,8 @@ function GetDataState(data){
     hosts = {"reader": 0,
              "xe1t-datamanager": 0,
              "midway-login1": 0,
-             "tegner-login-1": 0,
-             "login": 0,
+             "rucio-catalogue": 0,
+             "tsm-server": 0,
              "nikhef-srm": 0
 	    };
 
