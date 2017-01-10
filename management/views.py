@@ -500,6 +500,14 @@ def update_user(request):
                 "position": profile_update.cleaned_data['position'],
                 "email": profile_update.cleaned_data['email']
             }
+            if ("start_date" in request.POST and 
+                profile_update.cleaned_data['start_date'] is not None):
+                doc['start_date'] = datetime.datetime.combine(profile_update.cleaned_data['start_date'],
+                                                              datetime.datetime.min.time())
+            if ("end_date" in request.POST and 
+                profile_update.cleaned_data['end_date'] is not None):
+                doc['end_date'] = datetime.datetime.combine(profile_update.cleaned_data['end_date'],
+                                                            datetime.datetime.min.time())
             if "training" in request.POST:
                 if request.POST['training'] == 'on':
                     doc['training']=True
@@ -522,6 +530,9 @@ def update_user(request):
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)
+        else:
+            logger.error(request.POST)
+            logger.error("INVALID UPDATE")
     return HttpResponsePermanentRedirect("/management", content_type="application/json")
 
 @login_required

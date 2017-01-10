@@ -44,7 +44,7 @@ background-color:white;
     <!--<h3>User Management</h3>-->
   </div>
   <div class="col-xs-1 col-sm-1 col-xs-offset-8">
-    {% if request.user.username == "messina" or request.user.username == "coderre" or request.user.username == "murra" %}
+    {% if request.user.username == "messina" or request.user.username == "coderre" or request.user.username == "murra" or request.user.username == "pizzella" %}
     <button data-toggle="modal" onclick="NewUser()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewUser </button>
     {% endif %}
   </div>
@@ -59,9 +59,9 @@ background-color:white;
       <th>Institute</th>
       <th>Position</th>
       <th>Email</th>
-      <th>Training</th>
+      <!--<th>Training</th>-->
       <th>Member Since</th>
-      <th>Status</th>
+      <th>Left</th>
       <th>Edit</th>
     </tr>
   </thead>
@@ -73,9 +73,9 @@ background-color:white;
       <td style="color:black"></td>
       <td style="color:black"></td>
       <td style="color:black"></td>
-      <td style="color:black"></td>
+      <!--<td style="color:black"></td>-->
       <td style="width:100px"></td>
-      <td style="width:100px"></td>
+      <td style="width:120px"></td>
       <td style="width:10px" class="details-edit"></td>
     </tr>
   </tbody>
@@ -147,12 +147,11 @@ else
     document.getElementById("id_"+key).checked = false;
 
         }
-        else if(key == "start_date"){
+        else if(key == "start_date" || key == "end_date"){
            date = (new Date(data[key]["$date"]));
            valstring = date.toISOString().slice(0,10);
-
-//           document.getElementById("id_"+key).value=valstring;
-}
+           document.getElementById("id_"+key).value=valstring;
+         }
          else if(key != "g_id"){
 console.log(key);
              document.getElementById("id_"+key).value=data[key];
@@ -177,6 +176,12 @@ console.log(table_data[0]);
         'copy', 'excel', 'pdf'
     ],
          "data": table_data,          
+    "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+       if("end_date" in aData){
+          $('td', nRow).css('background-color', '#ccc');
+          $('td', nRow).css('color', '#555');
+       }
+    },
          "columns": [
             { "data": "username" },
             { "data": "last_name" },
@@ -184,7 +189,7 @@ console.log(table_data[0]);
             { "data": "institute" },
             { "data": "position" },
             {"data": "email"},
-            {
+/*            {
                    "orderable": false,
                    "render": function ( data, type, row ) {
                     rethtml = "";
@@ -199,7 +204,7 @@ console.log(table_data[0]);
                        rethtml+="<i style='color:red;' class='fa fa-times-circle'></i>"
                     return rethtml;
 },
-},
+},*/
             { "data": "start_date", "width": "15%", "render": function (data) {
               if(!data)
                  return "unknown";
@@ -208,14 +213,23 @@ console.log(table_data[0]);
                  "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " ";           
              return dateString;
             }},
-            { "data": null,
+            { "render": function(data, type, row){
+                  if("end_date" in row){
+                    var m = new Date(row["end_date"]['$date']);
+                    var datestring = m.getUTCFullYear() +
+                 "/"+ (m.getUTCMonth()+1) +"/"+ m.getUTCDate() + " ";
+
+                    return datestring;
+                  }
+                  return "active";
+               },
               "defaultContent": "active",
             },
             {
                 "className":      'details-edit',
                 "orderable":      false,
                 "data":           null,
-                {% if request.user.username == "messina" or request.user.username == "coderre" %}
+                {% if request.user.username == "messina" or request.user.username == "coderre" or request.user.username == "pizzella" %}
                 "defaultContent": '<button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this)">Edit</button>'
                {% else %}
                "defaultContent": '<button class="btn btn-default disabled">Edit</button>'
