@@ -111,8 +111,12 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
     for user in users:
         
         # Don't count people who left
-        if 'end_date' in user and user['end_date']<cdef:
-            continue
+        if 'end_date' in user:
+            userend = datetime.datetime.combine(user['end_date'],datetime.datetime.min.time())
+            cdefend = datetime.datetime.combine(cdef, datetime.datetime.min.time())
+            logger.error("User: "+user['last_name']+" not used")
+            if userend<cdefend:
+                continue
         
         if user['institute'] not in inst_count.keys():
             inst_count[user['institute']]=0
@@ -124,7 +128,10 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
             total += 1
     
     inst_frac = {}
-    total_shifts = (52-start.isocalendar()[1])*shifts_per_week
+    start_week = start.isocalendar()[1]
+    if start_week == 52:
+        start_week = 0
+    total_shifts = (52-start_week)*shifts_per_week
     for institute in inst_count.keys():
         inst_frac[institute] = {
             "whole": math.floor((inst_count[institute]/total)*total_shifts),
@@ -157,7 +164,7 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
               "start": datetime.datetime.combine(start,
                                                  datetime.datetime.min.time()),
               "total": total_shifts,
-              "user_count": total_all,
+              "user_count": total,
               "institutes": inst_count}              
     return retdoc
 
@@ -245,17 +252,69 @@ def GetShiftStats(request):
                                         "type": { "$in": ["shifter", "responsible", "run coordinator", "credit"] }})
             done_doc = {}
             for doc in cursor:
-                if doc['institute'] not in done_doc:
-                    done_doc[doc['institute']] = 0
-                done_doc[doc['institute']] += int((doc['end']-doc['start']).days/7)
+                institute = doc['institute']
+                if institute =="Bern":
+                    institute = "Bern/Freiburg"
+                if institute not in done_doc:
+                    done_doc[institute] = 0
+                done_doc[institute] += int((doc['end']-doc['start']).days/7)
             #need_doc = GetShiftResponsibility(rules)
             need_doc = rules['shifts']
+            if "Bern" in need_doc['shifts']:
+                need_doc['shifts']['Bern/Freiburg'] = need_doc['shifts']['Bern']
+                del need_doc['shifts']['Bern']
             for institute in need_doc['shifts']:
+                if institute =="Bern":
+                    institute = "Bern/Freiburg"
                 if institute in done_doc:
                     need_doc['shifts'][institute]['done'] = done_doc[institute]
                 else:
                     need_doc['shifts'][institute]['done'] = 0
             ret_doc = {"institutes": need_doc}
+        
+        # Get previous years
+        if "institutes" not in ret_doc:
+            ret_doc["institutes"] = {"shifts": {}}
+        for inst in ret_doc['institutes']['shifts']:
+            ret_doc['institutes']['shifts'][inst]['prev_credit'] = 0
+            ret_doc['institutes']['shifts'][inst]['prev_owe'] = 0
+
+        prevrules = db['shift_rules'].find({"year": {"$lt": year}})
+        logger.error("COUNT")
+        logger.error(prevrules.count())
+        for ruledoc in prevrules:
+            jan_first = datetime.datetime(year=int(ruledoc["year"]), month=1, day=1)
+            next_jan = datetime.datetime(year=int(ruledoc["year"])+1, month=1, day=1)
+            cursor = db['shifts'].find({"start": {"$gte": jan_first, 
+                                                  "$lt": next_jan},
+                                        "type": {"$in": ["shifter", "responsible", "run coordinator",
+                                                         "credit"]}})
+            for doc in cursor:
+                institute = doc['institute']
+                if institute == "none" or institute is None:
+                    continue
+                if institute == "Bern":
+                    institute = "Bern/Freiburg"
+                if institute not in ret_doc['institutes']['shifts']:
+                    ret_doc['institutes']['shifts'][institute] = {"prev_credit": 0, "prev_owe": 0}
+                if "prev_credit" not in ret_doc['institutes']['shifts'][institute]:
+                    ret_doc['institutes']['shifts'][institute]['prev_credit'] = 0
+                ret_doc['institutes']['shifts'][institute]['prev_credit'] +=1
+            for institute in ruledoc['shifts']['shifts']:                
+                if institute == "none" or institute is None:
+                    continue
+                retinstitute=institute
+                if retinstitute =="Bern":
+                    retinstitute = "Bern/Freiburg"
+                if retinstitute not in ret_doc['institutes']['shifts']:
+                    ret_doc['institutes']['shifts'][retinstitute] = {"prev_credit": 0, "prev_owe": 0}
+                if "prev_owe" not in ret_doc['institutes']['shifts'][retinstitute]:
+                    ret_doc['institutes']['shifts'][retinstitute]['prev_owe'] =0
+                logger.error(ruledoc['shifts']['shifts'][institute])
+                logger.error(institute)
+                ret_doc['institutes']['shifts'][retinstitute]['prev_owe'] += ruledoc['shifts']['shifts'][institute]['shifts']
+
+            
     return HttpResponse(dumps(ret_doc), 
                         content_type = 'application/json')
 
@@ -350,13 +409,13 @@ def shift_rules(request):
                 logger.error("Insert failed")
                 logger.error(e)
                 shift_resp={"ERR":e}
-            CreateShiftTemplate(doc)
+            #CreateShiftTemplate(doc)
             # create new def
             shift_def = new_shift_def
         else:
             shift_resp={"ERR": "NOT_VALID"}
             
-    retdict = {"form": shift_def, "resp": shift_resp}
+    retdict = {"form": shift_def, "resp": shift_resp, "year": str(year)}
     #retdict={}
     return render(request, "management/shift_rules.html", retdict)
 

@@ -2,6 +2,7 @@ function MakeSidebar(divname, year){
     // Draws a sidebar with each institute and what
     // shifts they've done/have to do
     var URL = "/management/get_shift_stats/?year=" + year.toString();
+    document.getElementById("current_year_column").innerHTML="Shifts "+year.toString();
     $.getJSON(URL, function(data){
 	inst_array = [];
 	for (var key in data['institutes']['shifts']) {
@@ -10,6 +11,8 @@ function MakeSidebar(divname, year){
 		shifts_to_do = entry['shifts']-entry['done']
 		entry['net'] = shifts_to_do;
 		entry['institute']=key;
+		entry['rollover'] = data['institutes']['shifts'][key]['prev_credit'] -
+		    data['institutes']['shifts'][key]['prev_owe'];
 		if(inst_array.length == 0)
 		    inst_array.push(entry);
 		else{
@@ -28,8 +31,18 @@ function MakeSidebar(divname, year){
 	}
 	console.log(inst_array);
 	ret="";
+	console.log(data);
 	for(i=0;i<inst_array.length;i+=1){
-	    ret += "<tr><td>"+inst_array[i]['institute']+"</td><td><strong style='color:#990000'>"+inst_array[i]['shifts']+" - </strong><strong style='color:#006600'>"+inst_array[i]['done']+" = </strong>";
+	    ret += "<tr><td>"+inst_array[i]['institute']+"</td>";
+	    rollover = inst_array[i]['rollover'];
+	    color="#990000";
+	    if(rollover>=0)
+		color = "#444444";
+	    else if(rollover > -4)
+		color="#ff9900";
+	    ret+="<td><strong style='color:"+color+"'>"+rollover.toString()+"</td>";	   
+
+	    ret +="<td><strong style='color:#990000'>"+inst_array[i]['shifts']+" - </strong><strong style='color:#006600'>"+inst_array[i]['done']+" = </strong>";
 	    left = inst_array[i]['shifts'] - inst_array[i]['done'];
 	    color="#990000"; 
 	    if(left < 2)
@@ -40,6 +53,7 @@ function MakeSidebar(divname, year){
 //	    ret += "<tr><td>"+inst_array[i]['institute']+"</td><td>"+
 //		inst_array[i]['shifts']+"</td><td>"+inst_array[i]['done']+
 //		"</td><td>"+inst_array[i]['net']+"</td></tr>";	    
+	    ret+="</td></tr>";
 	}
 	document.getElementById(divname).innerHTML=ret;
     });
