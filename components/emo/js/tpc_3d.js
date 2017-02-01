@@ -292,15 +292,60 @@ function emo_draw_waveform(div, data, peak_labels=true){
     annos = [];
     shapes = [];
 
+    peak_labels=true;
+    var s2trace = {                                                                                  
+            x: [],                                                                                      
+            y: [],                                                                                      
+            mode: 'markers+text',                                                                       
+            name: 'S2s',                                                                   
+            text: [],                                                                                   
+            textposition: 'top',                                                                        
+            type: 'scatter',
+            color: "#119DA4"
+        };                                                                                               
+        var s1trace = {                                                                                 
+            x: [],                                                                                      
+            y: [],                                                                                      
+            mode: 'markers+text',                                                                       
+            name: 'S1s',                                                                   
+            text: [],                                                                                  
+            textposition: 'top',                                                         
+            type: 'scatter',
+	    color: "D33F49"
+        };            
     if(peak_labels){
 	peaks_s2 = get_peaks(data, 's2');
 	peaks_s1 = get_peaks(data, 's1');
-	
+
 	for( var s2=0;s2<peaks_s2.length;s2+=1){
             //if(s2>10) break;
 	    peak = data['peaks'][peaks_s2[s2]];
-	    anno = {		
-	    x:peak['index_of_maximum'],
+	    x = peak['index_of_maximum']
+	    y = waveforms['tpc'][peak['index_of_maximum']],//peak['area']/(peak['right']-peak['left'])
+	    text = "S2["+s2.toString()+"]";
+	    s2trace['x'].push(x);
+            s2trace['y'].push(y);
+            s2trace['text'].push(text);                                                                        
+	    shapes.push(
+		{
+		    type: 'rect',
+		    // x-reference is assigned to the x-values
+		    xref: 'x',
+		    // y-reference is assigned to the plot paper [0,1]
+		    yref: 'y',//'paper',
+		    x0: peak['left'],
+		    y0: 0,
+		    x1: peak['right'],
+		    y1: waveforms['tpc'][peak['index_of_maximum']],
+		    fillcolor: '#119DA4',
+		    opacity: 0.2,
+		    line: {
+			width: 0
+		    }
+		}
+	    );
+	    /*anno = {		
+		x:peak['index_of_maximum'],
 		y:peak['area']/(peak['right']-peak['left']),//waveforms['tpc'][peak['index_of_maximum']],
 		xref:'x',
 		yref:'y2',
@@ -309,7 +354,7 @@ function emo_draw_waveform(div, data, peak_labels=true){
 		arrowhead:7,
 		ax:0,
 		ay:-40
-	    };	    
+	    };
 	    annos.push(anno);
 	    shape =    {
 		type: 'rect',
@@ -329,9 +374,37 @@ function emo_draw_waveform(div, data, peak_labels=true){
 	    }
 	    };
 	    shapes.push(shape);
+	    */
 	};
 	for( var s1=0;s1<peaks_s1.length;s1+=1){
         //if(s1>10) break;
+	    peak = data['peaks'][peaks_s1[s1]];                                                         
+            x = peak['index_of_maximum']                                                                
+            y = waveforms['tpc'][peak['index_of_maximum']], //y = peak['area']/(peak['right']-peak['left'])                                               
+            text = "S1["+s1.toString()+"]";                                                             
+            s1trace['x'].push(x);                                                                       
+            s1trace['y'].push(y);                                                                       
+            s1trace['text'].push(text);
+
+	    shapes.push(                                                                                
+                {                                                                                       
+                    type: 'rect',                                                                       
+                    // x-reference is assigned to the x-values                                          
+                    xref: 'x',                                                            
+                    // y-reference is assigned to the plot paper [0,1]                                  
+                    yref: 'y', //'paper',                                                  
+                    x0: peak['left'],                                                                   
+                    y0: 0,                                                                              
+                    x1: peak['right'],                                                                  
+                    y1: waveforms['tpc'][peak['index_of_maximum']],                                     
+                    fillcolor: '#D33F49',            
+                    opacity: 0.2,                                                                       
+                    line: {                                                                             
+                        width: 0                                                                        
+                    }                                                                                   
+                }  
+            );                   
+	    /*
 	    peak = data['peaks'][peaks_s1[s1]];
 	    anno = {
 		x:peak['index_of_maximum'],
@@ -363,7 +436,10 @@ function emo_draw_waveform(div, data, peak_labels=true){
 		}
 	};
 	    shapes.push(shape);
+	    */
 	};
+	plot_data_wf.push(s1trace);
+	plot_data_wf.push(s2trace);
     }
 
     //wmin = 2*waveform_min;
@@ -375,6 +451,7 @@ function emo_draw_waveform(div, data, peak_labels=true){
 	yaxis: {/*domain: [0, 0.5], */title: "PMT channel", range: [0, 255]},
         //yaxis2: {domain: [0.5,1.], title: "Charge [p.e.]", range: [wmin,wmax], autorange: false,},
         margin: {l:60, r:10, t:10, b:40},
+	shapes: shapes,
 //	annotations: annos,
 //	shapes: shapes,
 //	hovermode: 'y',
@@ -389,6 +466,8 @@ showlegend: true
 
 	};
     wfdiv="sum_waveform_line";
+    console.log(s2trace);
+    console.log("S2TRACE");
     Plotly.newPlot(wfdiv, plot_data_wf, layout_wf, {"showLink": false, "displaylogo": false});
     Plotly.newPlot(div, plot_data, layout, {"showLink": false, "displaylogo": false});
 
@@ -558,7 +637,7 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
 
     // Check that the S1 is there
     if( peaks.length < ID+1 ){
-        console.log(peaks);
+        //console.log(peaks);
 	console.log( "tpc_3d::draw_d1 - ERROR requested S1 out of bounds");
 	return;
     }
@@ -575,7 +654,7 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
     // Slice the waveform around the S1
     //waveform = unzipped_data.slice( leftb, rightb );
     waveform = GetSliceWaveform(unzipped_data, leftb, rightb);
-    console.log(waveform);
+    //console.log(waveform);
     // From here for dygraphs plot
   /*  var dygraph_data = [];
     for(var x=0;x<waveform.length;x+=1){
@@ -626,10 +705,10 @@ function draw_peak( div, data, unzipped_data, ID, peaktype, title, callback ){
 	name: "Sum waveform"
     };
     plot_data.push(trace_sum);
-    console.log("PEAK");
-    console.log(data['peaks'][peaks[ID]]);
-    console.log(sum_x);
-    console.log(sum_y);
+    //console.log("PEAK");
+    //console.log(data['peaks'][peaks[ID]]);
+    //console.log(sum_x);
+    //console.log(sum_y);
     /*
     for(var h=0;h<data['peaks'][peaks[ID]]['hits'].length;h+=1){
 	console.log("Looking at pulse " + data['peaks'][peaks[ID]]['hits'][h]['found_in_pulse'].toString());
@@ -698,9 +777,9 @@ function GetSliceWaveform(reducedwf, left, right){
     retwf = [];
     current_index = left;
     // Find left bound
-    console.log(reducedwf);
-    console.log(left);
-    console.log(right);
+    //console.log(reducedwf);
+    //console.log(left);
+    //console.log(right);
     for(i=0;i<reducedwf.length;i+=1){
 	if(reducedwf[i][0]<current_index)
 	    continue;
@@ -717,7 +796,7 @@ function GetSliceWaveform(reducedwf, left, right){
 	    current_index+=1;
 	}
     }
-    console.log(retwf);
+    //console.log(retwf);
     return retwf;
 }
 function draw_hit_location( scene, data, hit_locs )
@@ -763,7 +842,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 // Draw the hit pattern
 {
     logstr = "Drawing peak type " + type + " at index " + index.toString();
-    console.log(logstr);
+    //console.log(logstr);
     var iScaleMultiplier = 10.3;//2.5;
     var iPositionTopArray = 1050;
     var iPositionBottomArray = -150;
@@ -784,8 +863,8 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 	console.log("Out of index peak");
         return;
     }
-    console.log(peaks);
-    console.log(data);
+    //console.log(peaks);
+    //console.log(data);
     var maxamp = 0.;
     for(x=0;x<data['peaks'][peaks[index]]['area_per_channel'].length;x+=1) {
 	if(data['peaks'][peaks[index]]['area_per_channel'][x]>maxamp)
@@ -814,8 +893,8 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
         var hit = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0),
 				 new THREE.MeshLambertMaterial({color: 0xaaaaaa,
 							       emissiveIntensity:.01}));
-	console.log("COLOR");
-	console.log(colz);
+	//console.log("COLOR");
+	//console.log(colz);
 	hit.material.color.setRGB(colz[0], colz[1], colz[2]);
 	hit.material.emissive.setRGB(colz[0], colz[1], colz[2] );
 	if(amp==0)
@@ -846,7 +925,7 @@ function draw_hitpattern( scene, camera, renderer, hits, data, type, index )
 
 	// Look up what this does
 	hit.overdraw = true;
-	console.log(channel);
+	//console.log(channel);
 	hit.position.x = g_pmt_map[channel]['x']*iScaleMultiplier;
         hit.position.z = g_pmt_map[channel]['y']*iScaleMultiplier;
 	
@@ -936,7 +1015,7 @@ function initialize_mini_display(scene, camera, renderer, path, div, callback){
     var FAR = 10000;
     var WIDTH = document.getElementById(div).offsetWidth;
     var HEIGHT = document.getElementById(div).offsetHeight;
-    console.log(WIDTH);
+    //    console.log(WIDTH);
     var ASPECT = WIDTH/HEIGHT;
 
     //renderer = new THREE.WebGLRenderer({blending: THREE.AdditiveBlending, 

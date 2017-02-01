@@ -111,24 +111,23 @@
 	            <div class="row" style="margin-top:3px;padding-left:10px;">
                     <div class="col-xs-3"><strong>Run:</strong></div>
                     <div class="col-xs-9">
-                    <select id="run_picker" name="run_picker" width="150" style="width:150px"></select>
+                    <select id="run_picker" name="run_picker" width="150" style="width:200px"></select>
                 </div>
           </div>
 	    <div class="row" style="margin-top:3px;padding-left:10px;">
 	        <div class="col-xs-3"><strong>Event:</strong></div>
 	        <div class="col-xs-9">
-	            <div class="btn-group btn-group-xs" role="group"
-		            aria-label="Event Control">
-		            <button class="btn btn-info btn-sm"
-			            onclick="update_data_newest()" style="margin-right:3px">First</button>
-		            <button class="btn btn-info btn-sm" onclick="update_data_prev()"
-			            style="margin-right:3px;margin-left:3px">Previous</button>
-		            <button class="btn btn-info btn-sm"
-			            onclick="update_data_next()" style="margin-left:3px;">
-		            Next</button>
-
-	            </div>
-	        </div>
+		  <input id="input_event_number" style="width:50" type="number" value=0 min=0/>
+		  &nbsp;
+		  <button class="btn btn-info btn-sm" onclick="update_data_custom()">Go!</button>
+		  <!--<button class="btn btn-info btn-sm"
+		      onclick="update_data_newest()" style="margin-right:3px">First</button>
+		      <button class="btn btn-info btn-sm" onclick="update_data_prev()"
+			      style="margin-right:3px;margin-left:3px">Previous</button>
+		      <button class="btn btn-info btn-sm"
+			      onclick="update_data_next()" style="margin-left:3px;">
+		        Next</button>-->
+		</div>
 	    </div>
 	    <div class="row" style="margin-top:3px;padding-left:10px;">
 	        <div class="col-xs-12">
@@ -460,9 +459,9 @@ console.log("STILL");
 
              if(data!=null){
                   for(x=0;x<data['runs'].length;x++){
-                        $("#run_picker").append("<option name='"
+                        $("#run_picker").append("<option value='"
                                      + data['runs'][x] + "'>"+
-                                       data['runs'][x]+"</option>");
+                                       data['runs'][x]+" ("+data['events'][x]+" events)</option>");
                     }
                 }
           });
@@ -501,7 +500,12 @@ console.log("STILL");
          the_url += event_number.toString();
          document.getElementById("Loading").style.display = 'block';
          $.getJSON(the_url, function(data){
-console.log(data);
+	     if("error" in data){
+	       alert("ERROR: "+data['error']);
+               document.getElementById("Loading").style.display = 'none';
+               return;
+             }
+	     console.log(data);
              draw_waveform_local(data, function(){
                 document.getElementById("Loading").style.display = 'none';
 			      });
@@ -527,6 +531,10 @@ console.log(data);
          event_number -= 1;
          update_data();
     }
+    function update_data_custom(){
+	event_number = $("#input_event_number").val();
+        update_data();
+    }
     function draw_waveform_local(data, callback){
         s1_index = -1;
         s2_index = -1;
@@ -540,6 +548,7 @@ console.log(data);
        
         if(ns1 > 0 ) s1_index = 0;
         if(ns2 > 0 ) s2_index = 0;
+	      else ChooseS1();
         document.getElementById("full_waveform").innerHTML = "";
 	      last_data = data;
         emo_draw_waveform("full_waveform", data, annotations);
@@ -555,7 +564,7 @@ console.log(data);
 */
 
         document.getElementById("run_name").innerHTML = data['run_name'];
-        document.getElementById("event_number").innerHTML = 1000*data['event_number'];
+        document.getElementById("event_number").innerHTML = data['event_number'];
         document.getElementById("event_date").innerHTML = data['event_date'];
         document.getElementById("event_s1s").innerHTML = ns1.toString();
         document.getElementById("event_s2s").innerHTML = ns2.toString();

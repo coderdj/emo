@@ -4,15 +4,15 @@ from json import dumps, loads
 from bson import json_util, objectid
 from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect
 import pickle
-from bokeh.plotting import figure
-from bokeh.resources import CDN
-from bokeh.embed import components
-from bokeh.models import ColumnDataSource
+#from bokeh.plotting import figure
+#from bokeh.resources import CDN
+#from bokeh.embed import components
+#from bokeh.models import ColumnDataSource
 #import mpld3
 import numpy as np
-from bokeh.models import Range1d
-from bokeh.io import hplot, vplot, gridplot
-from bokeh._legacy_charts import HeatMap
+#from bokeh.models import Range1d
+#from bokeh.io import hplot, vplot, gridplot
+#from bokeh._legacy_charts import HeatMap
 import time
 import datetime
 from datetime import date, timedelta
@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.conf import settings
 from monitor.models import ScopeRequest
 from pandas import DataFrame
-from bokeh.properties import value
+#from bokeh.properties import value
 import dateutil
 import snappy
 import collections
@@ -28,6 +28,11 @@ import scipy.ndimage as spi
 import math
 import logging
 import os
+from pax import core
+import grp
+import pwd
+import os
+
 # Get an instance of a logger
 #logger = logging.getLogger(__name__)
 logger = logging.getLogger("emo")
@@ -43,15 +48,40 @@ bufferClients = ["mongodb://"+settings.BUFFER_USER+":"+settings.BUFFER_PW+
                  "@eb0:27000/admin", "mongodb://"+settings.BUFFER_USER+":"+
                  settings.BUFFER_PW+"@eb1:27000/admin", "mongodb://"+
                  settings.BUFFER_USER+":"+settings.BUFFER_PW+"@eb2:27000/admin"]
-
+runclient = MongoClient(settings.RUNS_DB_ADDR)
+runcollection = runclient[settings.RUNS_DB_NAME][settings.RUNS_DB_COLLECTION]
 
 """TRIGGER SECTION"""
 #triggerClients = ["eb2:27001", "eb0:27017", "eb1:27017", "master:27017"]
 triggerClients = ["gw:27018"]
 
+
+pax_config = {
+    "DEFAULT":{
+        "run_number": 2000
+    },
+    "pax":
+    {
+        'output':'Dummy.DummyOutput',
+        'encoder_plugin':     None,
+        'pre_output': [],
+        'logging_level': 'ERROR'
+        #'events_to_process': []        
+    },
+    "MongoDB":
+    {
+        "user": settings.RUN_USER,
+        "password": settings.RUN_PW,
+        "host": "gw",
+        "port": 27017,
+        "database": settings.RUN_DB,
+    },
+}
+
+
 @login_required
 def get_buffer_occupancy(request):
-
+    # Note: this crashed the DAQ when datamanager went down. So disabled.
     return HttpResponse({}, content_type="application/json")
 '''
     free = 1 
@@ -412,12 +442,16 @@ def trigger_get_data(request):
 
 """END TRIGGER SECTION"""
 
+''' WAVEFORM DISPLAY '''
+
 @login_required
 def get_waveform_run_list(request):
     """
     Return all run names for which there is a collection containing waveforms
     """
-
+    
+    '''
+    # OLD - REMOVE AFTER SETTING UP PAX PROCESSING
     retlist = []
     collection_list = list(wfdb.collection_names())
     collection_list.sort(reverse=True)
@@ -426,11 +460,92 @@ def get_waveform_run_list(request):
         if wfdb[collection].count() != 0:
             retlist.append(collection)
     return HttpResponse(dumps({"runs": retlist}), content_type="application/json")
+    '''
+    retlist = []
+    events = []
+    query = {"detector": "tpc",
+             "data": {"$elemMatch": {"host": "xe1t-datamanager",
+                                     "status": "transferred",
+                                     "type": "raw"
+                                     }
+                      },
+             "trigger.events_built": {"$gt": 0},
+             }
+    returnvals = {"number": 1, "data": 1, "trigger.events_built": 1}
+    cursor = runcollection.find(query, returnvals).sort("number", -1)
+    for doc in cursor:
+        # This because we have some crappy files with wrong permissions
+        save=False
+        for entry in doc['data']:
+            if entry['host']=='xe1t-datamanager' and entry['type'] == 'raw':
+                try:
+                    stat_info = os.stat(entry['location'])
+                    uid = stat_info.st_uid 
+                    user = pwd.getpwuid(uid)[0]
+                    if user=="transfer":
+                        save=True
+                except:
+                    save=False
+        if save:
+            retlist.append(doc['number'])
+            events.append(doc['trigger']['events_built'])
+    return HttpResponse(dumps({'runs': retlist, 'events': events}), content_type="application/json")
 
+
+@login_required                    
+def get_event_as_json(request):       
+    return HttpResponse(dumps(get_json_event(request)), content_type="application/json")
 
 @login_required
-def get_event_as_json(request):
+def get_json_event(request):
 
+    run = None
+    if request.method == "GET" and "run" in request.GET:
+        run = int(request.GET['run'])
+    else:
+        return {"error": "No run in request"}
+    
+    event_number = 0
+    if "event" in request.GET:
+        event_number = int(request.GET['event'])
+
+    # Now load up pax and process the waveform. Warning: pax is a greedy bastard. He will
+    # not hestitate to use ALL the RAM. Many requests at once will kill the server.
+    rundoc = runcollection.find_one({"number": run})
+    if rundoc is None:
+        return {"error": "Couldn't find run in DB"}
+    path = ""
+    for entry in rundoc['data']:
+        if entry['type'] == 'raw' and entry['host'] == 'xe1t-datamanager':
+            path = entry['location']
+    if path == "" or not os.path.exists(path):
+        return {"error": "Data no longer on datamanager. You missed it."}
+
+    if event_number > rundoc['trigger']['events_built']:
+        return {"error": "Requested an event not in the run"}
+    
+    config = pax_config
+    config['pax']['input_name'] = path
+    config['pax']['events_to_process'] = [event_number]
+    config['DEFAULT']['run_number'] = run
+    logger.error(config)
+    processor = core.Processor(config_names="XENON1T", config_dict=config)
+    logger.error("HERE")
+    for event in processor.get_events():
+        logger.error("AGAIN")
+        processed = processor.process_event(event)
+
+    # Pack up the event
+    logger.error("COMPRESSING")
+    packed = CompressEvent(json_util.loads(processed.to_json()))
+    logger.error("STRIPPING")
+    ret = strip_doc(packed)  
+    logger.error("RETURNING")
+    ret['event_number'] = event_number
+    return ret
+    
+'''
+    # OLD - REMOVE AFTER SETTING UP PROCESSING
     run = ""
     if request.method == "GET" and "run" in request.GET:
         run = request.GET['run']
@@ -467,6 +582,38 @@ def get_event_as_json(request):
     ret_doc['start_time'] = doc['start_time']
     ret_doc['event_number'] = event_number
     return HttpResponse(json_util.dumps(doc), content_type="application/json")
+'''
+
+def CompressEvent(event):
+    """ Compresses an event by suppressing zeros in waveform in a way the frontend will understand  
+    Format is the char 'zn' where 'z' is a char and 'n' is the number of following zero bins
+    """
+
+    for x in range(0, len(event['sum_waveforms'])):
+
+        waveform = event['sum_waveforms'][x]['samples']
+        zeros = 0
+        ret = []
+
+        for i in range(0, len(waveform)):
+            if waveform[i] == 0:
+                zeros += 1
+                continue
+            else:
+                if zeros != 0:
+                    ret.append('z')
+                    ret.append(str(zeros))
+                    zeros = 0
+                ret.append(str(waveform[i]))
+        if zeros != 0:
+            ret.append('z')
+            ret.append(str(zeros))
+        event['sum_waveforms'][x]['samples'] = ret
+
+    # Unfortunately we also have to remove the pulses or some events are huge                            
+    del event['pulses']
+    return event
+
 
 def strip_doc(doc):
     trigger_time_ns = (doc['start_time'])
@@ -526,6 +673,8 @@ def get_event_for_display(request):
         optionally
             : hit pattern
     """
+    return HttpResponse(dumps(get_json_event(request)), content_type="application/json")
+'''
     print("Got request")
     # Get the doc. If there is no doc return an empty dict
     run = ""
@@ -585,7 +734,7 @@ def get_event_for_display(request):
     #ret = json_util.loads(json_util.dumps(ret))
     print("Serving request")
     return HttpResponse(json_util.dumps(ret), content_type="application/json")
-
+'''
 
 def make_bokeh_hits_plot(hit_list):
 
