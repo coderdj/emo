@@ -326,6 +326,18 @@ function DrawStorageWindow(data, storage_template, storageloc_template){
 	    "display_paxversion": "style='display:none'",
 	    "pax_version": "trolololol"
 	}
+
+	console.log(data['data'][i]['host'])
+	if (data['data'][i]['host'] == 'rucio-catalogue'){
+	    pars['location'] += ' [';
+	    for(j=0; j<data['data'][i]['rse'].length; j+=1){
+		pars['location'] += data['data'][i]['rse'][j];
+		if(j < data['data'][i]['rse'][length] -1)
+		    pars['location'] += ',';
+	    }
+	    pars['location']+=']';
+	}
+	 
 	console.log(pars);
 	if(data['data'][i]['type'] == 'raw')
 	    raw.push(Mustache.render(storageloctemplate, pars));

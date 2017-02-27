@@ -311,11 +311,22 @@ function emo_draw_waveform(div, data, peak_labels=true){
             text: [],                                                                                  
             textposition: 'top',                                                         
             type: 'scatter',
-	    color: "D33F49"
+	    color: "D33F49"	  
         };            
+    var unknowntrace = {
+	x: [],
+	y: [],
+	mode: "markerts+text",
+	name: "unknown",
+	text: [],
+	textposition: 'top',
+	type: 'scatter',
+	color: '#cacaca'
+    };
     if(peak_labels){
 	peaks_s2 = get_peaks(data, 's2');
 	peaks_s1 = get_peaks(data, 's1');
+	peaks_unknown = get_peaks(data, 'unknown');
 
 	for( var s2=0;s2<peaks_s2.length;s2+=1){
             //if(s2>10) break;
@@ -438,8 +449,37 @@ function emo_draw_waveform(div, data, peak_labels=true){
 	    shapes.push(shape);
 	    */
 	};
+	for( var u=0;u<peaks_unknown.length;u+=1){                           
+            //if(s2>10) break;                                                                          
+            peak = data['peaks'][peaks_unknown[u]];                     
+            x = peak['index_of_maximum']                                                                
+            y = waveforms['tpc'][peak['index_of_maximum']],//peak['area']/(peak['right']-peak['left']) 
+            text = "unknown["+u.toString()+"]";                                                      
+            unknowntrace['x'].push(x);                                        
+            unknowntrace['y'].push(y);                           
+            unknowntrace['text'].push(text);                             
+                                                                     
+            shapes.push(                                                               
+                {                                                             
+                    type: 'rect',                                       
+                    // x-reference is assigned to the x-values              
+                    xref: 'x',                                                
+                    // y-reference is assigned to the plot paper [0,1]                
+                    yref: 'y',//'paper',                                           
+                    x0: peak['left'],                                          
+                    y0: 0,                                                     
+                    x1: peak['right'],                                   
+                    y1: waveforms['tpc'][peak['index_of_maximum']],                 
+                    fillcolor: '#bbbbbb',                                        
+                    opacity: 0.2,       
+                    line: {                                                                       
+                        width: 0                                 
+                    }                                              
+                }                                    
+            );              }
 	plot_data_wf.push(s1trace);
 	plot_data_wf.push(s2trace);
+	plot_data_wf.push(unknowntrace);
     }
 
     //wmin = 2*waveform_min;

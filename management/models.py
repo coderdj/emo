@@ -78,7 +78,7 @@ class UserInfo(forms.Form):
     github_id = forms.CharField(max_length=200, label="Github name", required=False)
     cell = forms.CharField(max_length=200, label="Cell number", required=False)
     nickname = forms.CharField(max_length=250, label="Preferred nickname", required=False)
-    start_date = forms.DateField(label="Start date", required=True, 
+    start_date = forms.DateField(label="Start date", required=False, 
                                  help_text="Date that person started in XENON")
     end_date = forms.DateField(label="End date", required=False,
                                help_text="Date that person left XENON (empty if none)")

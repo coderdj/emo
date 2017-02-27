@@ -17,6 +17,32 @@ import logging
 logger = logging.getLogger('emo')
 
 @login_required
+def get_pax_report(request):
+    '''Get what data on midway with what pax version'''
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    cursor = client['run']['runs_new'].find({"detector": "tpc", "tags.name": "_sciencerun0"}) 
+    dat = {"total": {}}
+    for doc in cursor:
+        source = doc['source']['type']
+        if source not in dat['total']:
+            dat["total"][source] = 0
+        dat["total"][source] += 1 
+        
+        for entry in doc["data"]:
+            if ( entry['type'] != 'processed' or 
+                 entry['host'] != "midway-login1" or
+                 entry['status'] != 'transferred'):
+                continue
+            if entry['pax_version'] not in dat:
+                dat[entry['pax_version']] = {}
+            if source not in dat[entry['pax_version']]:
+                dat[entry['pax_version']][source]= 0
+            dat[entry['pax_version']][source] += 1
+
+    return HttpResponse(dumps(dat), content_type="application/json")
+            
+
+@login_required
 def get_run(request):
     client = MongoClient(settings.RUNS_DB_ADDR)
     if (request.method == "GET" and "detector" in request.GET and

@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^get_run', views.get_run, name="get_run"),
     url(r'^runs_stream', views.runs_stream, name="runs_stream"),
     url(r'^old', login_required( views.runs ), name='runs' ),
+    url(r'^processing', login_required(TemplateView.as_view
+                                       (template_name='runs/whatdata.html'))),
+    url(r'^getpaxreport', views.get_pax_report, name='get_pax_report'),
     url(r'$', login_required(TemplateView.as_view
                                 (template_name="runs/runs_new.html"))),
 ]

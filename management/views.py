@@ -114,7 +114,7 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
         if 'end_date' in user:
             userend = datetime.datetime.combine(user['end_date'],datetime.datetime.min.time())
             cdefend = datetime.datetime.combine(cdef, datetime.datetime.min.time())
-            logger.error("User: "+user['last_name']+" not used")
+            #logger.error("User: "+user['last_name']+" not used")
             if userend<cdefend:
                 continue
         
@@ -280,8 +280,8 @@ def GetShiftStats(request):
             ret_doc['institutes']['shifts'][inst]['prev_owe'] = 0
 
         prevrules = db['shift_rules'].find({"year": {"$lt": year}})
-        logger.error("COUNT")
-        logger.error(prevrules.count())
+        #logger.error("COUNT")
+        #logger.error(prevrules.count())
         for ruledoc in prevrules:
             jan_first = datetime.datetime(year=int(ruledoc["year"]), month=1, day=1)
             next_jan = datetime.datetime(year=int(ruledoc["year"])+1, month=1, day=1)
@@ -310,8 +310,8 @@ def GetShiftStats(request):
                     ret_doc['institutes']['shifts'][retinstitute] = {"prev_credit": 0, "prev_owe": 0}
                 if "prev_owe" not in ret_doc['institutes']['shifts'][retinstitute]:
                     ret_doc['institutes']['shifts'][retinstitute]['prev_owe'] =0
-                logger.error(ruledoc['shifts']['shifts'][institute])
-                logger.error(institute)
+                #logger.error(ruledoc['shifts']['shifts'][institute])
+                #logger.error(institute)
                 ret_doc['institutes']['shifts'][retinstitute]['prev_owe'] += ruledoc['shifts']['shifts'][institute]['shifts']
 
             
@@ -687,7 +687,9 @@ def profile(request):
             except Exception as e:
                 logger.error("Insert failed")
                 logger.error(e)
-
+        else:
+            logger.error("Invalide profile update")
+            logger.error(profile_update.cleaned_data)
     # If no POST request then check the user's permissions and info
     retdict = { 'canstartruns': False }
     thisuser = User.objects.get(username=request.user)
