@@ -123,10 +123,13 @@ def GetShiftResponsibility(cdef, start, shifts_per_week):
         if ( user['position'] == "PI" or 
              user['position'] =="Postdoc" or 
              user['position'] == "Staff" or
-             user['position'] == "PhD student" ):
+             user['position'] == "PhD student" or
+             user['position'] == "Master student"):
             inst_count[user['institute']] +=1
             total += 1
-    
+        else:
+            logger.error("Loser user")
+            logger.error(user)
     inst_frac = {}
     start_week = start.isocalendar()[1]
     if start_week == 52:

@@ -201,7 +201,8 @@ function SetPlaylistTitle(data){
     html = "";
     
     // Add new run button
-    html += "<div class='playlist-start-button' style='width:150px' onclick='ConfirmCanStartRuns(NewRun, null)'><span class='glyphicon glyphicon-plus'></span>Add run</div>";
+    html += "<div class='playlist-start-button' style='width:120px' onclick='ConfirmCanStartRuns(NewRun, null)'><span class='glyphicon glyphicon-plus'></span>Add </div>";
+    html += "<div class='playlist-stop-button' style='width:120px' onclick='ConfirmCanStartRuns(StopRunMenu, null)'><span class='glyphicon glyphicon-stop'></span>Stop</div>";
     
     first_tpc = null;
     second_tpc = null;
@@ -263,8 +264,8 @@ function SetPlaylist(data){
 	    row += "<div class='playlist-drag-handle'><span class='glyphicon glyphicon-menu-hamburger handle' stlye='font-size:20px;z-index:50;'></span></div>";
 	//if(data[i]['running']==0)
 	//row += "<div class='playlist-start-button control' onclick='StartFirstRun()'><span class='glyphicon glyphicon-play'></span></div>";
-	if(data[i]['running']==1)
-	    row += "<div class='playlist-stop-button control' onclick='ConfirmCanStartRuns(StopRun, "+'"'+data[i]['detector']+'"'+")'><span class='glyphicon glyphicon-stop'></span></div>";
+	//if(data[i]['running']==1)
+	//row += "<div class='playlist-stop-button control' onclick='ConfirmCanStartRuns(StopRun, "+'"'+data[i]['detector']+'"'+")'><span class='glyphicon glyphicon-stop'></span></div>";
 	
 	row += "<div style='position:absolute;font-size:53px;top:0;left:30px;height:50px;color:#dadaff;width:10px;z-index:0;'>" + (i+1).toString() + " </div>";
 	if(data[i]['detector'] == 'tpc')
@@ -372,6 +373,38 @@ Array.prototype.move = function (old_index, new_index) {
     return this; 
 }; 
 
+function StopRunMenu(){
+    console.log("HERE");
+	html="<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='tpc'>TPC</button></div>"+
+	    "<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='muon_veto'>Muon Veto</button></div>"+
+	    "<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='all'>Both</button></div>";
+	 document.stop_element = new Ply({
+            el: html, // HTML-content
+
+            effect: "fade", // or ["open-effect:duration", "close-effect:duration"]
+            //effect: ["fade:250", "fade:1000"],
+            layer: { width: "300px",
+                     height: '230px'}, // default css
+
+            overlay: { // defaults css
+            opacity: 0.0,
+            backgroundColor: "#000"
+        },
+
+            flags: { // defaults
+                closeBtn: true, // presence close button "
+                //          hideLayerInStack: true,
+            },
+            onaction: function (ui) {},
+        });
+ document.stop_element.open().always(function () {
+            $('.detbtn').click(function(){
+if(this.value == "tpc" || this.value=="muon_veto" || this.value=="all")
+StopRun(this.value);
+});
+});
+}
+			
 // ADD NEW RUN
 function NewRun(){
 

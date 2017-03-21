@@ -84,7 +84,10 @@ def GetTPCEventRate(request):
                                        "dead_time_info"}).sort("_id", 
                                                                1)[0]['time']
         retdoc['deadtime'] = dead_time_doc['busy'] / time_bin
-        retdoc['deadtime_run'] = newest
+        try:
+            retdoc['deadtime_run'] = newest
+        except:
+            retdoc['deadtime_run'] = -1
         dead_time_doc = (list(monDB[newest].aggregate([
             {"$match": {"data_type": "dead_time_info", "busy": {"$ne": 0}}}, 
             {"$group": {"_id": None,  "count": {"$sum": "$busy"}, 

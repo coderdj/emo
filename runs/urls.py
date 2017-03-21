@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^processing', login_required(TemplateView.as_view
                                        (template_name='runs/whatdata.html'))),
     url(r'^getpaxreport', views.get_pax_report, name='get_pax_report'),
+    url(r'^wheres_the_data', views.wheres_the_data, name='wheres_the_data'), 
     url(r'$', login_required(TemplateView.as_view
                                 (template_name="runs/runs_new.html"))),
 ]

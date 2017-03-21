@@ -16,6 +16,66 @@ import logging
 # Get an instance of a logger                                                       
 logger = logging.getLogger('emo')
 
+
+@login_required
+def wheres_the_data(request):
+    '''
+    Return a report summarizing all data sites and what data is available at each.
+    '''
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    coll = client['run']['runs_new']
+    queries = {
+        "Science Run 0": {"detector": "tpc", "tags.name": "_sciencerun0"},
+        "Science Run 1": {"detector": "tpc", "number": {"$gt": 6731}}
+    }
+    ret = {}
+
+    # For each query we want two aggregations I guess. One is the total processed
+    # data available in each pax version. The other is the total raw data at each site
+    for name, query in queries.items():
+
+        # BAM
+        allruns_cursor = coll.aggregate([
+            {"$match": query},
+            {"$group": {"_id": {"source": "$source.type"}, 
+                        "total_runs": {"$sum": 1},
+                        "data": {"$push": {"data": "$data", "number": "$number"}}}},
+            {"$unwind": "$data"},
+            {"$unwind": "$data.data"},
+            {"$group": {"_id": {"source": "$_id.source",
+                                "count": "$total_runs"},
+                        "data": {"$addToSet": {"host": "$data.data.host", "number": "$data.number",
+                                              "pax_version": {"$ifNull": ["$data.data.pax_version", "raw"]},
+                                              "status": "$data.data.status"}}}},
+            {"$unwind": "$data"},
+            {"$match": {"data.status": "transferred"}},
+            {"$group": {"_id": {"source": "$_id.source",
+                               "version": "$data.pax_version",
+                               "host": "$data.host",
+                               "count": "$_id.count"},
+                       "onsite_runs": {"$sum": 1}}},
+            {"$project": {"_id": "$_id", 
+                         "onsite_runs": "$onsite_runs",
+                         "onsite_fraction": {"$divide": ["$onsite_runs", "$_id.count"]}}},
+            {"$group": {"_id": {
+                                "source": "$_id.source",
+                                "total_runs": "$_id.count"
+                                },
+                        "sites": {"$push": {"version": "$_id.version", 
+                                 "host": "$_id.host",
+                                 "onsite_runs": "$onsite_runs",
+                                 "onsite_fraction": "$onsite_fraction"
+                                 }}}}
+        ])        
+
+        ret[name] = []
+        for item in allruns_cursor:
+            ret[name].append({"source": item["_id"]["source"],
+                              "total_runs": item["_id"]["total_runs"],
+                              "sites": item["sites"]})
+    
+    return HttpResponse(dumps(ret), content_type="application/json")
+
 @login_required
 def get_pax_report(request):
     '''Get what data on midway with what pax version'''
