@@ -280,12 +280,18 @@ function SetPlaylist(data){
 
 	// Badges to indicate which detector
 	console.log(data[i]);
+	row += "<div class='badge-div'>";
+	if(data[i]['running'] == 1)
+	    row+="<span class='label label-success'>Running</span>&nbsp;"
+	else if(data[i]['running'] == 2)
+	    row+="<span class='label label-warning'>Queued</span>&nbsp;"
 	if(data[i]['detector'] == 'tpc')
-            row += "<div class='badge-div'><span class='label label-primary'>TPC</span></div>";
+            row += "<span class='label label-primary'>TPC</span>";
         else if(data[i]['detector'] == 'muon_veto')
-            row += "<div class='badge-div'><span class='label label-default'>Muon Veto</span></div>";
+            row += "<span class='label label-default'>Muon Veto</span>";
         else if(data[i]['detector'] == 'all')
-            row += "<div class='badge-div'><span class='label label-warning'>Combined</span></div>";
+            row += "<span class='label label-danger'>Combined</span>";
+	row += "</div>";
 
 	if(i!=0 || data[i]['running']==0)
 	    row+="<span class='js-remove'><span class='glyphicon glyphicon-trash'></span></span>";

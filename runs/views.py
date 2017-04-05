@@ -13,9 +13,39 @@ from django.conf import settings
 from django.conf import settings
 import logging
 
-# Get an instance of a logger                                                       
+import copy
+import matplotlib
+matplotlib.use('agg')
+import matplotlib as mplt
+import types
+from matplotlib.patches import Rectangle
+from matplotlib import patches
+from collections import OrderedDict
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+    
+# Get an instance of a logger          
 logger = logging.getLogger('emo')
-
+start_science_run = 6387
+sr1_query = {
+    # We only use TPC
+    "detector": "tpc", 
+    # Only runs within the current science run
+    "number": {"$gt": start_science_run}, 
+    # No runs tagged bad by the shifters or with other known issues
+    "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess", 
+                           "earthquake", "nofield", "lowfield", 
+                           "ramping", "source_moving", "crash", "daqcrash",
+                           "triggercrash", "_pmttrip", 
+                           "rn220_contamination", "comissioning"]},
+    # Anything with less than 100 events (half-minute run time in background) likely failed
+    "trigger.events_built": {"$gt": 100},
+    # We don't need to track LED runs. That's a separate thing.
+    "source.type": {"$nin": ["LED"]}
+}
 
 @login_required
 def wheres_the_data(request):
@@ -44,10 +74,12 @@ def wheres_the_data(request):
             {"$unwind": "$data.data"},
             {"$group": {"_id": {"source": "$_id.source",
                                 "count": "$total_runs"},
-                        "data": {"$addToSet": {"host": "$data.data.host", "number": "$data.number",
+                        "data": {"$addToSet": {"host": {"$ifNull": ["$data.data.rse", "$data.data.host"]}, 
+                                               "number": "$data.number",
                                               "pax_version": {"$ifNull": ["$data.data.pax_version", "raw"]},
                                               "status": "$data.data.status"}}}},
             {"$unwind": "$data"},
+            {"$unwind": "$data.host"},
             {"$match": {"data.status": "transferred"}},
             {"$group": {"_id": {"source": "$_id.source",
                                "version": "$data.pax_version",
@@ -66,7 +98,7 @@ def wheres_the_data(request):
                                  "onsite_runs": "$onsite_runs",
                                  "onsite_fraction": "$onsite_fraction"
                                  }}}}
-        ])        
+        ])
 
         ret[name] = []
         for item in allruns_cursor:
@@ -77,8 +109,306 @@ def wheres_the_data(request):
     return HttpResponse(dumps(ret), content_type="application/json")
 
 @login_required
+def get_exposure_text(request):
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    coll = client['run']['runs_new']
+    # Very basic test of 'good runs' just rejects runs 
+    # tagged with known 'bad' tags
+    query = {"number": {"$gt": start_science_run},
+             "tags.name": {"$nin": 
+                           ["bad", "messy", "test", "donotprocess", 
+                            "earthquake", "nofield", "lowfield", 
+                            "ramping", "source_moving", "crash", 
+                            "daqcrash", "triggercrash", "_pmttrip", 
+                            "rn220_contamination", "comissioning"]},
+             "trigger.events_built": {"$gt": 100}}
+    runtime = coll.aggregate([
+        {"$match": query}, 
+        {"$sort": {"start": 1}},
+        {"$project": {"runtime": {"$subtract": ["$end", "$start"]},
+                      "source": "$source.type",
+                      "events": "$trigger.events_built"}},
+        {"$group": {"_id": {"source": "$source"}, 
+                    "runtime": {"$sum": "$runtime"},  
+                    "events": {"$sum": "$events"}}}
+    ])
+    total_runtime = list(runtime)
+
+    # Total Exposure Last 7 days
+    query["start"] = {"$gt": datetime.datetime.utcnow()-
+                      datetime.timedelta(days=7)}
+    runtime = coll.aggregate([
+        {"$match": query}, 
+        {"$sort": {"start": 1}},
+        {"$project": {"runtime": {"$subtract": ["$end", "$start"]},
+                      "source": "$source.type",
+                      "events": "$trigger.events_built"}},
+        {"$group": {"_id": {"source": "$source"}, 
+                    "runtime": {"$sum": "$runtime"},  
+                    "events": {"$sum": "$events"}}}
+    ])
+    weekly_runtime = list(runtime)
+    
+    most_recent_processed = coll.find({
+        "detector": "tpc", 
+        "data": {"$elemMatch": 
+                 {"type": "processed",
+                  "status": "transferred",
+                  "host": "midway-login1"}}}).sort("number", -1)[0]
+    ret = {"mrp": {"number": most_recent_processed['number'],
+                   "start": most_recent_processed['start']}}
+    most_recent_run = coll.find(
+        {"detector": "tpc", 
+         "source.type": {"$nin": ["LED"]}}).sort("number", -1)[0]
+    ret['mrr'] = {"number": most_recent_run['number'],
+                  "start":most_recent_run['start']}
+    ret['processing_lag'] = (((most_recent_run['start']-
+                              most_recent_processed['start']).total_seconds())/3600.)
+    ret['total_runtime'] = total_runtime
+    ret['weekly_runtime'] = weekly_runtime
+    return HttpResponse(dumps(ret), content_type="application/json")
+
+@login_required
+def get_processing_progress(request):
+    
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    coll = client['run']['runs_new']
+    start_science_run = 6387
+    sr1_query = {
+    # We only use TPC
+    "detector": "tpc",
+    # Only runs within the current science run
+    "number": {"$gt": start_science_run},
+    # No runs tagged bad by the shifters or with other known issues
+    "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess",
+                           "earthquake", "nofield", "lowfield",
+                           "ramping", "source_moving", "crash", "daqcrash",
+                           "triggercrash", "_pmttrip",
+                           "rn220_contamination", "comissioning"]},
+        "trigger.events_built": {"$gt": 100},
+    # We don't need to track LED runs. That's a separate thing.
+    "source.type": {"$nin": ["LED"]}
+    }
+    cursor = coll.find(sr1_query).sort("number", 1)
+    date_source = {'all': [], 'processed': []}
+    date_lookup = {}
+    min_date = None
+    max_date = None
+    for doc in cursor:
+        if 'end' in doc:
+            if min_date == None:
+                min_date = mdates.date2num(doc['start'])
+            max_date = mdates.date2num(doc['start'])
+            date_source['all'].append(doc['number'])
+            date_lookup[doc['number']] = {
+                'source': doc['source']['type'], 
+                'start': doc['start'], 'end': doc['end'], 
+                'number': doc['number']}
+            for d in doc['data']:
+                if (d['type'] != "processed" or 
+                    d['status'] != "transferred" or 
+                    d['host'] != "midway-login1"):
+                    continue
+                if 'pax_version' not in d:
+                    continue
+                if d['pax_version'] not in date_source.keys():
+                    date_source[d['pax_version']] = []
+                date_source[d['pax_version']].append({
+                    'source': doc['source']['type'], 
+                    'start': doc['start'], 'end': doc['end'], 
+                    'number': doc['number']})
+                if doc['number'] not in date_source['processed']:
+                    date_source['processed'].append(doc['number'])
+
+    #Make the plot
+    fig = plt.figure(figsize=(16,4))
+    plt.style.use('ggplot')    
+    colors={"Rn220": '#eeb868', "AmBe": '#ef767a', 
+            "Kr83m": '#49dcb1', "neutron_generator": '#3A3335', 
+            "none": '#5992c2', "Th228": "#99cc00", "Cs137": "#cc3399"}
+    SR_COLOR = "#99d2ff"
+    labels = ["Not processed"]
+    ax = plt.gca()
+    plt.xlim(min_date, max_date)
+    date_source['not_processed'] = []
+    date_source['Not processed'] = []
+    logger.error("Starting source loop")
+    for d in date_source['all']:
+        if d not in date_source['processed']:
+            date_source['Not processed'].append(date_lookup[d])
+    i = 0
+    keys_sorted = sorted(date_source.keys())
+    for key in keys_sorted:
+        value = date_source[key]
+        if key == 'all' or key == 'processed' or key == 'not_processed':
+            continue
+        index = 0
+        if key != 'Not processed':
+            i+=1
+            index = i
+            labels.append(key)
+        for d in value:
+            enddate = float(mdates.date2num(d['end']))
+            startdate = float(mdates.date2num(d['start']))
+            width = enddate - startdate
+            lab = "background"
+            if d['source'] != 'none':
+                lab=d['source']
+            ax.add_patch(Rectangle(
+                xy=(float(mdates.date2num(d['start'])), 
+                    float(index)), width=width, height=1,
+                color=colors[d['source']], label=lab))
+
+    plt.yticks(range(0, 1+len(labels)), labels)
+    plt.ylim(0, len(labels))
+    hfmt = mdates.DateFormatter('%m/%d')
+    ax.xaxis.set_major_formatter(hfmt)
+    for tick in ax.yaxis.get_major_ticks():
+        tick.tick1line.set_markersize(0)
+        tick.tick2line.set_markersize(0)
+        tick.label1.set_verticalalignment('bottom')
+        tick.label1.set_size(15)
+    
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys(), 
+              loc="upper left", bbox_to_anchor=(1, .8))
+    
+    canvas=FigureCanvas(fig)
+    response=HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response
+    
+@login_required    
+def get_current_exposure(request):
+    # For each calibration source we want to find all 'periods' where this source was used
+    # This is a tiny bit tricky
+    sources = ["AmBe", "Kr83m", "Rn220", "LED"]
+    client = MongoClient(settings.RUNS_DB_ADDR)
+    coll = client['run']['runs_new']
+    # Tried my best. Couldn't figure out an aggregation. For loop it is.
+    ranges = {}
+    for source in sources:
+        cursor = coll.find({
+            "source.type": source, 
+            "number": {"$gt": start_science_run}}).sort("number", 1)
+        ranges[source] = []
+        first = None
+        last = None
+        firstNum = None
+        lastNum = None
+        for doc in cursor:
+            if first is None:
+                first = doc['start']
+                firstNum = doc['number']
+            if last is None:
+                last = doc['start']
+                lastNum = doc['number']
+
+            if abs(doc['number'] - lastNum) < 12:
+                last = doc['start']
+                lastNum = doc['number']
+            else:
+                ranges[source].append([first, last])
+                first = doc['start']
+                last = doc['start']
+                firstNum = doc['number']
+                lastNum = doc['number']
+        if first is not None and last is not None:
+            ranges[source].append([first, last])
+
+    # Make a query to find all 'good' background exposure
+    bg_query =  {
+        # We only use TPC
+        "detector": "tpc",
+        # Only runs within the current science run
+        "number": {"$gt": start_science_run},
+        # No runs tagged bad by the shifters or with other known issues
+        "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess",
+                               "earthquake", "nofield", "lowfield",
+                               "ramping", "source_moving", "crash", "daqcrash",
+                               "triggercrash", "_pmttrip",
+                               "rn220_contamination", "comissioning"]},
+        "trigger.events_built": {"$gt": 100},
+        # We don't need to track LED runs. That's a separate thing.
+        "source.type": {"$nin": ["LED"]}
+    }
+    bg_query['reader.ini.name'] = 'background_stable'
+    bg_query['source.type'] = 'none'    
+    cursor = coll.find(bg_query).sort("number", 1)
+    cdate = []
+    cumulative_runtime = []
+    cumu = 0.
+    for doc in cursor:
+        if 'start' not in doc or 'end' not in doc:
+            continue
+        cdate.append(doc['start'])
+        cumu += (doc['end']-doc['start']).total_seconds() / (60*60*24)
+        cumulative_runtime.append(cumu)
+    fig = plt.figure(figsize=(16, 4))
+    plt.style.use('ggplot')
+    plt.plot(cdate, cumulative_runtime)
+    plt.xlabel("Date")
+    plt.ylabel("Science run time (days)")
+
+    ax = plt.gca()
+
+    # Mark the Rn220 calibrations
+    for rn220 in ranges['Rn220']:
+        p = patches.Rectangle(
+            (mdates.date2num(rn220[0]), 0), 
+            (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 70,
+            alpha=.1, color='b', label="Rn220"
+        )
+        ax.add_patch(p)
+
+    # Mark the Kr83m calibrations
+    for krdate in ranges['Kr83m']:
+        p =  patches.Rectangle(
+            (mdates.date2num(krdate[0]), 0), 
+            (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 70,
+            alpha=.1, color='r', label="Kr83m"
+        )
+        ax.add_patch(p)
+
+    # Mark the AmBe calibration
+    for ambe in ranges['AmBe']:
+        p = patches.Rectangle(
+            (mdates.date2num(ambe[0]), 0), 
+            (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 70,
+            alpha=.1, color='c', label="NR Calibration"
+        )
+        ax.add_patch(p)
+
+    # Mark the AmBe calibration
+    for led in ranges['LED']:
+        p = patches.Rectangle(
+            (mdates.date2num(led[0]), 0), 
+            (mdates.date2num(led[1])-mdates.date2num(led[0])), 70,
+            alpha=.1, color='#999999', label="LED", linewidth=.3
+        )
+        ax.add_patch(p)
+
+    # Funny trick from StackOverflow to limit legend to one entry per string
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys(), loc="upper left",
+               bbox_to_anchor=(1, .8))
+    ymax = int(cumu)*1.1
+    plt.ylim(0, ymax)
+    start_time = mdates.date2num(coll.find_one(
+        {"number": start_science_run})['start'])
+    end_time = mdates.date2num(datetime.datetime.now())
+    plt.xlim(start_time, end_time)
+    
+    canvas=FigureCanvas(fig)
+    response=HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response
+
+'''
+@login_required
 def get_pax_report(request):
-    '''Get what data on midway with what pax version'''
     client = MongoClient(settings.RUNS_DB_ADDR)
     cursor = client['run']['runs_new'].find({"detector": "tpc", "tags.name": "_sciencerun0"}) 
     dat = {"total": {}}
@@ -100,7 +430,7 @@ def get_pax_report(request):
             dat[entry['pax_version']][source] += 1
 
     return HttpResponse(dumps(dat), content_type="application/json")
-            
+'''         
 
 @login_required
 def get_run(request):

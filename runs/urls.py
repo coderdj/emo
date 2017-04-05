@@ -15,7 +15,13 @@ urlpatterns = [
     url(r'^old', login_required( views.runs ), name='runs' ),
     url(r'^processing', login_required(TemplateView.as_view
                                        (template_name='runs/whatdata.html'))),
-    url(r'^getpaxreport', views.get_pax_report, name='get_pax_report'),
+    url(r'^get_processing_progress', views.get_processing_progress, 
+        name='get_processing_progress'),
+    url(r'^get_current_exposure', views.get_current_exposure,
+        name='get_current_exposure'),
+    url(r'^get_exposure_text', views.get_exposure_text, 
+        name='get_exposure_text'),
+    #url(r'^getpaxreport', views.get_pax_report, name='get_pax_report'),
     url(r'^wheres_the_data', views.wheres_the_data, name='wheres_the_data'), 
     url(r'$', login_required(TemplateView.as_view
                                 (template_name="runs/runs_new.html"))),
