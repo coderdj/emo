@@ -280,7 +280,7 @@ function SetPlaylist(data){
 
 	// Badges to indicate which detector
 	console.log(data[i]);
-	row += "<div class='badge-div'>";
+	row += "<div class='badge-div' style='margin-top:5px'>";
 	if(data[i]['running'] == 1)
 	    row+="<span class='label label-success'>Running</span>&nbsp;"
 	else if(data[i]['running'] == 2)
