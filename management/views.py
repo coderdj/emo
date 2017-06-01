@@ -433,8 +433,8 @@ def shift_calendar(request):
     if our_user is None:
         return render(request, "management/shift_calendar.html", retdict)
 
-    if our_user['position'] == "PI" or request.user.username=="coderre":
-        if request.user.username=="coderre":
+    if our_user['position'] == "PI" or request.user.username=="coderre" or request.user.username == "messina":
+        if request.user.username=="coderre" or request.user.username=="messina":
             user_cursor = (db['users'].find({
                 "username": {"$exists": True},
                 "last_name": {"$exists": True},
@@ -511,7 +511,9 @@ def shift_calendar(request):
                                          update_dict}, upsert=False)
             else:
                 if "remove" in signup_form.cleaned_data and signup_form.cleaned_data['remove'] == True:
+                    logger.error("REMOVE SHIFT")                    
                     query['shifter'] = signup_form.cleaned_data['user']
+                    logger.error(query)
                     db['shifts'].remove(query)
                 else:
                     doc = {

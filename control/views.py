@@ -181,6 +181,7 @@ def UpdateQueueList(request):
     try:
         collection.drop()
     except:
+        logger.error("Unable to drop collection in queue update.")
         return HttpResponse({})
 
     # Had to disable csrf because couldn't figure out how to put in json
@@ -191,6 +192,8 @@ def UpdateQueueList(request):
         doc['position'] = n
         collection.insert_one(doc)
         n+=1
+    #logger.error("Updated queue with following settings")
+    #logger.error(pythondict)
     return HttpResponse(status=200)
 
 

@@ -31,7 +31,31 @@
 
 {% endblock %}
 {% block content %}
+<style>.Loading {
+      display:    none;
+      position:   absolute;
+      z-index:    100;
+      top:        0;
+      left:       0;
+      height:     100%;
+      width:      100%;
+      background: #ebebeb;      
+      50% 50%;
+      no-repeat;
+  }
+.phrow{
+  height: calc(100vh - 40px);
+}
+</style>
+<div id="ImpatientLoading" class="Loading" style="visibility:hidden">
+  <div class="col-xs-3 col-xs-offset-5;padding-left:200px;" style="margin-top:150px;left:45%">
+    <img style="width:100px;height:100px;" src="http://2.bp.blogspot.com/-KgvocefQtsg/VUnc3A4jJiI/AAAAAAAABig/khtH3a9ToSQ/s1600/1Intro1.jpg">
+    <br>
+    <br>
+    Page unavailable for 30 seconds
 
+  </div>
+</div>
 <!-- Title bar-->                                                                
 <div class="grid-stack" style="width:100%;margin-top:10px;margin-bottom:10px">
 

@@ -246,11 +246,17 @@ function SetPlaylistTitle(data){
     $("#autoplay_toggle_checkbox").on('switchChange.bootstrapSwitch',
 				      function(){ 
 					  AutoplayToggle(this);
+					  ShowBlocker();
 				      }
 				     );
     
     
 }
+
+function ShowBlocker(){
+    $("#ImpatientLoading").show();
+    setTimeout(function(){ $("#ImpatientLoading").hide(); }, 30000);
+};
 
 function SetPlaylist(data){
     var bodyhtml = "<ul id='playlist_ul' style='padding-left:0px;'>";

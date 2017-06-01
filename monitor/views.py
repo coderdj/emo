@@ -517,6 +517,10 @@ def get_json_event(request):
     config['pax']['input_name'] = path
     config['pax']['events_to_process'] = [event_number]
     config['DEFAULT']['run_number'] = run
+
+    # REMOVE LATER
+    config['MongoDB']['host']='xenon1t-daq.lngs.infn.it'
+    # END
     logger.error(config)
     processor = core.Processor(config_names="XENON1T", config_dict=config)
     logger.error("HERE")

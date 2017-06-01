@@ -495,7 +495,7 @@ class RunsResource(Resource):
 
         # Status needed for new entry
         updateDict['status'] = request['status']
-        updateDict['creation_time'] = datetime.datetime.utcnow(),                     
+        updateDict['creation_time'] = datetime.datetime.utcnow()
 
         # Now add a new entry
         res = self._db()[settings.RUNS_DB_COLLECTION].update_one(

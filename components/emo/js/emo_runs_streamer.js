@@ -435,7 +435,7 @@ function GetDataState(data){
              "midway-login1": 0,
              "rucio-catalogue": 0,
              "tsm-server": 0,
-             "nikhef-srm": 0
+             "osg": 0
 	    };
 
     // status 0: none, 1: transferring/triggering, 2: transferred/triggered
@@ -548,6 +548,12 @@ function RemoveTag(id, name, runname, detector){
 }
 
 function NewTag(form, name, detector){
+    Ply.dialog("confirm", "You want to add a new tag? Keep in mind this may exclude the run from analysis!").done(function(ui){
+	  ReallyNewTag(form, name, detector);
+});
+}
+
+function ReallyNewTag(form, name, detector){
     arr = $(form).serializeArray();
     var id="";
     var content="";

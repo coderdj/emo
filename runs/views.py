@@ -39,7 +39,7 @@ sr1_query = {
     "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess", 
                            "earthquake", "nofield", "lowfield", 
                            "ramping", "source_moving", "crash", "daqcrash",
-                           "triggercrash", "_pmttrip", 
+                           "triggercrash", "_pmttrip", "noanode",
                            "rn220_contamination", "comissioning"]},
     # Anything with less than 100 events (half-minute run time in background) likely failed
     "trigger.events_built": {"$gt": 100},
@@ -118,7 +118,7 @@ def get_exposure_text(request):
              "tags.name": {"$nin": 
                            ["bad", "messy", "test", "donotprocess", 
                             "earthquake", "nofield", "lowfield", 
-                            "ramping", "source_moving", "crash", 
+                            "ramping", "source_moving", "crash", "noanode",
                             "daqcrash", "triggercrash", "_pmttrip", 
                             "rn220_contamination", "comissioning"]},
              "trigger.events_built": {"$gt": 100}}
@@ -183,7 +183,7 @@ def get_processing_progress(request):
     "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess",
                            "earthquake", "nofield", "lowfield",
                            "ramping", "source_moving", "crash", "daqcrash",
-                           "triggercrash", "_pmttrip",
+                           "triggercrash", "_pmttrip", "noanode",
                            "rn220_contamination", "comissioning"]},
         "trigger.events_built": {"$gt": 100},
     # We don't need to track LED runs. That's a separate thing.
@@ -357,7 +357,7 @@ def get_current_exposure(request):
     for rn220 in ranges['Rn220']:
         p = patches.Rectangle(
             (mdates.date2num(rn220[0]), 0), 
-            (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 70,
+            (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 700,
             alpha=.1, color='b', label="Rn220"
         )
         ax.add_patch(p)
@@ -366,7 +366,7 @@ def get_current_exposure(request):
     for krdate in ranges['Kr83m']:
         p =  patches.Rectangle(
             (mdates.date2num(krdate[0]), 0), 
-            (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 70,
+            (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 700,
             alpha=.1, color='r', label="Kr83m"
         )
         ax.add_patch(p)
@@ -375,7 +375,7 @@ def get_current_exposure(request):
     for ambe in ranges['AmBe']:
         p = patches.Rectangle(
             (mdates.date2num(ambe[0]), 0), 
-            (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 70,
+            (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 700,
             alpha=.1, color='c', label="NR Calibration"
         )
         ax.add_patch(p)
@@ -384,7 +384,7 @@ def get_current_exposure(request):
     for led in ranges['LED']:
         p = patches.Rectangle(
             (mdates.date2num(led[0]), 0), 
-            (mdates.date2num(led[1])-mdates.date2num(led[0])), 70,
+            (mdates.date2num(led[1])-mdates.date2num(led[0])), 700,
             alpha=.1, color='#999999', label="LED", linewidth=.3
         )
         ax.add_patch(p)
@@ -493,7 +493,8 @@ def last_run_per_det(request):
 @login_required
 def runs_stream(request):
 
-    filter_query = {"detector": "tpc"}
+    #filter_query = {"detector": "tpc"}
+    filter_query = {}
 
     # Connect to pymongo
     client = MongoClient(settings.RUNS_DB_ADDR)
@@ -511,7 +512,7 @@ def runs_stream(request):
             limit = int(request.GET['limit'])
         if "offset" in request.GET:
             offset = int(request.GET['offset'])
-        if "detector" in request.GET:
+        if "detector" in request.GET and request.GET['detector'] != 'all':
             filter_query['detector'] = request.GET['detector']
         if "startdate" in request.GET and "enddate" in request.GET:
             start = datetime.datetime.strptime(request.GET['startdate'], "%Y-%m-%d").date()
@@ -720,7 +721,8 @@ def addTag(request):
                 # Make sure the requesting user is allowed to remove the tag
                 for etag in doc['tags']:
                     if (etag['name'] == request.GET['tagname'] and
-                        etag['user'] == request.user.username):
+                        (etag['user'] == request.user.username
+                         or request.user.username == "coderre")):
                         update['$pull'] = {"tags": {"name": request.GET['tagname']}}
             
             if update!={}:
