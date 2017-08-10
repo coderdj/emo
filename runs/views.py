@@ -283,7 +283,7 @@ def get_processing_progress(request):
 def get_current_exposure(request):
     # For each calibration source we want to find all 'periods' where this source was used
     # This is a tiny bit tricky
-    sources = ["AmBe", "Kr83m", "Rn220", "LED"]
+    sources = ["AmBe", "neutron_generator", "Kr83m", "Rn220", "LED"]
     client = MongoClient(settings.RUNS_DB_ADDR)
     coll = client['run']['runs_new']
     # Tried my best. Couldn't figure out an aggregation. For loop it is.
@@ -349,7 +349,7 @@ def get_current_exposure(request):
     plt.style.use('ggplot')
     plt.plot(cdate, cumulative_runtime)
     plt.xlabel("Date")
-    plt.ylabel("Science run time (days)")
+    plt.ylabel("Sci-ence run time (days)")
 
     ax = plt.gca()
 
@@ -379,7 +379,13 @@ def get_current_exposure(request):
             alpha=.1, color='c', label="NR Calibration"
         )
         ax.add_patch(p)
-
+    for ng in ranges["neutron_generator"]:
+        p = patches.Rectangle(
+            (mdates.date2num(ng[0]), 0),
+            (mdates.date2num(ng[1])-mdates.date2num(ng[0])), 700,
+            alpha=.1, color='c', label="NR Calibration"
+        )
+        ax.add_patch(p)
     # Mark the AmBe calibration
     for led in ranges['LED']:
         p = patches.Rectangle(
@@ -581,6 +587,8 @@ def runs_stream(request):
         "number": 1,
         "reader.self_trigger": 1
     }
+
+
     #logger.error(filter_query)
     retset = {}
     if limit!=0 and offset!=0:
@@ -590,7 +598,42 @@ def runs_stream(request):
     else:
         retset = collection.find( filter_query, projection ).sort( "name", -1 )
 
-    return HttpResponse( dumps(retset),
+    # does this help?
+    retvals = []
+    for doc in retset:
+        rd = {
+            "detector": doc['detector'],
+            "name": doc['name'],
+            "start": doc['start'],
+            "source": doc['source'],
+            "reader": {"ini": {"name": doc['reader']['ini']['name']},
+                       "self_trigger": doc['reader']['self_trigger']
+                   },
+            "tags": [],
+            "comments": [],
+            "trigger": {"events_built": 0},
+            "number": None,
+            "data": []
+        }
+        if "trigger" in doc and "events_built" in doc['trigger']:
+            rd['trigger']['events_built'] = doc['trigger']['events_built']
+        if "tags" in doc:
+            rd['tags'] = doc['tags']
+        if "comments" in doc:
+            rd['comments'] = doc['comments']
+        if "number" in doc:
+            rd['number'] = doc['number']
+        if 'data' in doc:
+            for d in doc['data']:
+                rd['data'].append(
+                    {'host': d['host'],
+                     'status': d['status'],
+                     'type': d['type']
+                 })
+        retvals.append(rd)
+                    
+
+    return HttpResponse( dumps(retvals),
                          #       "form" : filter_form,
                           #      "query": filter_query}, 
                          content_type="application/json" )

@@ -191,6 +191,8 @@
 		<div class="row">
 		  <div class="col-xs-2"><strong>Updated: </strong></div>
 		  <div class="col-xs-10" id="mongo_update_time"></div>
+		  <div class="col-xs-2"><strong>Deleter: </strong></div>
+		  <div class="col-xs-10" id="deleter_update_time"></div>
                   <div class="col-xs-2"><strong>eb0</strong></div>
                   <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
                        id="eb0_progress"></div>
@@ -556,6 +558,20 @@ console.log(data);
          var ttime = tdate.getFullYear()+"."+('0'+(1+tdate.getMonth())).slice(-2)+"."+('0'+tdate.getDate()).slice(-2)+
 				" at "+('0'+tdate.getHours()).slice(-2)+":"+('0'+tdate.getMinutes()).slice(-2);
          document.getElementById("trigger_time").innerHTML=ttime;
+				
+        if(data["deleter_timestamp"]!=null){
+
+	   var deldate = new Date((parseInt(data['deleter_timestamp']['$date'])));
+        var deltime = deldate.getFullYear()+"."+('0'+(1+deldate.getMonth())).slice(-2)+"."+
+                                   ('0'+deldate.getDate()).slice(-2)+
+                                " at "+('0'+deldate.getHours()).slice(-2)+":"+
+                                   ('0'+deldate.getMinutes()).slice(-2);
+	   document.getElementById("deleter_update_time").innerHTML=deltime;
+        }
+        else{
+           document.getElementById("deleter_update_time").innerHTML="Not found";
+        }
+
         var docdate = new Date(1000*(parseFloat(data['time'])));
 	var doctime = docdate.getFullYear()+"."+('0'+(1+docdate.getMonth())).slice(-2)+"."+
 				   ('0'+docdate.getDate()).slice(-2)+
@@ -575,22 +591,22 @@ console.log(data);
          else
             document.getElementById("eb_working").innerHTML="Nope";
 	document.getElementById("eb0_progress").innerHTML=GetGradProgress(
-           data['eb0:27000']['storageSize']/60e9, "in cache ",0.5, 0.7, 
+           data['eb0:27000']['storageSize']/500e9, "in cache ",0.5, 0.7, 
 				   data['eb0:27000']['storageSize']/1e9, "GB");
 document.getElementById("eb1_progress").innerHTML=GetGradProgress(
-	data['eb1:27000']['storageSize']/60e9, "in cache",0.5, 0.7,
+	data['eb1:27000']['storageSize']/500e9, "in cache",0.5, 0.7,
                                    data['eb1:27000']['storageSize']/1e9, "GB");
 document.getElementById("eb2_progress").innerHTML=GetGradProgress(
-		data['eb2:27000']['storageSize']/60e9, "in cache",0.5, 0.7,
+		data['eb2:27000']['storageSize']/500e9, "in cache",0.5, 0.7,
                                    data['eb2:27000']['storageSize']/1e9, "GB");
         var pctarray = [];
 var staticdir = "{% static "emo/js" %}";
         pctarray.push(busy);
-        pctarray.push(data['eb0:27000']['storageSize']/60e9);
-        pctarray.push(data['eb1:27000']['storageSize']/60e9);
-        pctarray.push(data['eb2:27000']['storageSize']/60e9);
+        pctarray.push(data['eb0:27000']['storageSize']/500e9);
+        pctarray.push(data['eb1:27000']['storageSize']/500e9);
+        pctarray.push(data['eb2:27000']['storageSize']/500e9);
 	pctarray.push(data['eventbuilder_info']['eventbuilder_queue_size']/10000);
-				   health = GetHealth(pctarray, staticdir, tdate);
+				   health = GetHealth(pctarray, staticdir, tdate, deldate);
 				   console.log(health);
  document.getElementById("theimage").innerHTML=health['image'];
 	document.getElementById("thetext").innerHTML=health['text'];

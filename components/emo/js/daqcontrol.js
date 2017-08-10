@@ -742,7 +742,7 @@ function GetGradProgress(percent, name, warnpct, errpct, rawval, rawunit){
 
 }
 
-function GetHealth(pctarray, static_dir, update_time){
+function GetHealth(pctarray, static_dir, update_time, deleter_time){
     health="Good";
     largest = 0.;
     for(i=0; i<pctarray.length;i+=1){
@@ -790,5 +790,14 @@ function GetHealth(pctarray, static_dir, update_time){
     }
     if(timeDiff < 60)
 	document.getElementById("stale_header").innerHTML = "";
+
+    var dtimediff = 0;
+    if(! isNaN( deleter_time.getTime()) )
+	dtimediff = Math.abs(now.getTime() - deleter_time.getTime())/1000.;
+    if(isNaN( update_time.getTime() ) || timeDiff > 300){
+        health = "<strong style='color:red'>Data deleter inactive</strong>";
+        image="<img src='"+static_dir+"/doom_faces/clean_pissed.png' style='width:50px' class='center-block'>";
+    }
+
     return {"text": health, "image": image};
 }

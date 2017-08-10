@@ -35,9 +35,14 @@ def GetTPCEventRate(request):
                             settings.GEN_PW+"@gw:27018"+"/"
                             +settings.GEN_DB)
     monDB = monClient["trigger_monitor"]
-    monCollections = list(monDB.collection_names())
-    monCollections.sort(reverse=True)
-    newest = monCollections[0]
+    try:
+        monCollections = list(monDB.collection_names())        
+        monCollections.sort(reverse=True)
+        newest = monCollections[0]
+    except:
+        return HttpResponse(dumps({}),
+                            content_type="application/json")
+
 
     client = MongoClient(settings.RUNS_DB_ADDR)
     runsDB = client[ settings.RUNS_DB_NAME ][settings.RUNS_DB_COLLECTION]
@@ -50,8 +55,16 @@ def GetTPCEventRate(request):
         "rnumber": None, "eb0": { "storageSize": 0, "dataSize": 0, "collections": 0},
         "eb1": { "storageSize": 0, "dataSize":0, "collections": 0},
         "eb2": { "storageSize": 0, "dataSize":0, "collections": 0},
-        "eventbuilder_info": None
+        "eventbuilder_info": None, "deleter_timestamp": None
     }
+    
+    # Grab the most recent deleter doc and record the time
+    try:
+        deleterdoc = list(pipelineDB.find({"name": "deleter"}).sort("time", -1).limit(1))[0]
+        retdoc['deleter_timestamp'] = deleterdoc['time']
+    except Exception as E:
+        logger.error(str(E))
+        retdoc['deleter_timestamp'] = None
 
     # Get most recent status doc
     rnum = newest

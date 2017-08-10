@@ -162,15 +162,48 @@ class StatusResource(Resource):
             }
 
         # Alerts
+        # 1: DAQ error 2: DB error 3: MV error 4: trig error 5: MV/trig
         try:
             logcollection = self._db()["log"]
-            if logcollection.find({"priority": {"$gt": 2, "$lt": 5}}).count() != 0:
+            cursor = logcollection.find({"priority": {"$gt": 2, "$lt": 5}})
+            
+            if cursor.count() != 0:
                 ret["alerts"] = 1
-        except:
+
+            # Now try to guess which system done messed up
+            breakout = False
+            for doc in cursor:
+                if breakout:
+                    break
+
+                # TPC DAQ error in readers
+                for reader in ['reader0', 'reader1', 'reader2', 'reader3',
+                               'reader4', 'reader6', 'reader7']:
+                    if reader in doc['text']:
+                        ret['alerts'] = 1
+                        breakout = True
+
+                # MV DAQ is reader5
+                if 'reader5' in doc['text']:
+                    if ret['alerts'] == 4 or ret['alerts'] == 5:
+                        ret['alerts'] = 5
+                        continue
+                    ret['alerts'] = 3
+
+                # Super long error means trigger
+                if len(doc['text']) > 500 or doc['user'] == 'trigger':
+                    if ret['alerts'] == 3 or ret['alerts'] ==5:
+                        ret['alerts'] = 5
+                        continue
+                    ret['alerts'] = 4
+            
+            
+        except Exception as e:
+            logger.error(str(e))
             ret['alerts'] = 2
 
         # This line disables SC alarms!
-        #ret['alerts'] = 0
+        ret['alerts'] = 0
 
         nodes = ["reader5"]
         if det == "tpc":
