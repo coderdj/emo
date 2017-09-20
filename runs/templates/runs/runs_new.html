@@ -376,17 +376,27 @@ console.log("Refresh");
 	<input type="hidden" name="id" value="{% verbatim %}{{ oid }}{% endverbatim%}"/>
 	<input type="hidden" name="content" value="" id="tagid"/>
 	<input class="btn btn-warning" name="content" value="messy"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>	
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="This run might be bad"/>	
 	<input class="btn btn-default" name="content" value="nofield"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="The electric field is off"/>
 	<input class="btn btn-danger" name="content" value="bad"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="This run is definitely bad"/>
 	<input class="btn btn-danger" name="content" value="donotprocess"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="This run is in some test mode so don't process"/>
 	<input class="btn btn-info" name="content" value="test"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="This run is in a test mode but you can process"/>
 	<input class="btn btn-default" name="content" value="ramping"
-	       type="submit" onclick="$('#tagid').val(this.value);"/>
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="Something (field, PMT) is ramping"/>
+	<input class="btn btn-warning" name="content" value="PMTtrip"
+	       type="submit" onclick="$('#tagid').val(this.value);"
+	       title="PMT tripped"/>
+
       </div>
     </form>
   <form class='new_tag_form' method='get' 

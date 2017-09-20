@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% load auth_extras %}
 {% load staticfiles %}
 {% block title %}User List{% endblock %}
 {% block content %}
+
 <script src="{% static "jquery-ui-1.11.1/jquery-ui.js"%}"></script>
 <script src="{% static "js/summernote.min.js"%}"></script>
 <link href="{% static "jquery-ui-1.11.1/jquery-ui.css" %}" rel="stylesheet">
@@ -44,7 +46,9 @@ background-color:white;
     <!--<h3>User Management</h3>-->
   </div>
   <div class="col-xs-1 col-sm-1 col-xs-offset-8">
-    {% if request.user.username == "messina" or request.user.username == "coderre" or request.user.username == "murra" or request.user.username == "pizzella" %}
+    
+    {% if request.user|has_group:"user_admins" %} 
+
     <button data-toggle="modal" onclick="NewUser()" class="btn btn-info pull-right" style="margin-top:10px;">+ NewUser </button>
     {% endif %}
   </div>
@@ -229,7 +233,8 @@ console.log(table_data[0]);
                 "className":      'details-edit',
                 "orderable":      false,
                 "data":           null,
-                {% if request.user.username == "messina" or request.user.username == "coderre" or request.user.username == "pizzella" %}
+{% if request.user|has_group:"user_admins" %} 
+
                 "defaultContent": '<button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this)">Edit</button>'
                {% else %}
                "defaultContent": '<button class="btn btn-default disabled">Edit</button>'

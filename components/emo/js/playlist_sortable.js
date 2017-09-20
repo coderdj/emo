@@ -229,7 +229,11 @@ function SetPlaylistTitle(data){
     if( ( first_tpc == null && first_mv == null && document.autoplay == true) ||
 	( first_tpc == 2 && first_mv == 2) ||
 	( first_tpc == 1 && second_tpc == 2) ||
-	( first_mv == 1 && second_mv == 2) ){
+	( first_mv == 1 && second_mv == 2) || 
+	( first_tpc == 2 && first_mv == null) ||
+	(first_tpc == null && first_mv ==2) ||
+      (first_tpc == 1 && first_mv == 2) || 
+      (first_mv == 1 && first_tpc ==2 )){
 	html += "<div class='playlist-play-toggle'>Run DAQ: "+
 	    "<input type='checkbox' id='autoplay_toggle_checkbox' checked data-toggle='toggle'></input></div>";
     }

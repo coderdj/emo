@@ -92,8 +92,8 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
     var options = {
 	view: view,                  //View function to render table rows.
 	data_url: url,               //Data fetching url
-	stream_after: 0.1,           //Start streaming after 2 secs
-	fetch_data_limit: 2000,       //Streaming data in batch of 500 
+	stream_after: 0.01,           //Start streaming after 2 secs
+	fetch_data_limit: 300,       //Streaming data in batch of 500 
 
 	// Undocumented option baby
 	params: {

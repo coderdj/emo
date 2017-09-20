@@ -341,7 +341,9 @@ def CreateShiftTemplate(doc):
     shifts_per_week = doc['shifts_per_week']
 
     db['shifts'].remove({"year": year})
-
+    logger.error(end_date)
+    logger.error(start_date)
+    logger.error("HERE")
     while start_date < end_date:
         for i in range(0, shifts_per_week):
             shift_type="shifter"
@@ -412,6 +414,8 @@ def shift_rules(request):
                 logger.error("Insert failed")
                 logger.error(e)
                 shift_resp={"ERR":e}
+            
+            # Uncomment to put in all the empty shift days. 
             #CreateShiftTemplate(doc)
             # create new def
             shift_def = new_shift_def

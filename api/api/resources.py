@@ -163,6 +163,7 @@ class StatusResource(Resource):
 
         # Alerts
         # 1: DAQ error 2: DB error 3: MV error 4: trig error 5: MV/trig
+        errtxt = ""
         try:
             logcollection = self._db()["log"]
             cursor = logcollection.find({"priority": {"$gt": 2, "$lt": 5}})
@@ -175,23 +176,27 @@ class StatusResource(Resource):
             for doc in cursor:
                 if breakout:
                     break
+                
+                errtext = doc['message']
+                erruser = doc['sender']
+                errtxt = dumps(doc)
 
                 # TPC DAQ error in readers
                 for reader in ['reader0', 'reader1', 'reader2', 'reader3',
                                'reader4', 'reader6', 'reader7']:
-                    if reader in doc['text']:
+                    if reader in errtext:
                         ret['alerts'] = 1
                         breakout = True
 
                 # MV DAQ is reader5
-                if 'reader5' in doc['text']:
+                if 'reader5' in errtext:
                     if ret['alerts'] == 4 or ret['alerts'] == 5:
                         ret['alerts'] = 5
                         continue
                     ret['alerts'] = 3
 
                 # Super long error means trigger
-                if len(doc['text']) > 500 or doc['user'] == 'trigger':
+                if len(errtext) > 500 or erruser == 'trigger':
                     if ret['alerts'] == 3 or ret['alerts'] ==5:
                         ret['alerts'] = 5
                         continue
@@ -200,10 +205,11 @@ class StatusResource(Resource):
             
         except Exception as e:
             logger.error(str(e))
+            logger.error(errtxt)
             ret['alerts'] = 2
 
         # This line disables SC alarms!
-        ret['alerts'] = 0
+        #ret['alerts'] = 0
 
         nodes = ["reader5"]
         if det == "tpc":

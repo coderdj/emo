@@ -102,9 +102,13 @@ def run_mode_config(request):
                 thebson['date'] = datetime.datetime.now(datetime.timezone.utc)
                 if '_id' in thebson.keys():
                     del thebson['_id']
-                print(thebson)
+                logger.error(thebson)
                 try:
-                    collection.update({"name": thebson['name']}, {"$set": thebson}, upsert=True)
+                    collection.remove({"name": thebson['name']})
+                except:
+                    print("Remove doc that doesn't exist")
+                try:
+                    collection.insert(thebson)
                 except Exception as e:
                     logger.error("Insert failed")
                     logger.error(e)
@@ -118,7 +122,7 @@ def run_mode_config(request):
     detectors = collection.distinct("detector")
     ret = []
     for det in detectors:
-        modes = collection.find({"detector": det})
+        modes = collection.find({"detector": det}).sort("name", 1)
         first = True
         for mode in modes:
             dic = {}
