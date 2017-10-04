@@ -30,6 +30,10 @@ from matplotlib.figure import Figure
 # Get an instance of a logger          
 logger = logging.getLogger('emo')
 start_science_run = 6387
+last_sr1_tag = 12515
+start_sr1 = 6387
+start_sr0=3936
+last_tagging = 12515
 sr1_query = {
     # We only use TPC
     "detector": "tpc", 
@@ -56,7 +60,8 @@ def wheres_the_data(request):
     coll = client['run']['runs_new']
     queries = {
         "Science Run 0": {"detector": "tpc", "tags.name": "_sciencerun0"},
-        "Science Run 1": {"detector": "tpc", "number": {"$gt": 6731}}
+        "Science Run 1": {"$or": [{"detector": "tpc", "tags.name": "_sciencerun1"},
+                                  {"number": {"$gt": last_sr1_tag}}]}
     }
     ret = {}
 
@@ -281,17 +286,21 @@ def get_processing_progress(request):
     
 @login_required    
 def get_current_exposure(request):
+    '''
+    Make the fancy plot that shows the exposure of XENON1T over time
+    '''
     # For each calibration source we want to find all 'periods' where this source was used
     # This is a tiny bit tricky
-    sources = ["AmBe", "neutron_generator", "Kr83m", "Rn220", "LED"]
-    client = MongoClient(settings.RUNS_DB_ADDR)
-    coll = client['run']['runs_new']
+    sources = ["AmBe", "Kr83m", "Rn220", "LED", "neutron_generator"]
+    client = MongoClient(settings.RUNS_DB_ADDR)                                                         
+    coll = client['run']['runs_new'] 
+
     # Tried my best. Couldn't figure out an aggregation. For loop it is.
     ranges = {}
     for source in sources:
-        cursor = coll.find({
-            "source.type": source, 
-            "number": {"$gt": start_science_run}}).sort("number", 1)
+        cursor = coll.find({"source.type": source, 
+                            "number": {"$gt": start_sr0},        
+                        }).sort("number", 1)
         ranges[source] = []
         first = None
         last = None
@@ -304,8 +313,7 @@ def get_current_exposure(request):
             if last is None:
                 last = doc['start']
                 lastNum = doc['number']
-
-            if abs(doc['number'] - lastNum) < 12:
+            if abs(doc['number'] - lastNum) < 15:
                 last = doc['start']
                 lastNum = doc['number']
             else:
@@ -314,99 +322,97 @@ def get_current_exposure(request):
                 last = doc['start']
                 firstNum = doc['number']
                 lastNum = doc['number']
-        if first is not None and last is not None:
-            ranges[source].append([first, last])
-
+        ranges[source].append([first, last])
+        
     # Make a query to find all 'good' background exposure
-    bg_query =  {
-        # We only use TPC
-        "detector": "tpc",
-        # Only runs within the current science run
-        "number": {"$gt": start_science_run},
-        # No runs tagged bad by the shifters or with other known issues
-        "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess",
-                               "earthquake", "nofield", "lowfield",
-                               "ramping", "source_moving", "crash", "daqcrash",
-                               "triggercrash", "_pmttrip",
-                               "rn220_contamination", "comissioning"]},
-        "trigger.events_built": {"$gt": 100},
-        # We don't need to track LED runs. That's a separate thing.
-        "source.type": {"$nin": ["LED"]}
-    }
-    bg_query['reader.ini.name'] = 'background_stable'
-    bg_query['source.type'] = 'none'    
-    cursor = coll.find(bg_query).sort("number", 1)
+    #cursor = coll.find({"tags.name": {"$in": good_tags}, "reader.ini.name": "background_stable"})
+    good_tags = ["_sciencerun0", "_sciencerun1"]
+    cursor = coll.find(
+        {"$or": [{"tags.name": {"$in": good_tags}, "reader.ini.name": "background_stable"},
+                 {"number": {"$gt": last_tagging},
+                  "tags.name": {"$nin": ["_sciencerun1_candidate", "_sciencerun0_candidate"]},
+                  "tags.name": {"$nin": ["bad", "messy", "test", "donotprocess", "earthquake", 
+                                         "nofield", "lowfield", "ramping", "source_moving", "crash", "daqcrash",
+                                         "triggercrash", "_pmttrip", "rn220_contamination", "comissioning"]},
+                  "reader.ini.name": "background_stable",
+                  "source.type": "none",
+                  "trigger.events_built": {"$gt": 100}
+              }]}).sort("number", 1)    
+
     cdate = []
     cumulative_runtime = []
     cumu = 0.
     for doc in cursor:
-        if 'start' not in doc or 'end' not in doc:
-            continue
         cdate.append(doc['start'])
         cumu += (doc['end']-doc['start']).total_seconds() / (60*60*24)
         cumulative_runtime.append(cumu)
-    fig = plt.figure(figsize=(16, 4))
-    plt.style.use('ggplot')
+
+    # Plot everything. Sorry messy.
+    fig = plt.figure(figsize=(18,6))
+    #plt.style.use('ggplot')
     plt.plot(cdate, cumulative_runtime)
-    plt.xlabel("Date")
-    plt.ylabel("Sci-ence run time (days)")
+    plt.xlabel("Date", fontsize=20)
+    plt.ylabel("Science run time (days)", fontsize=18)
 
     ax = plt.gca()
-
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label.set_fontsize(14) 
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label.set_fontsize(14) 
     # Mark the Rn220 calibrations
     for rn220 in ranges['Rn220']:
         p = patches.Rectangle(
-            (mdates.date2num(rn220[0]), 0), 
-            (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 700,
-            alpha=.1, color='b', label="Rn220"
+            (mdates.date2num(rn220[0]), 0), (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 250,
+            alpha=.2, color='b', label="Rn220"
         )
         ax.add_patch(p)
 
     # Mark the Kr83m calibrations
     for krdate in ranges['Kr83m']:
         p =  patches.Rectangle(
-            (mdates.date2num(krdate[0]), 0), 
-            (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 700,
-            alpha=.1, color='r', label="Kr83m"
+            (mdates.date2num(krdate[0]), 0), (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 250,
+            alpha=.2, color='r', label="Kr83m"
         )
         ax.add_patch(p)
 
     # Mark the AmBe calibration
     for ambe in ranges['AmBe']:
         p = patches.Rectangle(
-            (mdates.date2num(ambe[0]), 0), 
-            (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 700,
-            alpha=.1, color='c', label="NR Calibration"
+            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
+            alpha=.2, color='c', label="AmBe Calibration"
         )
         ax.add_patch(p)
-    for ng in ranges["neutron_generator"]:
+    for ambe in ranges['neutron_generator']:
         p = patches.Rectangle(
-            (mdates.date2num(ng[0]), 0),
-            (mdates.date2num(ng[1])-mdates.date2num(ng[0])), 700,
-            alpha=.1, color='c', label="NR Calibration"
+            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
+            alpha=.2, color='g', label="NG Calibration"
         )
         ax.add_patch(p)
-    # Mark the AmBe calibration
+
+    # Mark the LED calibration
     for led in ranges['LED']:
         p = patches.Rectangle(
-            (mdates.date2num(led[0]), 0), 
-            (mdates.date2num(led[1])-mdates.date2num(led[0])), 700,
-            alpha=.1, color='#999999', label="LED", linewidth=.3
+            (mdates.date2num(led[0]), 0), (mdates.date2num(led[1])-mdates.date2num(led[0])), 250,
+            alpha=.2, color='#333333', label="LED", linewidth=.3
         )
         ax.add_patch(p)
+
+    # ADD QUAKE IN JANUARY
+    d = datetime.datetime(2017, 1, 18, 12, 0)
+    md = mdates.date2num(d)
+    plt.plot([md,md], [0, 250], c='k', linestyle='--', linewidth=2)
 
     # Funny trick from StackOverflow to limit legend to one entry per string
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(), loc="upper left",
-               bbox_to_anchor=(1, .8))
-    ymax = int(cumu)*1.1
+    plt.legend(by_label.values(), by_label.keys(), loc="upper left", fontsize=16)
+    ymax = int(cumu)*1.05
     plt.ylim(0, ymax)
-    start_time = mdates.date2num(coll.find_one(
-        {"number": start_science_run})['start'])
+    start_time = mdates.date2num(coll.find_one({"tags.name": {"$in": good_tags}})['start'])
     end_time = mdates.date2num(datetime.datetime.now())
     plt.xlim(start_time, end_time)
-    
+    plt.tight_layout()
+
     canvas=FigureCanvas(fig)
     response=HttpResponse(content_type='image/png')
     canvas.print_png(response)

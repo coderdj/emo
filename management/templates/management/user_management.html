@@ -85,7 +85,72 @@ background-color:white;
   </tbody>
 </table>
 
-
+<div class="modal fade" id="userDetailModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+	<button type="button" class="close" 
+		data-dismiss="modal" aria-hidden="true">close
+	</button>
+	<h4 class="modal-title" id="detail_title">User Detail</h4>     
+      </div>         
+      <div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Family name: </strong></div>
+	  <div class="col-sm-6"><span id="detail_last_name"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>First name: </strong></div>
+	  <div class="col-sm-6"><span id="detail_first_name"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+          <div class="col-sm-6"><strong>Nickname: </strong></div>
+          <div class="col-sm-6"><span id="detail_nickname"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Institute: </strong></div>
+	  <div class="col-sm-6"><span id="detail_institute"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Position: </strong></div>
+	  <div class="col-sm-6"><span id="detail_position"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Start date: </strong></div>
+	  <div class="col-sm-6"><span id="detail_start_date"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>End date: </strong></div>
+	  <div class="col-sm-6"><span id="detail_end_date">None</span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>LNGS ID: </strong></div>
+	  <div class="col-sm-6"><span id="detail_username"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Email: </strong></div>
+	  <div class="col-sm-6"><span id="detail_email"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Skype: </strong></div>
+	  <div class="col-sm-6"><span id="detail_skype_id"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Github/gitter: </strong></div>
+	  <div class="col-sm-6"><span id="detail_github_id"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>Phone: </strong></div>
+	  <div class="col-sm-6"><span id="detail_cell"></span></div>
+	</div>
+	<div class="row" style="margin-top:5px">
+	  <div class="col-sm-6"><strong>High score: </strong></div>
+	  <div class="col-sm-6"><span id="detail_g_id"></span></div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal fade" id="userEditModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -133,40 +198,56 @@ background-color:white;
 <script>
 var table = null;
 var detail_address="/equipment/get_actions";
-function EditEntry(button){
+function EditEntry(button, edit){
+  prefix = "detail_";
+  if (edit == true) prefix = "id_";
+  
   found = false;
   var tr = $(button).closest('tr');
   var row = table.row(tr);
-var data = row.data();
+  var data = row.data();
   $("#user_form").trigger("reset");
   for (var key in data) {
+     
      if(key=="actions")
         continue;
      if (data.hasOwnProperty(key) && key!="_id" && key!="name") {
         if(key=="training" || key=="responsible"){
-
-if(data[key]==true)
-    document.getElementById("id_"+key).checked = true;
-else
-    document.getElementById("id_"+key).checked = false;
-
+            if(!edit)
+                continue;
+            if(data[key]==true)
+                document.getElementById(prefix+key).checked = true;
+             else
+                 document.getElementById("id_"+key).checked = false;
         }
         else if(key == "start_date" || key == "end_date"){
            date = (new Date(data[key]["$date"]));
            valstring = date.toISOString().slice(0,10);
-           document.getElementById("id_"+key).value=valstring;
+           if(edit)
+               document.getElementById(prefix+key).value=valstring;
+           else
+               document.getElementById(prefix+key).innerHTML=valstring;
          }
-         else if(key != "g_id"){
+         else if(key != "g_id" || (!edit && key != "name")){
 console.log(key);
-             document.getElementById("id_"+key).value=data[key];
-}
-     }
-}
+           if(edit)
+              document.getElementById(prefix+key).value=data[key];
+           else
+              document.getElementById(prefix+key).innerHTML = data[key];
+      }
+   }
+  }
  
 
   // Open dialog
-  $('#userEditModal').modal('show');
-
+  if(edit==true){
+    $('#userEditModal').modal('show');
+    $('#userDetailModal').modal('hide');
+  }
+  else{
+    $('#userDetailModal').modal('show');
+    $('#userEditModal').modal('hide');
+  }
 }; // end listener for detail click
 
 
@@ -235,9 +316,9 @@ console.log(table_data[0]);
                 "data":           null,
 {% if request.user|has_group:"user_admins" %} 
 
-                "defaultContent": '<button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this)">Edit</button>'
+                "defaultContent": '<button class="btn btn-default btn-xs" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:#aaaaaa" onClick="EditEntry(this, false)">Detail</button><button class="btn btn-default btn-xs btn-edit" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:white" onClick="EditEntry(this, true)">Edit</button>'
                {% else %}
-               "defaultContent": '<button class="btn btn-default disabled">Edit</button>'
+               "defaultContent": '<button class="btn btn-default btn-xs" style="font-size:8pt;padding-top:0px;padding-bottom:0px;margin-bottom:0px;background-color:#aaaaaa" onClick="EditEntry(this, false)">Detail</button><button class="btn btn-default disabled">Edit</button>'
                {% endif %}
             },],
            "iDisplayLength": 50,
