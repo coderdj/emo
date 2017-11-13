@@ -2,7 +2,8 @@ from pymongo import MongoClient, ASCENDING, DESCENDING
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util, objectid
-from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect
+from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect 
+from django.http import StreamingHttpResponse
 import pickle
 #from bokeh.plotting import figure
 #from bokeh.resources import CDN
@@ -436,8 +437,8 @@ def trigger_get_data(request):
     except Exception as e:
         logger.error("Couldn't encode " + str(e))
         return HttpResponse({}, content_type="application/json")
-    return HttpResponse(json_ret, content_type="application/json")
-
+    #return HttpResponse(json_ret, content_type="application/json")
+    return StreamingHttpResponse(json_ret, content_type="application/json")
 
 """END TRIGGER SECTION"""
 

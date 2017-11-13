@@ -12,6 +12,7 @@ import simplejson
 from django.conf import settings
 from django.conf import settings
 import logging
+from django.http import StreamingHttpResponse
 
 import copy
 import matplotlib
@@ -33,7 +34,7 @@ start_science_run = 6387
 last_sr1_tag = 12515
 start_sr1 = 6387
 start_sr0=3936
-last_tagging = 12515
+last_tagging = 13780
 sr1_query = {
     # We only use TPC
     "detector": "tpc", 
@@ -189,7 +190,7 @@ def get_processing_progress(request):
                            "earthquake", "nofield", "lowfield",
                            "ramping", "source_moving", "crash", "daqcrash",
                            "triggercrash", "_pmttrip", "noanode",
-                           "rn220_contamination", "comissioning"]},
+                           "rn220_contamination", "commissioning"]},
         "trigger.events_built": {"$gt": 100},
     # We don't need to track LED runs. That's a separate thing.
     "source.type": {"$nin": ["LED"]}
@@ -224,10 +225,11 @@ def get_processing_progress(request):
                     'number': doc['number']})
                 if doc['number'] not in date_source['processed']:
                     date_source['processed'].append(doc['number'])
-
+                    
     #Make the plot
-    fig = plt.figure(figsize=(16,4))
-    plt.style.use('ggplot')    
+    plt.style.use('classic')
+    fig = plt.figure(figsize=(18,4), facecolor='white')
+
     colors={"Rn220": '#eeb868', "AmBe": '#ef767a', 
             "Kr83m": '#49dcb1', "neutron_generator": '#3A3335', 
             "none": '#5992c2', "Th228": "#99cc00", "Cs137": "#cc3399"}
@@ -276,6 +278,8 @@ def get_processing_progress(request):
     
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
     ax.legend(by_label.values(), by_label.keys(), 
               loc="upper left", bbox_to_anchor=(1, .8))
     
@@ -348,8 +352,8 @@ def get_current_exposure(request):
         cumulative_runtime.append(cumu)
 
     # Plot everything. Sorry messy.
-    fig = plt.figure(figsize=(18,6))
-    #plt.style.use('ggplot')
+    plt.style.use('classic')
+    fig = plt.figure(figsize=(18,6), facecolor='white')
     plt.plot(cdate, cumulative_runtime)
     plt.xlabel("Date", fontsize=20)
     plt.ylabel("Science run time (days)", fontsize=18)
@@ -363,7 +367,7 @@ def get_current_exposure(request):
     for rn220 in ranges['Rn220']:
         p = patches.Rectangle(
             (mdates.date2num(rn220[0]), 0), (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 250,
-            alpha=.2, color='b', label="Rn220"
+            alpha=.5, color='b', label="Rn220"
         )
         ax.add_patch(p)
 
@@ -371,29 +375,29 @@ def get_current_exposure(request):
     for krdate in ranges['Kr83m']:
         p =  patches.Rectangle(
             (mdates.date2num(krdate[0]), 0), (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 250,
-            alpha=.2, color='r', label="Kr83m"
+            alpha=.5, color='r', label="Kr83m"
         )
+        ax.add_patch(p)
+
+    # Mark the LED calibration                                                                          
+    for led in ranges['LED']:
+        p = patches.Rectangle(
+            (mdates.date2num(led[0]), 0), (mdates.date2num(led[1])-mdates.date2num(led[0])), 250,
+            alpha=.7, color='#333333', label="LED", linewidth=.3
+            )
         ax.add_patch(p)
 
     # Mark the AmBe calibration
     for ambe in ranges['AmBe']:
         p = patches.Rectangle(
             (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
-            alpha=.2, color='c', label="AmBe Calibration"
+            alpha=.5, color='c', label="AmBe Calibration"
         )
         ax.add_patch(p)
     for ambe in ranges['neutron_generator']:
         p = patches.Rectangle(
             (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
-            alpha=.2, color='g', label="NG Calibration"
-        )
-        ax.add_patch(p)
-
-    # Mark the LED calibration
-    for led in ranges['LED']:
-        p = patches.Rectangle(
-            (mdates.date2num(led[0]), 0), (mdates.date2num(led[1])-mdates.date2num(led[0])), 250,
-            alpha=.2, color='#333333', label="LED", linewidth=.3
+            alpha=1., color='g', label="NG Calibration"
         )
         ax.add_patch(p)
 
@@ -639,10 +643,10 @@ def runs_stream(request):
         retvals.append(rd)
                     
 
-    return HttpResponse( dumps(retvals),
-                         #       "form" : filter_form,
-                          #      "query": filter_query}, 
-                         content_type="application/json" )
+    return StreamingHttpResponse( dumps(retvals),
+                                  #       "form" : filter_form,
+                                  #      "query": filter_query}, 
+                                  content_type="application/json" )
 
 @login_required
 def runs(request):

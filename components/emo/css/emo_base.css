@@ -25,6 +25,15 @@ background-color: #ebebeb;
     background-color: white;
     color: #5992c2;
 }
+.toggle-sidebar.emo-highlighted{
+    background-color: black;
+    color: white;
+    
+}
+.toggle-sidebar.emo-highlighted .glyphicon-nav:before {
+    background-color:black;
+    
+}
 .emo-navbar-brand.emo-highlighted{
     /* TRUMP */
     #background-color: #5992c2;
@@ -34,9 +43,9 @@ background-color: #ebebeb;
 }
 .bs_button_nav{
 cursor:pointer;
-#background-color:#5992c2;
+background-color:#5992c2;
 /* TRUMP */
-background-color: black;
+#background-color: black;
 }
 .bs_button{
 position: absolute;
@@ -47,9 +56,9 @@ top: 0;
 margin: 0;
 padding-top: 10px;
 padding-left: 10px;
-#background-color: #5992c2;
+background-color: #5992c2;
 /* TRUMP */
-background-color: black;
+#background-color: black;
 
 border-style: solid;
 border-right: 1px;
@@ -237,8 +246,8 @@ color:#353535;
   border-top: 2px solid white;
   border-bottom: 2px solid white;
   /* TRUMP */
-  #background-color: #5992c2;
-  background-color: black;
+  background-color: #5992c2;
+  #background-color: black;
   top: 0px;
 }
 .glyphicon-nav:after {

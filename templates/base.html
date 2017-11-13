@@ -127,7 +127,7 @@ color: #000000;
 <body>
   
   <!-- Make the navigation bar -->	
-  <header class="emo-navbar navbar navbar-fixed-top emo-navbar">   	
+  <header class="navbar navbar-fixed-top emo-navbar">   	
     <div class="navbar-header" style="height:40px">
       <button type="button" class="navbar-toggle"
               data-toggle="collapse" data-target=".navbar-collapse" 
@@ -136,7 +136,7 @@ color: #000000;
       </button>
       <div class="emo-navbar-brand" id="navbar-brand">
 	<!--<a class="toggle-sidebar" style="cursor:pointer;height:40px;width:40px;" title="Click to open menu">-->
-	<div class="bs_button toggle-sidebar" style="cursor:pointer">
+	<div class="bs_button toggle-sidebar" id="sidebar-button" style="cursor:pointer">
 	  <span class="bs_button_nav glyphicon glyphicon-nav"></span></div>
 	<!--</a>-->
 	<!--<a style="color:black">-->
@@ -439,7 +439,8 @@ color: #000000;
   $(".sidebar.left").trigger("sidebar:toggle");
   $(".sidebar.left").toggle("slide", {direction: "left"}, 100);
   $(".mainHider").fadeToggle(100);
-  $("#navbar-brand").toggleClass("emo-highlighted", 500);
+  $("#navbar-brand").toggleClass("emo-highlighted", 50);
+  $("#sidebar-button").toggleClass("emo-highlighted", 50);
 //  $("#content").toggleClass('emo-sidebar-show');
   //$("#content").toggleClass('emo-sidebar-hide');
       $(".sidebar-opentoggle").toggle();
@@ -509,11 +510,11 @@ $(".sidebar-opentoggle").toggle();
     document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Looks good.";
         }
         else if(data['free']/data['tot'] > 0.05){
-              document.getElementById("scspan").innerHTML="<i style='color:orange;' class='fa fa-exclamation-triangle'></i>";
+              document.getElementById("scspan").innerHTML="<i style='color:#FCAF2A;' class='fa fa-exclamation-triangle'></i>";
               document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Getting pretty close there.";
        }
        else{ 
-              document.getElementById("scspan").innerHTML="<i style='color:red;' class='fa fa-exclamation-circle'></i>";
+              document.getElementById("scspan").innerHTML="<i style='color:#FB0808;' class='fa fa-exclamation-circle'></i>";
 	      document.getElementById("sc_more").innerHTML = "<strong>"+free_tb+"TB</strong> remaining of <strong>" + tot_tb + "TB </strong> total ("+(100*data['free']/data['tot']).toFixed(1)+"%). <p style='color:red'>Computing local buffer storage space is low!</p>";
        }
            
@@ -558,13 +559,13 @@ $(".sidebar-opentoggle").toggle();
 			      if(!data['status'][x]) continue;
 				status = data['status'][x]['state'];
 				if (status == "Running")
-					status_html+="<i style='color:green;' class='fa fa-check-circle'></i>";
+					status_html+="<i style='color:#4CE52E;' class='fa fa-check-circle'></i>";
 				else if( status == "Idle" )
-					status_html+="<i style='color:orange'; class='fa fa-check-circle'></i>";
+					status_html+="<i style='color:#FCAF2A;' class='fa fa-check-circle'></i>";
 				else if(status == "Error" )
-					status_html+="<i style='color:red;' class='fa fa-exclamation-circle'></i>";
+					status_html+="<i style='color:#FB0808;' class='fa fa-exclamation-circle'></i>";
 				else 
-					status_html+="<i style='color:orange;' class='fa fa-exclamation-triangle'></i>"
+					status_html+="<i style='color:#FCAF2A;' class='fa fa-exclamation-triangle'></i>"
 				var docdate = new Date(data['status'][x]['createdAt']['$date']);
 				tdiff = currentTime - docdate;
 				if (tdiff < maxtdiff) {					maxtdiff = tdiff;
@@ -591,13 +592,13 @@ if(!data['status'][x]) continue;
 			document.getElementById("status_more").innerHTML = status_more;
 
 			if( maxtdiff < 60000 ){
-				document.getElementById("contact").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+				document.getElementById("contact").innerHTML = '<i style="color:#4CE52E;" class="fa fa-check-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
 					"Network connection established: </strong> Most recent status " +
 					"check-in: " + Math.round(maxtdiff / 1000).toString() + " seconds ago.</div>";
 			}
 			else {
-				document.getElementById("contact").innerHTML = '<i style="color:red;" class="fa fa-exclamation-circle"></i>';
+				document.getElementById("contact").innerHTML = '<i style="color:#FB0808;" class="fa fa-exclamation-circle"></i>';
 				document.getElementById("contact_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:red;'>" +
 					"No connection to the DAQ database: </strong> Most recent status " +
 					"check-in: " + Math.round(maxtdiff / 1000).toString() + " seconds ago.</div>";
@@ -608,13 +609,13 @@ if(!data['status'][x]) continue;
 
 			}
 		        if( data["issues"] == false ){
-			    document.getElementById("alerts").innerHTML = '<i style="color:green;" class="fa fa-check-circle"></i>';
+			    document.getElementById("alerts").innerHTML = '<i style="color:#4CE52E;" class="fa fa-check-circle"></i>';
 			    document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong style='color:green;'>" +
 			    		"No open alerts: </strong> All systems go.</div>";
 		            global_can_start_runs = true;
 		        }
                         else{
-                            document.getElementById("alerts").innerHTML = '<i style="color:red;" class="fa fa-exclamation"></i>';
+                            document.getElementById("alerts").innerHTML = '<i style="color:#FB0808;" class="fa fa-exclamation"></i>';
 		            document.getElementById("alerts_more").innerHTML = "<div class='emo-status-menu-entry'><strong sty\
 le='color:red;'>" + "Open alerts! </strong> Close them on the <a href='/log?priority=-2'>log page</log></div>";
 			    global_can_start_runs = false;

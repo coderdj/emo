@@ -5,7 +5,7 @@
     width:60%;
     padding: 10px;
     text-overflow:ellipsis;
-
+    color: black;
 }
 .emo-status-menu-entry {
     min-height:30px;
@@ -24,6 +24,11 @@
     /* TRUMP */
     background-color: black;
     color: #eee;
+    #background: black;
+    background: -webkit-linear-gradient(left, #5992c2, #884dff); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(right, #5992c2, #884dff); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(right, #5992c2, #884dff); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(to right, #5992c2, #753E9C); /* Standard syntax (must be last) */
 
     /* NORMAL */
     #background-color: white;
@@ -37,8 +42,10 @@
     line-height:20px;
     padding-left:45px;
     #color: #333;
+    background: rgb(0, 0, 0) transparent;
+
     /* TRUMP */
-    color: #eee;
+    #color: #eee;
     height:40px;
     width: 280px;
     /*border-right: 1px solid #666;*/
@@ -57,7 +64,7 @@
 .emo-navbar .navbar-nav>.active>a,.emo-navbar .navbar-nav>.open>a,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover,.emo-navbar .navbar-nav>.open>a, .emo-navbar .navbar-nav>.open>a:hover, .emo-navbar .navbar-nav>.open>a:focus { background-color: #DDDDDD;}
 .dropdown-menu { background-color: #EEEEEE; left:auto;right:auto;}
 .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: #3498DB}
-.emo-navbar { background-image: none; }
+/*.emo-navbar { background-image: none; }*/
 .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-image: none; }
 .dropdown-header {color: #000000 }
 .emo-navbar { border-color: #CCCCCC}

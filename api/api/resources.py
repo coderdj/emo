@@ -209,7 +209,7 @@ class StatusResource(Resource):
             ret['alerts'] = 2
 
         # This line disables SC alarms!
-        #ret['alerts'] = 0
+        # ret['alerts'] = 0
 
         nodes = ["reader5"]
         if det == "tpc":

@@ -207,6 +207,7 @@ function EditEntry(button, edit){
   var row = table.row(tr);
   var data = row.data();
   $("#user_form").trigger("reset");
+document.getElementById("detail_g_id").innerHTML="";
   for (var key in data) {
      
      if(key=="actions")
@@ -229,7 +230,7 @@ function EditEntry(button, edit){
                document.getElementById(prefix+key).innerHTML=valstring;
          }
          else if(key != "g_id" || (!edit && key != "name")){
-console.log(key);
+//console.log(key);
            if(edit)
               document.getElementById(prefix+key).value=data[key];
            else

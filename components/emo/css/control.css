@@ -29,9 +29,18 @@
     height:100%;
     width:20px;
     background-color:#5992c2;
-    #background-color: #DDDDFF;
+    background-color: rgba(89,146,194, .95);
+    #background-color: rgba(105,107,176,.7);
+    #background: #cccccc;
+    #background: -webkit-linear-gradient(top, #5992c2, #cccccc); /* For Safari 5.1 to 6.0 */
+    #background: -o-linear-gradient(bottom, #5992c2, #cccccc); /* For Opera 11.1 to 12.0 */
+    #background: -moz-linear-gradient(bottom, #5992c2, #cccccc); /* For Firefox 3.6 to 15 */
+    #background: linear-gradient(to bottom, rgba(89,146,194, 1), rgba(0,0,0,0)); /* Standard syntax (must be last) */
     padding:0;
     margin:0;
+    border-width:1px;
+    border-color:#cccccc;
+    border-style:solid;
     cursor: move;
     position: absolute;
     left: 0;
@@ -42,6 +51,7 @@
 .window-content{
     height:100%;
     padding:0;
+    #padding-left:2px;
     margin:0;
     /*width: calc(100% - 20px);*/
     width: -moz-calc(100% - 20x);

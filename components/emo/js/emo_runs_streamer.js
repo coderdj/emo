@@ -6,16 +6,16 @@ function MakeRunsTable(div, url, templatediv, counterdiv){
 
     // The view describes how to make each row
     //var template = $.trim($("#"+templatediv).html());
-    var template = "<tr><td style='width:10px'>{{{ link }}}</td><td>{{ number }}</td><td style='width:30px'>{{ date }}</td><td>{{ source }}</td><td>{{ mode }}</td><td>{{ events }}</td><td>{{{ status }}}</td><td style='width:30px'>{{{ tags }}}</td><td style='width:100px'>{{{ top_comment }}}</td></tr>";
+    var template = "<tr><td style='width:15px;padding:0px;'>{{{ link }}}</td><td>{{ number }}</td><td style='width:30px'>{{ date }}</td><td>{{ source }}</td><td>{{ mode }}</td><td>{{ events }}</td><td>{{{ status }}}</td><td style='width:30px'>{{{ tags }}}</td><td style='width:100px'>{{{ top_comment }}}</td></tr>";
     Mustache.parse(template);
     var view = function(record, index){
 	/*
 	  Render the link. This is a link to a detail request	  
 	 */
 	color="#5992c2";
-	var link = "<button class='btn' onclick='ShowDetail("+
+	var link = "<button class='btn-sm btn' onclick='ShowDetail("+
 	    '"' + record.name + '", "' + record.detector + '")' + "'" + 
-	    " style='background_color:"+color+";'>+</button>";
+	    " style='background_color:"+color+";width:80%;height:80%;margin:10%'>+</button>";
 	
 	/*
 	  The number is either the number or the name depending on detector
