@@ -332,8 +332,8 @@ function DrawStorageWindow(data, storage_template, storageloc_template){
 	    pars['location'] += ' [';
 	    for(j=0; j<data['data'][i]['rse'].length; j+=1){
 		pars['location'] += data['data'][i]['rse'][j];
-		if(j < data['data'][i]['rse'][length] -1)
-		    pars['location'] += ',';
+		if(j < data['data'][i]['rse'].length -1)
+		    pars['location'] += ', ';
 	    }
 	    pars['location']+=']';
 	}
