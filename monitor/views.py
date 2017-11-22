@@ -2,6 +2,7 @@ from pymongo import MongoClient, ASCENDING, DESCENDING
 from django.contrib.auth.decorators import login_required
 from json import dumps, loads
 from bson import json_util, objectid
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import HttpResponse, HttpResponsePermanentRedirect 
 from django.http import StreamingHttpResponse
 import pickle
@@ -289,6 +290,8 @@ def aggregate_trigger_collection(col_name):
     return
 
 @login_required
+@csrf_exempt
+# forgive me...
 def trigger_get_data(request):
     '''
     Refactor for new data format

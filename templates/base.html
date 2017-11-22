@@ -497,54 +497,15 @@ $(".sidebar-opentoggle").toggle();
 </script>
 
 <script type="text/javascript">
-  function DoUpdate(Url){
-/*
-
-	$.getJSON("/monitor/get_buffer_occupancy", function(data) {
-	     tot_tb = (data['tot']/Math.pow(2,40)).toFixed(2);
-	     free_tb = (data['free']/Math.pow(2,40)).toFixed(2);
-
-	
-	if(data['free']/data['tot'] > 0.1){
-	      document.getElementById("scspan").innerHTML="<i style='color:green;' class='fa fa-check-circle'></i>";
-    document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Looks good.";
-        }
-        else if(data['free']/data['tot'] > 0.05){
-              document.getElementById("scspan").innerHTML="<i style='color:#FCAF2A;' class='fa fa-exclamation-triangle'></i>";
-              document.getElementById("sc_more").innerHTML = "<strong>"+free_tb + "TB </strong>remaining of <strong>" + tot_tb + "TB </strong>total ("+(100*data['free']/data['tot']).toFixed(1)+"%). Getting pretty close there.";
+  document.blockupdate=false;
+  function DoUpdate(Url){      
+      console.log(document.blockupdate)
+      if(document.blockupdate==true){
+          setTimeout(function() {
+                    DoUpdate( Url );
+                }, 15000 );
+          return;
        }
-       else{ 
-              document.getElementById("scspan").innerHTML="<i style='color:#FB0808;' class='fa fa-exclamation-circle'></i>";
-	      document.getElementById("sc_more").innerHTML = "<strong>"+free_tb+"TB</strong> remaining of <strong>" + tot_tb + "TB </strong> total ("+(100*data['free']/data['tot']).toFixed(1)+"%). <p style='color:red'>Computing local buffer storage space is low!</p>";
-       }
-           
-
-	});
-*/
-
-	/*	
-	        sc_URL = "/slow_control/get_sc_info";
-         	$.getJSON(sc_URL, function(data) {
-                   if(data['staleness'] > 15){
-                      document.getElementById("fieldspan").innerHTML="--/--";
-                      document.getElementById("scspan").innerHTML="--/--";
-                   }
-                   document.getElementById("fieldspan").innerHTML=(parseFloat(data['anode'])/1000.).toFixed(2)+"kV/"+(data['cathode']).toFixed(2)+"kV";
-                   document.getElementById("scspan").innerHTML=data['pmts']['on'].toString() + "/" + data['pmts']['tot'].toString();
-    var html= "<p>Updated " + new Date(data['pmts']['date']['$date'])+"</p><p><strong>"+
-      "Values are: "+data['staleness']+" minutes old</strong></p>" + "<p><strong>PMTs off: </strong>";
-      if(data['pmts_off'].length>15) html += "Many</p>";
-    else {
-      for(var i=0; i<data['pmts_off'].length; i+=1){
-          html += data['pmts_off'][i].toString();
-          if(i!= data['pmts_off'].length -1) html += ", ";
-      }
-      html+="</p>";
-    }
-											                document.getElementById("sc_more").innerHTML = html;
-                  
-                });
-*/
 		$.getJSON(Url, function(data) {
 	                // Now do some aggregations. data is a list of status docs for the detectors. Status can
 			// either be RUNNING, IDLE, or ERROR. Last update is most recent update
