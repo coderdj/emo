@@ -609,6 +609,7 @@ def runs_stream(request):
         retset = collection.find( filter_query, projection ).sort( "name", -1 )
 
     # does this help?
+    
     retvals = []
     for doc in retset:
         rd = {
@@ -641,9 +642,10 @@ def runs_stream(request):
                      'type': d['type']
                  })
         retvals.append(rd)
-                    
+    
+    
 
-    return StreamingHttpResponse( dumps(retvals),
+    return HttpResponse( dumps(retvals),
                                   #       "form" : filter_form,
                                   #      "query": filter_query}, 
                                   content_type="application/json" )

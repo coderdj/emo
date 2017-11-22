@@ -703,7 +703,35 @@ function UpdateNodes( nodes_div, nodesUrl ){
 
 }
 
+function GetMongoDBProgress(percent, name, warnpct, errpct, rawval, rawunit){
 
+    warnpct = 128/(128+880);
+    rethtml = "";
+    var first_width = percent;
+    var second_width = first_width-warnpct;
+    console.log("FW");console.log(first_width);
+    console.log(rawval);
+    console.log(warnpct);
+    if(first_width>warnpct)
+	first_width=warnpct;
+    if(first_width-warnpct>0)
+	second_width=first_width-warnpct;
+    console.log(second_width);
+    console.log(first_width-warnpct);
+    rethtml += '<div class="progress-bar progress-bar-info" role="progressbar" style="border-top-right-radius:0;border-bottom-right-radius:0;width:'+(Math.floor(100*first_width)).toString()+'%">';
+    rethtml +='RAM';//+rawval.toFixed(2)+' '+rawunit+' '+name;
+    rethtml += '</div>';
+    if(second_width > 0.){
+	console.log(second_width);
+        rethtml += '<div class="progress-bar progress-bar-warning" role="progressbar" style="border-radius:0;width:'+(Math.floor(100*second_width)).toString()+'%">';
+	if(second_width>.5)
+	    rethtml+="SSD Buffer</div>";
+	else
+	    rethtml+="</div><span style='color:#dcd373'>SSD Buffer</span>";	
+      }
+    rethtml+="<span style='float:right;text-align:right'>"+rawval.toFixed(2)+" "+rawunit+"</span>";
+    return rethtml;
+}
 function GetGradProgress(percent, name, warnpct, errpct, rawval, rawunit){
 
     rethtml = "";
@@ -771,7 +799,7 @@ function GetHealth(pctarray, static_dir, update_time, deleter_time){
 	health="<strong style='color:orange'>Nearly dead</strong>";
     else if(largest > .5)
 	health="<strong style='color:yellow;background-color:black;'>Warning</strong>";
-    else if(largest > .2)
+    else if(largest > .35)
 	health="<strong style='color:blue'>Borderline</strong>";
     else
 	health="<strong style='color:green'>Healthy</strong>";

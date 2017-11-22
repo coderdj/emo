@@ -1,7 +1,7 @@
 {% load url from future %}
 {% load staticfiles %}
 {% load google_analytics %}
-{% load clicky %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -356,7 +356,7 @@ color: #000000;
   </div>
   {% else %}
 {% block content2 %}
-<div class="hero-unit fill" style="margin-top:30px">
+<div class="hero-unit fill" style="margin:20px;margin-top:30px;">
   <br>
   <h1>DAQ Web Portal</h1>
   <h2>Data flow monitoring</h2>
@@ -409,7 +409,7 @@ color: #000000;
 			
 
 <!--		</div>	-->
-{% clicky %}
+
   </body>
       {% if user.is_authenticated %}
 

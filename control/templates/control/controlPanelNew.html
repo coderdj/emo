@@ -128,6 +128,21 @@
       <div class="grid-stack-item-content gridbox" id="triggerwindowgs">
 	<div class="window-handle"></div>
         <div class="window-content" style="overflow-y:hidden">
+	  <div class="window-title" id="trigger_title">
+            <div class="row" style="width:100%">
+              <div class="col-sm-4 col-xs-12" style="min-width:180px;">
+                <h4 style="padding:3px;margin:0">
+                  <strong>Trigger Status: </strong><span style="font-size:14px" id="thetext"></span>
+		</h4>
+              </div>
+	      <div class="col-sm-4 col-xs-12">
+		<strong>Triggering run: </strong><span id="trigger_last_collection"></span>
+	      </div>
+	      <div class="col-sm-4 col-xs-12" style="text-align:right">
+		<strong>Checked in: </strong><span id="trigger_time"></span>
+              </div>
+            </div>
+	  </div>
 	  <div id="stale_header" style="width:100%"></div>
 	  <!--<div class="window-title" id="trigger_title" 
 	       style="padding-top:0px;min-height:26px;height:26px;">
@@ -136,8 +151,9 @@
 	    </h4>
 	  </div>	  -->
           <div id="trigger_body" style="overflow-y:auto;overflow-x:hidden;padding-right:20px;">
+
 	    <div class="row" style="overflow-y:auto">
-	      <!-- Quick status funny face -->
+	      <!--
 	      <div class="col-sm-2 col-xs-12">
 		<strong>Trigger Status (Beta)</strong>
 		<hr style="margin:0;padding:0;margin-bottom:20px">
@@ -146,10 +162,10 @@
 		<div class="text-center" style="width:100%">
                   <span id="thetext"></span></div>
               </div>
-	      
-	      <div class="col-sm-5 col-xs-12">		
+	      -->
+	      <div class="col-sm-6 col-xs-12">		
 		<!-- Last trigger doc -->
-		<strong>Last Status Doc</strong>
+		<!--<strong>Last Status Doc</strong>
 		<hr style="margin:0;padding:0;">
 		<strong>Last collection: </strong>
                 <span id="trigger_last_collection"></span>		  
@@ -157,6 +173,7 @@
 		  <strong>Time: </strong>                     
                   <span id="trigger_time"></span>    
 		</p>
+		-->
 		<strong>Event rate: </strong>
                 <span id="trigger_event_rate"></span> events/s
 		<div class="row">
@@ -166,8 +183,12 @@
                   <div class="col-xs-12"><strong>Triggering: </strong>
                     <span id="eb_working"></span>
                   </div>
-                </div>
-		<p style="margin-bottom:0;margin-top:8px">
+		  <div class="col-xs-12"><strong>DB Monitor: </strong>
+                    <span id="mongo_update_time"></span></div>
+		  <div class="col-xs-12"><strong>Deleter: </strong>
+                    <span id="deleter_update_time"></span></div>
+		</div>
+		<p style="margin-bottom:0;margin-top:4px">
 		  <strong>Deadtime info run <span id="deadtime_run_name"></span></strong>
 		  <hr style="margin:0;padding:0;">
 		</p>
@@ -184,35 +205,39 @@
 	      </div>
 	      
 	      <!-- Pipeline DB Info -->
-	      <div class="col-sm-5 col-xs-12">
+	      <div class="col-sm-6 col-xs-12" style="padding-top:10px">
 		<!-- Last trigger doc -->
-		<strong>Mongodb Buffers</strong>
-		<hr style="margin:0;padding:0;margin-bottom:5px;">
+		<!--<div class="row" style="padding-left:15px;padding-right:15px;"><strong>Mongodb Buffers</strong>&nbsp;(Updated <span id="mongo_update_time"></span>)</div>
+		<hr style="margin:0;padding:0;margin-bottom:5px;">-->
 		<div class="row">
-		  <div class="col-xs-2"><strong>Updated: </strong></div>
-		  <div class="col-xs-10" id="mongo_update_time"></div>
-		  <div class="col-xs-2"><strong>Deleter: </strong></div>
-		  <div class="col-xs-10" id="deleter_update_time"></div>
+		  <!--<div class="col-xs-2"><strong>Updated: </strong></div>-->
+		  <!--<div class="col-xs-10" id="mongo_update_time"></div>-->
+		  <!--<div class="col-xs-2"><strong>Deleter: </strong></div>
+		  <div class="col-xs-10" id="deleter_update_time"></div>-->
+		  
+		  
                   <div class="col-xs-2"><strong>eb0</strong></div>
-                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                  <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
                        id="eb0_progress"></div>
                   <div class="col-xs-12"><strong>Collections: </strong>
                     <span id="eb0_collections"></span>
                     <strong>Docs: </strong><span id="eb0_docs"></span>
                   </div>
                 </div>
+		<hr style="margin:0;padding:0;margin-bottom:3px;">
                 <div class="row">
                   <div class="col-xs-2"><strong>eb1</strong></div>
-                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                  <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
                        id="eb1_progress"></div>
                   <div class="col-xs-12"><strong>Collections: </strong>
                     <span id="eb1_collections"></span>
                     <strong>Docs: </strong><span id="eb1_docs"></span>
                   </div>
                 </div>
+		<hr style="margin:0;padding:0;margin-bottom:3px;">
                 <div class="row">
                   <div class="col-xs-2"><strong>eb2</strong></div>
-                  <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
+                  <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
                        id="eb2_progress"></div>
                   <div class="col-xs-12"><strong>Collections: </strong>
                     <span id="eb2_collections"></span>
@@ -590,25 +615,25 @@ console.log(data);
             document.getElementById("eb_working").innerHTML="Yes";
          else
             document.getElementById("eb_working").innerHTML="Nope";
-	document.getElementById("eb0_progress").innerHTML=GetGradProgress(
-           data['eb0:27000']['storageSize']/500e9, "in cache ",0.5, 0.7, 
+	document.getElementById("eb0_progress").innerHTML=GetMongoDBProgress(
+           data['eb0:27000']['storageSize']/1008e9, "in cache ",0.126, 0.7, 
 				   data['eb0:27000']['storageSize']/1e9, "GB");
-document.getElementById("eb1_progress").innerHTML=GetGradProgress(
-	data['eb1:27000']['storageSize']/500e9, "in cache",0.5, 0.7,
+document.getElementById("eb1_progress").innerHTML=GetMongoDBProgress(
+	data['eb1:27000']['storageSize']/1008e9, "in cache",0.5, 0.7,
                                    data['eb1:27000']['storageSize']/1e9, "GB");
-document.getElementById("eb2_progress").innerHTML=GetGradProgress(
-		data['eb2:27000']['storageSize']/500e9, "in cache",0.5, 0.7,
+document.getElementById("eb2_progress").innerHTML=GetMongoDBProgress(
+		data['eb2:27000']['storageSize']/1008e9, "in cache",0.5, 0.7,
                                    data['eb2:27000']['storageSize']/1e9, "GB");
         var pctarray = [];
 var staticdir = "{% static "emo/js" %}";
         pctarray.push(busy);
-        pctarray.push(data['eb0:27000']['storageSize']/500e9);
-        pctarray.push(data['eb1:27000']['storageSize']/500e9);
-        pctarray.push(data['eb2:27000']['storageSize']/500e9);
+        pctarray.push(data['eb0:27000']['storageSize']/1000e9);
+        pctarray.push(data['eb1:27000']['storageSize']/1000e9);
+        pctarray.push(data['eb2:27000']['storageSize']/1000e9);
 	pctarray.push(data['eventbuilder_info']['eventbuilder_queue_size']/10000);
 				   health = GetHealth(pctarray, staticdir, tdate, deldate);
 				   console.log(health);
- document.getElementById("theimage").innerHTML=health['image'];
+// document.getElementById("theimage").innerHTML=health['image'];
 	document.getElementById("thetext").innerHTML=health['text'];
         document.getElementById("eb0_collections").innerHTML=data['eb0:27000']['collections'];
 	document.getElementById("eb1_collections").innerHTML=data['eb1:27000']['collections'];
