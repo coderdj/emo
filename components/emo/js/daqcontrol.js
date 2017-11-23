@@ -110,6 +110,8 @@ function updateTriggerChart(data, triggerdiv)
     var thetriggerchart=$("#"+triggerdiv).highcharts();
     if(thetriggerchart.series.length==0 || 
       thetriggerchart.series[0].length > data['deadtimes']['dts'].length){
+	while(thetriggerchart.series.length!=0)
+	    thetriggerchart.series[0].remove(true);
 	dict = { type: "line", data: data['deadtimes']['dts'], 
 		 name: "Deadtime", fillColor: null, yAxis: 0, 
 		 color: Highcharts.getOptions().colors[3]};
