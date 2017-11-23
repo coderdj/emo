@@ -50,12 +50,13 @@ def GetTPCEventRate(request):
 
     # Defaults
     retdoc = {
-        "deadtime": None, "rate": None, "time": None, "rname": None, 
+        "deadtime": None, "rate": None, "time": None, "rname": None, "last_time_searched": None,
         "deadtime_total": None, "deadtime_run": None,
         "rnumber": None, "eb0": { "storageSize": 0, "dataSize": 0, "collections": 0},
         "eb1": { "storageSize": 0, "dataSize":0, "collections": 0},
         "eb2": { "storageSize": 0, "dataSize":0, "collections": 0},
-        "eventbuilder_info": None, "deleter_timestamp": None
+        "eventbuilder_info": None, "deleter_timestamp": None, 
+        "deadtimes":  {"dts": [], "times": []}, "eventrates": [],
     }
     
     # Grab the most recent deleter doc and record the time
@@ -71,26 +72,47 @@ def GetTPCEventRate(request):
     rnumbackup=monCollections[1]
     try:
         for collection in monCollections:            
-            doc = monDB[collection].find_one({"data_type": "batch_info"},
-                                             sort=[("_id", -1)])
+            batchc = monDB[collection].find({"data_type": "batch_info"},
+                                            sort=[("_id", 1)])
             newest = collection
             rundoc = runsDB.find_one({"name": newest, "detector": "tpc"})
 
-            if doc is not None and rundoc is not None: 
+            if batchc.count()!=0 and rundoc is not None: 
                 break
-            
-        if doc is not None:
+        
+        if batchc.count()!=0:
             rnum = newest
             start = rundoc['start']
             timestamp = (start - datetime.datetime(1970,1,1)).total_seconds()
-            retdoc['rate'] = doc['events_built']/21.
-            retdoc['time'] = str(timestamp+doc['last_time_searched']/1000000000.),
-            retdoc['rname'] = rnum
             retdoc['rnumber'] = rundoc['number']
+            retdoc['rname'] = rnum
+            i=0
+            for doc in batchc:
+                retdoc['eventrates'].append([i, doc['events_built']/21.])
+                i+=21.4748
+                retdoc['rate'] = doc['events_built']/21.
+                retdoc['time'] = str(timestamp+doc['last_time_searched']/1000000000.),
+                retdoc['last_time_searched'] = i+doc['last_time_searched']/1e9
+
     except Exception as e:
         logger.error("Error status:" + str(e)+" "+str(newest))
         
+    # Get the deadtime for this run
     try:
+        # Get entire cursor for this run
+        dead_time_cursor = monDB[newest].find({"data_type": 
+                                              "dead_time_info"}).sort("_id", 1)
+        dt_tot = 0.
+        dt_ct = 0
+        for doc in dead_time_cursor:
+            retdoc['deadtimes']['dts'].append((doc['busy']/1e9)*100.)
+            retdoc['deadtimes']['times'].append(doc['time']/1e9)
+            dt_tot += doc['busy']/1e9
+            dt_ct += 1
+            if retdoc['deadtime_run'] is None:
+                retdoc['deadtime_run'] = newest
+        retdoc['deadtime_total'] = dt_tot/dt_ct
+        '''
         dead_time_doc = monDB[newest].find({"data_type": 
                                             "dead_time_info"}).sort("_id", -1)[0]
         time_bin = monDB[newest].find({"data_type":
@@ -108,6 +130,7 @@ def GetTPCEventRate(request):
             {"$project": {"deadtime": {"$divide": ["$count", "$tot"]}, 
                           "busytime": "$count", "totaltime": "$tot"}}])))[0]
         retdoc['deadtime_total'] = dead_time_doc['deadtime']
+        '''
     except Exception as e:
         logger.error("Error deadtime run:" + str(e))
         

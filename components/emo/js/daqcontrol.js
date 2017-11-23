@@ -5,6 +5,220 @@ function ExpanderClick(button) {
 	button.innerHTML="Expand";
 };
 
+function drawTriggerChart(triggerchart, triggerchartdiv, chart, callback)
+{
+    // Make dictionary of options
+    var chartOptions = {
+	exporting: { enabled: false },
+        chart : {
+            renderTo: triggerchartdiv,
+            type: 'area',
+            zoomType: 'x',
+            animation: {
+		easing: 'linear',
+            },
+            spacingTop: 10,
+            spacingLeft: 10,
+            spacingRight: 10,
+            spacingBottom: 0,
+            borderWidth:0,
+            borderColor: "#D5D5D5",
+        },
+	legend: {
+	    align: 'left', verticalAlign: 'middle',
+	    layout: 'vertical',enabled: false, itemMarginBottom: 5
+	},
+        credits: {enabled: false},
+        title: {text: ''},
+        xAxis: {
+	    plotLines: [{
+		color: '#FF0000', // Red
+		width: 2,
+		value: 0. // Position, you'll have to translate this to the values on your x axis
+	    },
+	    {
+		color: '#333333',
+		width: 2,
+		value: 0.
+}	    ],
+
+            maxPadding:0,
+            minPadding:0,
+	    min: 0,
+	    max: 3600,
+            title : { text: 'time in run (s)' },
+            //tickInterval: 5000000,                                                                   
+            //type: 'datetime',
+            labels: {
+                enabled: true,
+                //formatter: function() {
+                  //  var d = new Date();                                                               
+                //    return Highcharts.dateFormat('%H:%M', this.value);
+            },
+        },
+        yAxis: [{ // Primary yAxis
+            labels: {
+		format: '{value}%',
+		style: {
+                    color: Highcharts.getOptions().colors[3]
+		}
+            },
+            title: {
+		text: 'Deadtime',
+		style: {
+                    color: Highcharts.getOptions().colors[3]
+		}
+            },
+            opposite: true
+	    
+	}, { // Secondary yAxis
+            gridLineWidth: 0,
+            title: {
+		text: 'Rate',
+		style: {
+                    color: Highcharts.getOptions().colors[1]
+		}
+            },
+            labels: {
+		format: '{value} Hz',
+		style: {
+                    color: Highcharts.getOptions().colors[1]
+		}
+            }
+	    
+	},],
+	plotOptions: {
+            area: {
+                fillColor: null,
+                pointPadding: 0,
+                borderWidth: 0,
+                stacking : false,
+                stack : 0,
+                marker: {enabled:false},
+            },
+        },
+        series: [],
+
+    }; //end waveform options                                                                           
+
+    triggerchart = new Highcharts.Chart(chartOptions, callback(chart, triggerchart));
+
+}
+
+function updateTriggerChart(data, triggerdiv)
+{
+    var thetriggerchart=$("#"+triggerdiv).highcharts();
+    if(thetriggerchart.series.length==0 || 
+      thetriggerchart.series[0].length > data['deadtimes']['dts'].length){
+	dict = { type: "line", data: data['deadtimes']['dts'], 
+		 name: "Deadtime", fillColor: null, yAxis: 0, 
+		 color: Highcharts.getOptions().colors[3]};
+
+        thetriggerchart.addSeries(dict, false);
+
+	dict2 = { type: "line", data: data['eventrates'],
+                 name: "Rate", fillColor: null, yAxis: 1,
+                 color: Highcharts.getOptions().colors[1]};
+	thetriggerchart.addSeries(dict2, false);
+	thetriggerchart.xAxis[0]['options']['plotLines'][0]['value'] = data['last_time_searched']-21;
+	thetriggerchart.redraw();
+    }
+    else{
+	var shift=false;
+	if(thetriggerchart.series[0]['data'].length != data['deadtimes']['dts'].length){
+	    for(i=thetriggerchart.series[0]['data'].length-1; i<data['deadtimes']['dts'].length; i+=1){
+		thetriggerchart.series[0].addPoint(data['deadtimes']['dts'][i],true,shift);
+	    }
+	}
+	if(thetriggerchart.series[1]['data'].length != data['eventrates'].length){
+            for(i=thetriggerchart.series[1]['data'].length-1; i<data['eventrates'].length; i+=1){
+		thetriggerchart.series[1].addPoint(data['eventrates'][i],false,shift);
+	    }
+        }
+    }
+	var axis = thetriggerchart.xAxis[0];
+	var line = axis.plotLinesAndBands[0]; // Get a reference to the plotLine
+	line.options.value = data['eventbuilder_info']['last_time_searched']/1e9;	
+	line.render(); // Render with updated values.
+	var line2 = axis.plotLinesAndBands[1];
+	line2.options.value = data['eventbuilder_info']['last_pulse_so_far_in_run']/1e9;
+	line2.render();
+
+    
+		    
+}
+
+function updateTriggerWindow(data, thetriggerchart)
+{
+    updateTriggerChart(data, 'triggerchartdiv');
+    document.getElementById("trigger_event_rate").innerHTML=parseFloat(data['rate']).toFixed(2);
+    document.getElementById("trigger_last_collection").innerHTML=data['rname']+"("+data['rnumber']+")";
+    var tdate = new Date(1000*(parseFloat(data['eventbuilder_info']['time'])));
+    var ttime = tdate.getFullYear()+"."+('0'+(1+tdate.getMonth())).slice(-2) +
+	"." + ('0'+tdate.getDate()).slice(-2) + " at " + ('0' + tdate.getHours()).slice(-2) + 
+	":" + ('0'+tdate.getMinutes()).slice(-2);
+    document.getElementById("trigger_time").innerHTML=ttime;
+    if(data["deleter_timestamp"]!=null){
+        var deldate = new Date((parseInt(data['deleter_timestamp']['$date'])));
+        var deltime = deldate.getFullYear() + "." + ('0' + (1 + deldate.getMonth())).slice(-2) + "." +
+            ('0' + deldate.getDate()).slice(-2) + " at " + ('0' + deldate.getHours()).slice(-2) + ":" +
+            ('0' + deldate.getMinutes()).slice(-2);
+        document.getElementById("deleter_update_time").innerHTML=deltime;
+    }
+    else{
+        document.getElementById("deleter_update_time").innerHTML="Not found";
+    }
+    var docdate = new Date(1000*(parseFloat(data['time'])));
+    var doctime = docdate.getFullYear() + "." + ('0' + (1 + docdate.getMonth())).slice(-2) + "." +
+        ('0' + docdate.getDate()).slice(-2) + " at " + ('0' + docdate.getHours()).slice(-2) + ":" +
+        ('0'+docdate.getMinutes()).slice(-2);
+    document.getElementById("mongo_update_time").innerHTML=doctime;
+    busy = data['deadtime'];
+    document.getElementById("busy_num").innerHTML=(100.*busy).toFixed(2)+"%";
+    document.getElementById("busy_num_tot").innerHTML=(data['deadtime_total']*100.).toFixed(2)+"%";
+    //document.getElementById("deadtime_run_name").innerHTML=data['deadtime_total'];
+    //document.getElementById("busy_tot_progress").innerHTML = 
+    //GetGradProgress(data['deadtime_total'], "dead time", 0.1, 0.5, 
+    //data['deadtime_total']*100, "%");
+    //document.getElementById("busy_progress").innerHTML=GetGradProgress(busy, "dead time", 
+    //0.1, 0.5,busy*100, "%");
+    //document.getElementById("eb_lag_progress").innerHTML = GetGradProgress(
+    //    data['eventbuilder_info']['eventbuilder_queue_size']/10000, "in queue",
+    //    0.3, 0.7, data['eventbuilder_info']['eventbuilder_queue_size'], " events");
+    //if(data['eventbuilder_info']['working_on_run']==true)
+    //document.getElementById("eb_working").innerHTML="Yes";
+    //else
+    //document.getElementById("eb_working").innerHTML="Nope";
+    document.getElementById("eb0_progress").innerHTML=GetMongoDBProgress(
+        data['eb0:27000']['storageSize']/1008e9, "in cache ",0.126, 0.7,
+        data['eb0:27000']['storageSize']/1e9, "GB");
+    document.getElementById("eb1_progress").innerHTML=GetMongoDBProgress(
+        data['eb1:27000']['storageSize']/1008e9, "in cache",0.5, 0.7,
+        data['eb1:27000']['storageSize']/1e9, "GB");
+    document.getElementById("eb2_progress").innerHTML=GetMongoDBProgress(
+        data['eb2:27000']['storageSize']/1008e9, "in cache",0.5, 0.7,
+        data['eb2:27000']['storageSize']/1e9, "GB");
+    var pctarray = [];
+    //var staticdir = "{% static "emo/js" %}";
+    var staticdir ="";
+    pctarray.push(busy);
+    pctarray.push(data['eb0:27000']['storageSize']/1000e9);
+    pctarray.push(data['eb1:27000']['storageSize']/1000e9);
+    pctarray.push(data['eb2:27000']['storageSize']/1000e9);
+    pctarray.push(data['eventbuilder_info']['eventbuilder_queue_size']/10000);
+    health = GetHealth(pctarray, staticdir, tdate, deldate);
+    // document.getElementById("theimage").innerHTML=health['image'];
+    document.getElementById("thetext").innerHTML=health['text'];
+    //document.getElementById("eb0_collections").innerHTML=data['eb0:27000']['collections'];
+    //document.getElementById("eb1_collections").innerHTML=data['eb1:27000']['collections'];
+    //document.getElementById("eb2_collections").innerHTML=data['eb2:27000']['collections'];
+    //document.getElementById("eb0_docs").innerHTML=data['eb0:27000']['objects'];
+    //document.getElementById("eb1_docs").innerHTML=data['eb1:27000']['objects'];
+    //document.getElementById("eb2_docs").innerHTML=data['eb2:27000']['objects'];
+//    rate_update_counts=0;
+
+}
+
 function drawChart( chart, chartdiv, graphic_var, callback )
 // Draws a chart at the chart div
 // Only have to call once
@@ -52,6 +266,9 @@ function drawChart( chart, chartdiv, graphic_var, callback )
             title : {text: 'rate (MB/s)'},
         },
         plotOptions: {
+	    line: {
+		marker: {enabled: false}
+	    },
             area: {
 		fillColor: null,
   //                  linearGradient: {
@@ -83,7 +300,6 @@ function updateData( chart, updateUrl )
 	var detlist = ['reader0', 'reader1', 'reader2', 'reader3', 'reader4', 'reader5', 'reader6', 'reader7'];
         var idlist = ['reader0', 'reader1', 'reader2', 'reader3', 'reader4', 'reader5', 'reader6', 'reader7'];
 
-	//console.log(data);
         for (x=0; x<detlist.length; x++){
             var shift = false;
             // do progress bar                                                 
@@ -148,12 +364,7 @@ function GetTimeString(startdate){
     return "...started "+jQuery.timeago(startdate);
     var nowdate = ConvertDateUTC(new Date());
     //startdate = ConvertDateUTC(startdate);
-    //console.log("!!!!");
-    //console.log((startdate));
-    //console.log(nowdate.toString());
     var diff = nowdate-startdate;
-    //console.log(nowdate);
-    //console.log(startdate);
     if(diff<0)
         diff=0;
     var hours = Math.floor(((diff)/1000)/3600);
@@ -173,9 +384,6 @@ function GetTimeString(startdate){
         else
             timestring += ( minutes.toString() + " minutes.");
     }
-    //console.log(hours);
-    //console.log(minutes);
-    //console.log("?");
     if(hours==0 && minutes==0)
         timestring="...just started";
     return timestring;
@@ -392,7 +600,6 @@ function UpdateDetectorTextPretty(dataUrl, nodesUrl, tpc_div, mv_div, tpc_title,
 		startedBy = detector_data['status'][status_id]['startedBy'];
 	    }
 	    
-	    console.log(detector_data);
 
 	    // Now for the second title
 	    var title_2_str = "<div style='display:table;max-height:40px;border-width:0px;border-color:#d3d3d3;border-style:solid;width:100%;'>"+
@@ -441,8 +648,6 @@ function UpdateDetectorTextNew(dataUrl, nodesUrl, div_id, graphic_var, callback)
 	    // Put node data in this dictionary
 	    tpc_rate = 0.;
 	    muon_veto_rate = 0.;
-	    console.log("NODES");
-console.log(node_data);
 	    for( var node_id = 0; node_id < node_data.length; node_id += 1){
 	    
 		var docdate = new Date(node_data[node_id]['createdAt']['$date']);
@@ -483,9 +688,7 @@ console.log(node_data);
 		    display_name = aliases[display_name];
 		
 		if ($('#'+div_id).find('#'+det_name+"_header").length) {
-		    //console.log("Found header");
 		    var startdate = detector_data['status'][status_id]['startTime'];
-		    //console.log(detector_data['status'][status_id]);
 		    document.getElementById(det_name+"_status").innerHTML = GetStateHtml(detector_data,status_id);
 		    document.getElementById(det_name+"_runname").innerHTML = detector_data['status'][status_id]['currentRun'];
 		    document.getElementById(det_name+"_startedby").innerHTML = detector_data['status'][status_id]['startedBy'];
@@ -494,8 +697,6 @@ console.log(node_data);
 		    
 		    var timestring = "";
 		    thedatestring = detector_data['status'][status_id].startTime;
-                    //console.log(thedatestring);
-		    //console.log(detector_data['status'][status_id]);
                     //thedatestring = thedatestring.substr(0, thedatestring.length - 1);
 		    //thedatestring += "+00:00";
 
@@ -518,20 +719,16 @@ console.log(node_data);
 			appstring+=nodeInfo[det_name][index];
 			
 		    }
-		    //console.log(appstring);
 		    document.getElementById(det_name+"_node_div").innerHTML = appstring;
 		}
 		else{ // append a new header
-		    //console.log(detector_data);
 		    var timestring="";
 		    if(detector_data['status'][status_id].startTime!=""){
 			thedatestring = detector_data['status'][status_id].startTime;
-			//console.log(thedatestring);
 			//thedatestring = thedatestring.substr(0, 
 			//thedatestring.length - 
 			//1);
 			//thedatestring += "+01:00";
-			//console.log(thedatestring);
 			
 			startdate = new Date( thedatestring );
 			if(detector_data['status'][status_id]['state'] == "Running")
@@ -576,7 +773,6 @@ console.log(node_data);
 			appstring+= nodeInfo[det_name][index];
 		    //appstring+= "</div></div>";
 		    appstring += "</tbody></table></div>"
-		    //console.log(appstring);
 		    $('#'+det_name + "_parent").append(appstring);
 		   // UpdateDetectorTextNew(dataUrl, nodesUrl, div_id);
 
@@ -709,20 +905,16 @@ function GetMongoDBProgress(percent, name, warnpct, errpct, rawval, rawunit){
     rethtml = "";
     var first_width = percent;
     var second_width = first_width-warnpct;
-    console.log("FW");console.log(first_width);
-    console.log(rawval);
-    console.log(warnpct);
+    
     if(first_width>warnpct)
 	first_width=warnpct;
     if(first_width-warnpct>0)
 	second_width=first_width-warnpct;
-    console.log(second_width);
-    console.log(first_width-warnpct);
+    
     rethtml += '<div class="progress-bar progress-bar-info" role="progressbar" style="border-top-right-radius:0;border-bottom-right-radius:0;width:'+(Math.floor(100*first_width)).toString()+'%">';
     rethtml +='RAM';//+rawval.toFixed(2)+' '+rawunit+' '+name;
     rethtml += '</div>';
-    if(second_width > 0.){
-	console.log(second_width);
+    if(second_width > 0.){	
         rethtml += '<div class="progress-bar progress-bar-warning" role="progressbar" style="border-radius:0;width:'+(Math.floor(100*second_width)).toString()+'%">';
 	if(second_width>.5)
 	    rethtml+="SSD Buffer</div>";
@@ -829,3 +1021,4 @@ function GetHealth(pctarray, static_dir, update_time, deleter_time){
 
     return {"text": health, "image": image};
 }
+
