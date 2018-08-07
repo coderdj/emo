@@ -435,7 +435,7 @@ function GetDataState(data){
              "midway-login1": 0,
              "rucio-catalogue": 0,
              "tsm-server": 0,
-             "osg": 0
+             "login": 0
 	    };
 
     // status 0: none, 1: transferring/triggering, 2: transferred/triggered

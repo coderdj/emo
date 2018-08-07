@@ -437,8 +437,8 @@ def shift_calendar(request):
     if our_user is None:
         return render(request, "management/shift_calendar.html", retdict)
 
-    if our_user['position'] == "PI" or request.user.username=="coderre" or request.user.username == "messina":
-        if request.user.username=="coderre" or request.user.username=="messina":
+    if our_user['position'] == "PI" or request.user.username=="coderre" or request.user.username == "junji":
+        if request.user.username=="coderre" or request.user.username=="junji":
             user_cursor = (db['users'].find({
                 "username": {"$exists": True},
                 "last_name": {"$exists": True},

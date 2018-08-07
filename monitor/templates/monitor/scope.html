@@ -175,6 +175,13 @@
       x_max = chart.xAxisRange()[1];
       y_min = chart.yAxisRange()[0];
       y_max = chart.yAxisRange()[1];
+  var wf = ""; 
+  for(var i=0; i<current_data['waveforms'][row]['data'].length; i+=1){
+     wf+=", ";
+      wf+=current_data['waveforms'][row]['data'][i][1].toString();
+   }
+    console.log("Data follows: ");
+    console.log(wf);
     if(current_data['waveforms'][row]['data'][0].length == 2){
         chart.updateOptions({isZoomedIgnoreProgrammaticZoom: true, "labels": ["bin (10ns)","channel a"],
      "file": current_data['waveforms'][row]['data'], "title": title_str});

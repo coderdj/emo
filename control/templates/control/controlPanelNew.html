@@ -49,7 +49,7 @@
 </style>
 <div id="ImpatientLoading" class="Loading" style="visibility:hidden">
   <div class="col-xs-3 col-xs-offset-5;padding-left:200px;" style="margin-top:150px;left:45%">
-    <img style="width:100px;height:100px;" src="http://2.bp.blogspot.com/-KgvocefQtsg/VUnc3A4jJiI/AAAAAAAABig/khtH3a9ToSQ/s1600/1Intro1.jpg">
+    <!--<img style="width:100px;height:100px;" src="http://2.bp.blogspot.com/-KgvocefQtsg/VUnc3A4jJiI/AAAAAAAABig/khtH3a9ToSQ/s1600/1Intro1.jpg">-->
     <br>
     <br>
     Page unavailable for 30 seconds
@@ -132,15 +132,15 @@
             <div class="row" style="width:100%">
               <div class="col-sm-4 col-xs-12" style="min-width:180px;">
                 <h4 style="padding:3px;margin:0">
-                  <strong>Trigger </strong><strong style="font-size:14px">Status: </strong><span style="font-size:14px" id="thetext"></span>
+                  <strong style="font-size:18px">Trigger </strong><strong style="font-size:14px">Status: </strong><span style="font-size:14px" id="thetext"></span>
 		</h4>
-              </div>
+	      </div>
 	      <div class="col-sm-4 col-xs-12">
 		<strong>Triggering run: </strong><span id="trigger_last_collection"></span>
 	      </div>
 	      <div class="col-sm-4 col-xs-12" style="text-align:right">
 		<strong>Checked in: </strong><span id="trigger_time"></span>
-              </div>
+	      </div>
             </div>
 	  </div>
 	  <div id="stale_header" style="width:100%"></div>
@@ -193,67 +193,40 @@
 		  <div class="col-xs-12"><strong>Deadtime last: </strong>
 		    <span id="busy_num"></span><strong> total: </strong>
 		    <span id="busy_num_tot"></span></div>
-		</div>
-		<!--
-		    <p style="margin-bottom:0;margin-top:4px">
-		      <strong>Deadtime info run <span id="deadtime_run_name"></span></strong>
-		      <hr style="margin:0;padding:0;">
-		    </p>
-		    <div class="row">                      
-                      <div class="col-xs-2"><strong>Last</strong></div>                             
-                      <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"  
-			   id="busy_progress"></div>                                                                                                        
-                    </div>  
-		    <div class="row">
-                      <div class="col-xs-2"><strong>Total</strong></div>
-                      <div class="col-xs-10 progress" style="margin-bottom:5px;padding:0"
-			   id="busy_tot_progress"></div>
-                    </div>
-		    -->
+		</div>	
 	      </div>
 	      
 	      <!-- Pipeline DB Info -->
 	      <div class="col-sm-8 col-xs-12" style="padding-top:10px">
 		<!-- Last trigger doc -->
 		<!--<div class="row" style="padding-left:15px;padding-right:15px;"><strong>Mongodb Buffers</strong>&nbsp;(Updated <span id="mongo_update_time"></span>)</div>
-		<hr style="margin:0;padding:0;margin-bottom:5px;">-->
+		    <hr style="margin:0;padding:0;margin-bottom:5px;">-->
 		<div class="row">
-		  <!--<div class="col-xs-2"><strong>Updated: </strong></div>-->
-		  <!--<div class="col-xs-10" id="mongo_update_time"></div>-->
-		  <!--<div class="col-xs-2"><strong>Deleter: </strong></div>
-		  <div class="col-xs-10" id="deleter_update_time"></div>-->
-		  
 		  
                   <div class="col-xs-2"><strong>eb0</strong></div>
                   <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
-                       id="eb0_progress"></div>
-                  <!--<div class="col-xs-12"><strong>Collections: </strong>
-                    <span id="eb0_collections"></span>
-                    <strong>Docs: </strong><span id="eb0_docs"></span>
-                  </div>-->
+                       id="eb0_progress"></div>                 
                 </div>
 		<hr style="margin:0;padding:0;margin-bottom:3px;">
                 <div class="row">
                   <div class="col-xs-2"><strong>eb1</strong></div>
                   <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
-                       id="eb1_progress"></div>
-                  <!--<div class="col-xs-12"><strong>Collections: </strong>
-                    <span id="eb1_collections"></span>
-                    <strong>Docs: </strong><span id="eb1_docs"></span>
-                  </div>-->
+                       id="eb1_progress"></div>                  
                 </div>
 		<hr style="margin:0;padding:0;margin-bottom:3px;">
                 <div class="row">
                   <div class="col-xs-2"><strong>eb2</strong></div>
                   <div class="col-xs-8 progress" style="margin-bottom:5px;padding:0"
                        id="eb2_progress"></div>
-                  <!--<div class="col-xs-12"><strong>Collections: </strong>
-                    <span id="eb2_collections"></span>
-                    <strong>Docs: </strong><span id="eb2_docs"></span>
-                  </div>  -->
 		</div>
 	      </div>
-	      
+	      <!-- EXTRA TEST ROW 
+	      <div class="row">
+		<div class="col-xs-4" id="eb0_chart"></div>
+		<div class="col-xs-4" id="eb1_chart"></div>
+		<div class="col-xs-4" id="eb2_chart"></div>
+	      </div>-->
+	      <!-- END TEST ROW -->
 	    </div>
           </div>
 	</div>

@@ -32,7 +32,7 @@ var test_data = [
 
 function ConfirmCanStartRuns(callback, arg){
     if(document.canstartruns){
-	console.log(arg);
+	//console.log(arg);
 	if(arg != null)
 	    callback(arg);
 	else
@@ -50,8 +50,8 @@ function UpdateServer(callback){
     // for now we just wait 3 seconds
     //setTimeout(function(){ callback(); }, 3000);
     var updateURL = "/control/set_queue_list";
-    console.log("UPDATING SERVER");
-    console.log(document.playlist_data);
+    //console.log("UPDATING SERVER");
+    //console.log(document.playlist_data);
     $.ajax({
         url: updateURL,
         type: "POST",
@@ -108,10 +108,10 @@ function ShowLoading(){
 function PullRemoteList(){
     var url = "/control/get_queue_list";
     //data = test_data;
-    console.log("Pull remote");
+    //console.log("Pull remote");
     $.getJSON(url, function(data){                                                    
-	console.log("Got it");
-	console.log(data);                                                            
+	//console.log("Got it");
+	//console.log(data);                                                            
 	document.playlist_data = data;       
 	document.getElementById(document.playlist_body_div).innerHTML ="";
 	document.getElementById(document.playlist_title_div).innerHTML ="";
@@ -121,8 +121,8 @@ function PullRemoteList(){
 }
 function StopRun(detector){
     var stopURL = "/control/stop_run";
-    console.log("Stopping");
-    console.log(detector);
+    //console.log("Stopping");
+    //console.log(detector);
     $.ajax({
         url: stopURL,
 	type: "POST",
@@ -136,7 +136,7 @@ function StopRun(detector){
         contentType: "application/json",
 
         success: function (result) {
-	    console.log("Did it!");
+	    //console.log("Did it!");
             RefreshPlaylist(false);
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -168,12 +168,12 @@ function AutoplayToggle(checkbox){
 	cna = ConfirmNoOpenAlerts( function(){	
 	    autoplay = 0;
 	    if(checkbox.checked){
-		console.log("Autoplay on");
+		//console.log("Autoplay on");
 		document.autoplay=true;
 		autoplay = 2;
 	    }
 	    else{
-		console.log("autoplay off");
+		//console.log("autoplay off");
 		document.autoplay=false;
 	    }
 	    
@@ -289,7 +289,7 @@ function SetPlaylist(data){
 	row += "<div class='playlist-run-time'>"+GetTimeHMS(data[i]['stop_after_minutes'])+"</div>";
 
 	// Badges to indicate which detector
-	console.log(data[i]);
+	//console.log(data[i]);
 	row += "<div class='badge-div' style='margin-top:5px'>";
 	if(data[i]['running'] == 1)
 	    row+="<span class='label label-success'>Running</span>&nbsp;"
@@ -320,8 +320,8 @@ function SetPlaylist(data){
 	draggable: '.track',
 	// REMOVE AN ITEM
 	onFilter: function (evt) {
-	    console.log(evt.item);
-	    console.log(evt.item.parentNode);
+	    //console.log(evt.item);
+	    //console.log(evt.item.parentNode);
 	    ConfirmCanStartRuns(function(){
 		var idnum = parseInt(evt.item['value']);
 		for(x=0;x<document.playlist_data.length;x+=1){        
@@ -390,7 +390,7 @@ Array.prototype.move = function (old_index, new_index) {
 }; 
 
 function StopRunMenu(){
-    console.log("HERE");
+    //console.log("HERE");
 	html="<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='tpc'>TPC</button></div>"+
 	    "<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='muon_veto'>Muon Veto</button></div>"+
 	    "<div class='row'><div class='col-xs-12' style='margin-top:20px'><button style='width:200px;height:40px;font-size:25px;display:block;margin:auto;background-color:#5992c2;' class='detbtn btn btn-primary btn-large' value='all'>Both</button></div>";
@@ -450,7 +450,7 @@ function NewRun(){
 	
 	document.ply_element.open().always(function () {
 	    $('.detbtn').click(function(){
-		console.log("Clicked " + this.value );
+		//console.log("Clicked " + this.value );
 		var run_doc = {};
 		var butt = this;
 		document.new_run_doc = {};
@@ -462,7 +462,7 @@ function NewRun(){
 				    document.new_run_doc['detector'] = 'all';
 				    GetMuonVetoOptions(
 					function(){
-					    console.log(document.new_run_doc);
+					    //console.log(document.new_run_doc);
 					    for(x=0;
 						x<document.
 						new_run_doc['repeat_n_times'];
@@ -477,7 +477,7 @@ function NewRun(){
 				}
 				else{
 				    document.new_run_doc['detector'] = 'tpc';
-				    console.log(document.new_run_doc);
+				    //console.log(document.new_run_doc);
 				    for(x=0;
 					x<document.new_run_doc['repeat_n_times'];
 					x+=1){
@@ -494,7 +494,7 @@ function NewRun(){
 			document.new_run_doc['detector'] = 'muon_veto';
 			GetMuonVetoOptions(
 			    function(){
-				console.log(document.new_run_doc);
+				//console.log(document.new_run_doc);
 				for(x=0;
                                     x<document.new_run_doc['repeat_n_times'];
                                     x+=1){
@@ -520,8 +520,8 @@ function AddPosition(){
 	    lowest = document.playlist_data[x]['position'];
     }
     document.new_run_doc['position'] = lowest+1;
-    console.log("ADDED NEW POSITION");
-    console.log(lowest+1);
+    //console.log("ADDED NEW POSITION");
+    //console.log(lowest+1);
 }
 function GetGenOptions(callback){
     var html= "<div class='row'><div class='col-xs-12'><h3>Run Options</h3></div></div><hr>"+

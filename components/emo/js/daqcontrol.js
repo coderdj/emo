@@ -40,7 +40,7 @@ function drawTriggerChart(triggerchart, triggerchartdiv, chart, callback)
 		color: '#333333',
 		width: 2,
 		value: 0.
-}	    ],
+	    }	    ],
 
             maxPadding:0,
             minPadding:0,
@@ -104,14 +104,31 @@ function drawTriggerChart(triggerchart, triggerchartdiv, chart, callback)
     triggerchart = new Highcharts.Chart(chartOptions, callback(chart, triggerchart));
 
 }
-
+function updateMongoChart(data, eb0div, eb1div, eb2div){
+    drawdivs = [eb0div, eb1div, eb2div];
+    for(i=0; i<drawdivs.length; i+=1){
+	drawdiv = drawdivs[i];
+	console.log(drawdiv);
+	if( $('#'+drawdiv).is(':empty') ) {
+	    //Create chart
+	}
+    }
+}
 function updateTriggerChart(data, triggerdiv)
 {
     var thetriggerchart=$("#"+triggerdiv).highcharts();
+
+    // Try to catch cases where the chart needs to be redrawn. 
+    // (a) If there are no series present
+    // (b) If the series is longer than the current data packet
+    // (this happens if the run wraps around)
     if(thetriggerchart.series.length==0 || 
-      thetriggerchart.series[0].length > data['deadtimes']['dts'].length){
-	while(thetriggerchart.series.length!=0)
+      thetriggerchart.series[0]['data'].length > data['deadtimes']['dts'].length ||
+      thetriggerchart.series[1]['data'].length > data['eventrates'].length){
+	while(thetriggerchart.series.length!=0){
 	    thetriggerchart.series[0].remove(true);
+	    console.log("Removing series");
+	}
 	dict = { type: "line", data: data['deadtimes']['dts'], 
 		 name: "Deadtime", fillColor: null, yAxis: 0, 
 		 color: Highcharts.getOptions().colors[3]};
@@ -122,10 +139,10 @@ function updateTriggerChart(data, triggerdiv)
                  name: "Rate", fillColor: null, yAxis: 1,
                  color: Highcharts.getOptions().colors[1]};
 	thetriggerchart.addSeries(dict2, false);
-	thetriggerchart.xAxis[0]['options']['plotLines'][0]['value'] = data['last_time_searched']-21;
 	thetriggerchart.redraw();
     }
     else{
+	// We're just adding points in this case and not re-drawing whole series
 	var shift=false;
 	if(thetriggerchart.series[0]['data'].length != data['deadtimes']['dts'].length){
 	    for(i=thetriggerchart.series[0]['data'].length-1; i<data['deadtimes']['dts'].length; i+=1){
@@ -138,13 +155,14 @@ function updateTriggerChart(data, triggerdiv)
 	    }
         }
     }
-	var axis = thetriggerchart.xAxis[0];
-	var line = axis.plotLinesAndBands[0]; // Get a reference to the plotLine
-	line.options.value = data['eventbuilder_info']['last_time_searched']/1e9;	
-	line.render(); // Render with updated values.
-	var line2 = axis.plotLinesAndBands[1];
-	line2.options.value = data['eventbuilder_info']['last_pulse_so_far_in_run']/1e9;
-	line2.render();
+    // Move the lines forward indicating where the trigger is compared to real time
+    var axis = thetriggerchart.xAxis[0];
+    var line = axis.plotLinesAndBands[0]; // Get a reference to the plotLine
+    line.options.value = data['eventbuilder_info']['last_time_searched']/1e9;	
+    line.render(); // Render with updated values.
+    var line2 = axis.plotLinesAndBands[1];
+    line2.options.value = data['eventbuilder_info']['last_pulse_so_far_in_run']/1e9;
+    line2.render();
 
     
 		    
@@ -153,6 +171,7 @@ function updateTriggerChart(data, triggerdiv)
 function updateTriggerWindow(data, thetriggerchart)
 {
     updateTriggerChart(data, 'triggerchartdiv');
+    updateMongoChart(data, "eb0_chart", "eb1_chart", "eb2_chart");
     document.getElementById("trigger_event_rate").innerHTML=parseFloat(data['rate']).toFixed(2);
     document.getElementById("trigger_last_collection").innerHTML=data['rname']+"("+data['rnumber']+")";
     var tdate = new Date(1000*(parseFloat(data['eventbuilder_info']['time'])));

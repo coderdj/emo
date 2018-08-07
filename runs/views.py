@@ -34,7 +34,7 @@ start_science_run = 6387
 last_sr1_tag = 12515
 start_sr1 = 6387
 start_sr0=3936
-last_tagging = 13780
+last_tagging = 14886
 sr1_query = {
     # We only use TPC
     "detector": "tpc", 
@@ -375,7 +375,7 @@ def get_current_exposure(request):
     # Mark the Rn220 calibrations
     for rn220 in ranges['Rn220']:
         p = patches.Rectangle(
-            (mdates.date2num(rn220[0]), 0), (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 250,
+            (mdates.date2num(rn220[0]), 0), (mdates.date2num(rn220[1])-mdates.date2num(rn220[0])), 500,
             alpha=.5, color='b', label="Rn220"
         )
         ax.add_patch(p)
@@ -383,7 +383,7 @@ def get_current_exposure(request):
     # Mark the Kr83m calibrations
     for krdate in ranges['Kr83m']:
         p =  patches.Rectangle(
-            (mdates.date2num(krdate[0]), 0), (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 250,
+            (mdates.date2num(krdate[0]), 0), (mdates.date2num(krdate[1])-mdates.date2num(krdate[0])), 500,
             alpha=.5, color='r', label="Kr83m"
         )
         ax.add_patch(p)
@@ -391,7 +391,7 @@ def get_current_exposure(request):
     # Mark the LED calibration                                                                          
     for led in ranges['LED']:
         p = patches.Rectangle(
-            (mdates.date2num(led[0]), 0), (mdates.date2num(led[1])-mdates.date2num(led[0])), 250,
+            (mdates.date2num(led[0]), 0), (mdates.date2num(led[1])-mdates.date2num(led[0])), 500,
             alpha=.7, color='#333333', label="LED", linewidth=.3
             )
         ax.add_patch(p)
@@ -399,13 +399,13 @@ def get_current_exposure(request):
     # Mark the AmBe calibration
     for ambe in ranges['AmBe']:
         p = patches.Rectangle(
-            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
+            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 500,
             alpha=.5, color='c', label="AmBe Calibration"
         )
         ax.add_patch(p)
     for ambe in ranges['neutron_generator']:
         p = patches.Rectangle(
-            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 250,
+            (mdates.date2num(ambe[0]), 0), (mdates.date2num(ambe[1])-mdates.date2num(ambe[0])), 500,
             alpha=1., color='g', label="NG Calibration"
         )
         ax.add_patch(p)
@@ -413,7 +413,7 @@ def get_current_exposure(request):
     # ADD QUAKE IN JANUARY
     d = datetime.datetime(2017, 1, 18, 12, 0)
     md = mdates.date2num(d)
-    plt.plot([md,md], [0, 250], c='k', linestyle='--', linewidth=2)
+    plt.plot([md,md], [0, 500], c='k', linestyle='--', linewidth=2)
 
     # Funny trick from StackOverflow to limit legend to one entry per string
     handles, labels = plt.gca().get_legend_handles_labels()
