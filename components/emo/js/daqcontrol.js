@@ -1022,7 +1022,7 @@ function GetHealth(pctarray, static_dir, update_time, deleter_time){
     if (! isNaN( update_time.getTime() ) )
 	timeDiff = Math.abs(now.getTime() - update_time.getTime())/1000.;
     if(isNaN( update_time.getTime() ) || timeDiff > 300){
-	health = health="<strong style='color:red'>Trigger not responding</strong>";
+	health = health="<strong style='color:red'>Trigger maybe not responding</strong>";
 	image="<img src='"+static_dir+"/doom_faces/dead.png' style='width:50px' class='center-block'>";
     }
     if(timeDiff >= 30){
@@ -1035,7 +1035,7 @@ function GetHealth(pctarray, static_dir, update_time, deleter_time){
     var dtimediff = 0;
     if(! isNaN( deleter_time.getTime()) )
 	dtimediff = Math.abs(now.getTime() - deleter_time.getTime())/1000.;
-    if(isNaN( update_time.getTime() ) || timeDiff > 300){
+    if(isNaN( deleter_time.getTime() ) || dtimediff > 300){
         health = "<strong style='color:red'>Data deleter inactive</strong>";
         image="<img src='"+static_dir+"/doom_faces/clean_pissed.png' style='width:50px' class='center-block'>";
     }
