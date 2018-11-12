@@ -263,6 +263,10 @@ def GetShiftStats(request):
                 done_doc[institute] += int((doc['end']-doc['start']).days/7)
             #need_doc = GetShiftResponsibility(rules)
             need_doc = rules['shifts']
+
+            # Monkey patch here
+            if 'shifts' not in need_doc.keys():
+                need_doc = {"shifts": need_doc}
             if "Bern" in need_doc['shifts']:
                 need_doc['shifts']['Bern/Freiburg'] = need_doc['shifts']['Bern']
                 del need_doc['shifts']['Bern']

@@ -40,10 +40,10 @@ function MakeSidebar(divname, year){
 		color = "#444444";
 	    else if(rollover > -4)
 		color="#ff9900";
-	    ret+="<td><strong style='color:"+color+"'>"+rollover.toString()+"</td>";	   
+	    ret+="<td><strong style='color:"+color+"'>"+rollover.toFixed(2)+"</td>";	   
 
 	    ret +="<td><strong style='color:#990000'>"+inst_array[i]['shifts']+" - </strong><strong style='color:#006600'>"+inst_array[i]['done']+" = </strong>";
-	    left = inst_array[i]['shifts'] - inst_array[i]['done'];
+	    left = (inst_array[i]['shifts'] - inst_array[i]['done']).toFixed(2);
 	    color="#990000"; 
 	    if(left < 2)
 		color="#ff9900";

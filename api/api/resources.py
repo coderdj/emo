@@ -378,6 +378,11 @@ class RunsResource(Resource):
     detector = fields.CharField(attribute="detector")
     name = fields.CharField(attribute="name")
     doc = fields.DictField(attribute="doc")
+
+    exclude_fields = {"name": 1, "number": 1, "source.type": 1, "tags.name": 1,
+                      "start": 1, "end": 1, "user": 1, "detector": 1, "_id": 1,
+                      "reader.ini.name": 1, "data": 1}
+
     class Meta:
         resource_name = 'runs'
         object_class = rundoc
@@ -454,7 +459,7 @@ class RunsResource(Resource):
         
         doc = self._db()[settings.RUNS_DB_COLLECTION].find_one(
             {"_id": 
-             ObjectId(req['_id'])})        
+             ObjectId(req['_id'])}, self.exclude_fields)        
         if doc is None:
             return 
         
