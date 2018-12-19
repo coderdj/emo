@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Shift Calendar{% endblock %}
+{% load staticfiles %}
+{% block head %}
+<script src="{% static "js/moment.js"%}"></script>
+<!--<script src="{% static "Dygraph/js/dygraph-combined.js"%}"></script>-->
+<script src="{% static "plotly_20150819a_basic/dependencies/d3.v3.min.js" %}"></script>
+ <script src="{% static "js/plotly-latest.min.js" %}"></script>
+<script src="{% static "js/fullcalendar.min.js"%}"></script>
+<link href="{% static "css/fullcalendar.min.css"%}" rel="stylesheet" />
+<!--<script src="{% static "js/fullcalendar_weekList.js"%}"></script>
+<link href="{% static "css/fullcalendar_weekList.css"%}" rel="stylesheet" />-->
+
+<script src="{% static "emo/js/shift_calendar.js"%}"></script>
+
+<style>
+.calbox{
+    background-color: white;
+    border-width: 1px;
+    border-color: #D5D5D5; /*#5992c2w;*/
+    border-style: solid;
+    #width:100%;
+    min-height:500px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    /*box-shadow: 10px 10px 5px #888888;*/
+    padding-top:10px;
+}
+.fc-event{
+    cursor: pointer;
+}
+.cal_ul {
+    display:inline;
+    list-style: none;
+    padding:0;
+    margin:0;
+}
+
+.cal_li { 
+    padding-left: 1em; 
+    text-indent: -.7em;
+    display:inline;
+}
+
+#ttip {
+box-shadow: 10px 10px 5px #888888;
+    z-index: 10;
+    min-width:300px;
+    min-height:100px;
+//    position:relative;
+    display: none;
+    position:fixed;
+    background-color:white;
+    padding:10px;    
+//    visibility: invisible;
+}
+.assigned:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #5992c2; /* or whatever color you prefer */
+}
+.free:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #36bc98; /* or whatever color you prefer */
+}
+.run_coordinator:before {
+    content: "■ ";
+    font-size:x-large;
+    color: #5a54bd; /* or whatever color you prefer */
+}
+.training:before{
+    content: "■ ";
+    font-size:x-large;
+    color: #ffa500; /* or whatever color you prefer */
+}
+
+</style>
+<script type="text/javascript">
+
+
+function CloseTooltip(){
+$(".ttip").css('display', 'none');//removeClass("show");
+}
+//var colors = {"tpc": "#36bc98", "muon_veto": "#5a54bd", "combined": "#5992c2"};
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+function rgbToHex(r, g, b) {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+
+function UpdateUserList(){
+   var user_options = {{user_list|safe}};
+   var value = $("#id_institute").val();
+   
+   ret="";
+console.log(user_options);
+console.log(value);
+   for(var key in user_options){
+     if(key == value){
+        for(i=0;i<user_options[key].length;i+=1){
+            ret += "<option value='"+user_options[key][i]['username']+"'>"+
+    user_options[key][i]['username'] + " (" +user_options[key][i]['first_name']+" "+user_options[key][i]['last_name']+")</option>";
+        }
+}}
+   document.getElementById("id_user").innerHTML=ret;
+};
+
+$(document).ready(function() {
+		    
+$("#id_institute").change(function(){
+   UpdateUserList();
+});
+
+   user_option = {{ user_list |safe }};
+
+   MakeCalendar("calendar", user_option);
+
+  ret="";
+  for (var key in user_option) {
+  if (user_option.hasOwnProperty(key)) {
+     ret+="<option value='"+key+"'>"+key+"</option>";
+    }
+  }
+  document.getElementById("id_institute").innerHTML = ret;
+  UpdateUserList();
+});
+
+
+</script>
+{% endblock %}
+{% block content %}
+
+<div class="row" style="padding:14px;padding-top:0px;">
+  <div class="calbox col-sm-8 col-xs-12" style="min-width:400px;">
+    <ul class="cal_ul" id="calendar-legend" class="pull-right">
+      <li class="cal_li assigned">Assigned</li>
+      <li class="cal_li free">Free</li>
+      <li class="cal_li run_coordinator">Run Coordinator</li>
+    </ul>
+    <div id="calendar"></div>     
+  </div>           
+  <div class="calbox col-sm-4 col-xs-12" style="padding:0;display:none">
+    <div class="col-xs-12" id="sidebar">
+      <h4>Institutes</h4>
+      <table class="table table-condensed">
+	<thead>
+	  <tr>
+	    <td>Institute</td>
+	    <td>Rollover</td>
+	    <td id="current_year_column">Shifts</td>
+	  </tr>
+	</thead>
+	<tbody id="inst_table_body">
+	</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="ttip" id="ttip" 
+     style="width:450px;border-width:1px;border-color:#BBBBBB;border-style:solid;">
+  <div class="row" style="width:400px;margin-left:10px;">
+    <button type="button" class="close"
+            onclick="CloseTooltip()" aria-hidden="true">×</button>
+    <h4 class="modal-title" id="shift_modal_title">Shift detail</h4>
+  </div>
+  <hr style="margin:2px">
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Start: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="shift_modal_start"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>End: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="shift_modal_end"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Institute: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="shift_modal_institute"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>User: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="shift_modal_user"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-4 col-sm-3">
+      <strong>Available: </strong>
+    </div>
+    <div class="col-xs-8 col-sm-3">
+      <span id="shift_modal_available"></span>
+    </div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-xs-12">
+      <button class="btn btn-info" id="btn_sign_up">Sign up</button>&nbsp;<button class="btn btn-default" id="btn_mark_available">Mark Available</button>&nbsp;<button class="btn btn-warning" id="btn_train">Sign up for training</button>
+      {% if request.user.username == 'coderre' or request.user.username == 'junji' %}
+      <button class="btn btn-warning" id="btn_credit">Make credit shift</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="signUpModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"
+                data-dismiss="modal" aria-hidden="true">×
+        </button>
+        <h4 class="modal-title" id="sign_up_title">Sign up for a shift</h4>
+      </div>
+      <span style="font-size:12px;margin-left:15px;" id="sign_up_start">Shift start</span>
+      <span style="font-size:12px;margin-left:15px;"><strong>* required field</strong></span>
+      <form method="POST" action="/management/shift_calendar" id="sign_up_form">
+        {% csrf_token %}
+	<div class="modal-body" style="min-height:200px;overflow-y:auto;">
+	  <div class="bg-danger">
+	    <strong>Note: </strong> Shifts start on Wednesday at the operations telecon and end the following Wednesday <strong>after</strong> the operations telecon. Plan your travel accordingly.
+	    </div>
+	  <br>
+	  {% load tz %}
+	  {% localtime off %}
+
+	  {{ signup_form.non_field_errors }}
+          {% for field in signup_form.visible_fields %}
+          <div class="row">
+            <div class="col-sm-6"><strong>{{ field.label }}{% if field.field.required %}*{% endif %}</strong></div>
+            <div class="col-sm-6">{{ field }}</div>
+	    {{ field.errors }}
+          </div>
+          <br style="margin:1px">
+          {% endfor %}
+	  {% for field in signup_form.hidden_fields %}
+	  {{field}}
+	  {% endfor %}
+	  {% endlocaltime %}
+
+
+        </div>
+        <div class="modal-footer">
+          <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+          <button type="submit" class="btn btn-success">
+            Enter</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

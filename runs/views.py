@@ -415,6 +415,13 @@ def get_current_exposure(request):
     md = mdates.date2num(d)
     plt.plot([md,md], [0, 500], c='k', linestyle='--', linewidth=2)
 
+    dforplot = datetime.datetime(2017, 9, 5, 18, 00)
+    font = {'family': 'serif',
+            'color':  'darkred',
+            'weight': 'normal',
+            'size': 24,
+        }
+    plt.text(mdates.date2num(dforplot), 300, "NOT A BLESSED PLOT", fontdict=font)
     # Funny trick from StackOverflow to limit legend to one entry per string
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Shift Management{% endblock %}
+{% load staticfiles %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<div class="emobox" style="padding:10px;overflow:hidden">
+  <h3>Shift Responsibility <span id="resp_year">{{ year }}</span> (total: {{resp.total}} weeks)</h3>
+  <br>
+   {% for key, value in resp.shifts.items %}
+  <div class="col-sm-6 col-xs-12"><strong>{{ key }}: </strong>{{ value.shifts|floatformat:2 }} weeks, {{ value.people }} people (frac: {{ value.frac|floatformat:2 }})</div>
+  {% endfor %}
+</div>
+{% if user.username == "coderre" %}
+<div class="emobox" style="padding:10px">
+<h3>Shift rules</h3>
+<p style="color:red">
+  This form no longer works!
+</p>
+<form method="POST" action="/management/shift_rules">
+{% csrf_token %}
+{% for field in form %}
+<div class="row">
+  <div class="col-xs-3">
+    <strong>{{ field.label }}:</strong>
+  </div> 
+  <div class="col-xs-3">
+    {{ field }}
+  </div>
+  <div class="col-xs-6">
+  <span style="color:#999999">{{ field.help_text }}</span>
+  </div>
+</div>
+<hr>
+{% endfor %}
+
+<button class="btn btn-info btn-sm disabled" style="margin:8px;" type="submit" name="submit" style="height:30%;">Submit</button>
+{% endif %}
+
+</form>
+<script>
+console.log({{resp}});
+</script>
+</div>
+
+{% endblock %}

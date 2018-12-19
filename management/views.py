@@ -222,7 +222,7 @@ def GetCurrentShifter(request):
 
     ret = {"shifters": [], "run_coordinator": []}
     for shift in docs:
-        if shift['type'] == 'shifter':
+        if shift['type'] == 'shifter' or shift['type'] == 'distillation':
             ret['shifters'].append(shift['shifter'])
         elif shift['type'] == 'run coordinator':
             ret['run_coordinator'].append(shift['shifter'])
@@ -307,6 +307,11 @@ def GetShiftStats(request):
                 if "prev_credit" not in ret_doc['institutes']['shifts'][institute]:
                     ret_doc['institutes']['shifts'][institute]['prev_credit'] = 0
                 ret_doc['institutes']['shifts'][institute]['prev_credit'] +=1
+            # Monkey patch here
+            #logger.error(ruledoc)
+            if 'shifts' not in ruledoc['shifts'].keys():
+                ruledoc = {"shifts": ruledoc}
+            # logger.error(ruledoc)
             for institute in ruledoc['shifts']['shifts']:                
                 if institute == "none" or institute is None:
                     continue
@@ -441,8 +446,8 @@ def shift_calendar(request):
     if our_user is None:
         return render(request, "management/shift_calendar.html", retdict)
 
-    if our_user['position'] == "PI" or request.user.username=="coderre" or request.user.username == "junji":
-        if request.user.username=="coderre" or request.user.username=="junji":
+    if our_user['position'] == "PI" or request.user.username in ["coderre", "junji", "acolijn"]:
+        if request.user.username in ["coderre", "junji", "acolijn"]:
             user_cursor = (db['users'].find({
                 "username": {"$exists": True},
                 "last_name": {"$exists": True},
